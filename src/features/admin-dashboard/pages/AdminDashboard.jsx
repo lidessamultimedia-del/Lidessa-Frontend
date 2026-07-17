@@ -87,7 +87,7 @@ export default function AdminDashboard() {
       <aside style={{
         width: sidebarOpen ? 220 : 64,
         minHeight: '100vh',
-        backgroundColor: '#0A1628',
+        backgroundColor: '#141414',
         transition: 'width 0.25s ease',
         flexShrink: 0,
         display: 'flex',

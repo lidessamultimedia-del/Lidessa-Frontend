@@ -26,7 +26,7 @@ export default function Footer() {
 
   return (
     <>
-      <footer style={{ backgroundColor: '#0A1628', color: '#A0B4CC' }}>
+      <footer style={{ backgroundColor: '#141414', color: '#cbb98a' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-14">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8">
 
@@ -46,10 +46,10 @@ export default function Footer() {
               </p>
               <div className="mt-4 flex flex-col gap-1.5 text-xs">
                 <span className="flex items-center gap-1.5">
-                  <span style={{ color: '#0EA5E9' }}>✓</span> NIT: 900.XXX.XXX-X
+                  <span style={{ color: '#c9a227' }}>✓</span> NIT: 900.XXX.XXX-X
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <span style={{ color: '#0EA5E9' }}>✓</span> RUT vigente 2025
+                  <span style={{ color: '#c9a227' }}>✓</span> RUT vigente 2025
                 </span>
               </div>
             </div>
@@ -86,7 +86,7 @@ export default function Footer() {
                   <span className="text-white font-medium">Sábados</span><br />
                   9:00 a.m. – 1:00 p.m.
                 </li>
-                <li className="pt-1 text-xs" style={{ color: '#7090AA' }}>
+                <li className="pt-1 text-xs" style={{ color: '#8a7d5a' }}>
                   Domingos y festivos: cerrado
                 </li>
                 <li>
@@ -187,7 +187,7 @@ export default function Footer() {
                   </a>
                 ))}
               </div>
-              <p className="text-xs" style={{ color: '#506070' }}>
+              <p className="text-xs" style={{ color: '#6b6152' }}>
                 © {new Date().getFullYear()} Lidessa. Todos los derechos reservados.
               </p>
             </div>

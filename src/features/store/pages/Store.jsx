@@ -28,15 +28,15 @@ export default function Store() {
           backgroundPosition: 'center',
         }}
       >
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(10,22,40,0.95) 50%, rgba(10,22,40,0.6))' }} />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(20,20,20,0.95) 50%, rgba(20,20,20,0.6))' }} />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
-          <span className="text-xs font-bold uppercase tracking-widest px-2 py-1 rounded" style={{ backgroundColor: 'rgba(14,165,233,0.2)', color: '#38BDF8' }}>
+          <span className="text-xs font-bold uppercase tracking-widest px-2 py-1 rounded" style={{ backgroundColor: 'rgba(201,162,39,0.2)', color: '#e8c766' }}>
             Tienda en línea
           </span>
           <h1 className="text-4xl sm:text-5xl font-black text-white mt-3 mb-4" style={{ fontFamily: 'var(--font-display)' }}>
             Equipos y materiales<br />de seguridad
           </h1>
-          <p className="text-base max-w-xl mb-6" style={{ color: '#A0C4E0' }}>
+          <p className="text-base max-w-xl mb-6" style={{ color: '#cbb98a' }}>
             Adquiera equipos de protección personal certificados, señalización industrial y herramientas para el cumplimiento normativo. Envíos a todo Colombia.
           </p>
           <div className="flex flex-wrap gap-3 text-sm">

@@ -52,7 +52,7 @@ export default function Home() {
       {/* ── Hero ── */}
       <section
         className="relative min-h-[90vh] flex items-center overflow-hidden"
-        style={{ background: 'linear-gradient(135deg, #005187 0%, #003a63 40%, #001f38 100%)' }}
+        style={{ background: 'linear-gradient(135deg, #005187 0%, #3d3115 40%, #141414 100%)' }}
       >
         {/* Animated orbs */}
         <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
@@ -102,12 +102,12 @@ export default function Home() {
                 target="_blank" rel="noreferrer"
                 className="px-7 py-3.5 rounded-xl text-sm font-bold"
                 style={{
-                  border: '2px solid rgba(132,182,244,0.5)',
-                  color: '#c4dafa',
+                  border: '2px solid rgba(201,162,39,0.6)',
+                  color: '#e8c766',
                   transition: 'background-color 0.25s, border-color 0.25s',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'rgba(132,182,244,0.12)'; e.currentTarget.style.borderColor = '#84b6f4' }}
-                onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.borderColor = 'rgba(132,182,244,0.5)' }}
+                onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'rgba(201,162,39,0.14)'; e.currentTarget.style.borderColor = '#e8c766' }}
+                onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.borderColor = 'rgba(201,162,39,0.6)' }}
               >
                 Solicitar asesoría →
               </a>
@@ -244,7 +244,7 @@ export default function Home() {
         {/* Animated counters strip */}
         <div
           className="mt-12 rounded-2xl p-8 reveal"
-          style={{ background: 'linear-gradient(135deg, #005187 0%, #003a63 100%)', color: 'white' }}
+          style={{ background: 'linear-gradient(135deg, #005187 0%, #3d3115 100%)', color: 'white' }}
         >
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 text-center">
             {[
@@ -315,7 +315,7 @@ export default function Home() {
         <div className="grid md:grid-cols-2 gap-6">
           <div
             className="rounded-2xl p-8 relative overflow-hidden card-interactive reveal-left"
-            style={{ background: 'linear-gradient(135deg, #005187 0%, #003a63 100%)' }}
+            style={{ background: 'linear-gradient(135deg, #005187 0%, #3d3115 100%)' }}
           >
             <div style={{ position: 'absolute', right: -30, top: -30, width: 200, height: 200, borderRadius: '50%', background: 'radial-gradient(circle, rgba(132,182,244,0.2), transparent)', pointerEvents: 'none' }} />
             <div className="relative">

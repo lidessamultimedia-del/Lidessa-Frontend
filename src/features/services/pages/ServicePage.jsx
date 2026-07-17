@@ -62,13 +62,13 @@ export default function ServicePage() {
           backgroundPosition: 'center',
         }}
       >
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(10,22,40,0.93) 0%, rgba(10,22,40,0.7) 100%)' }} />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(20,20,20,0.93) 0%, rgba(20,20,20,0.7) 100%)' }} />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
-          <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#38BDF8' }}>Servicio</p>
+          <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#e8c766' }}>Servicio</p>
           <h1 className="text-4xl sm:text-5xl font-black text-white mb-5" style={{ fontFamily: 'var(--font-display)' }}>
             {service.title}
           </h1>
-          <p className="text-base max-w-2xl leading-relaxed" style={{ color: '#A0C4E0' }}>
+          <p className="text-base max-w-2xl leading-relaxed" style={{ color: '#cbb98a' }}>
             {service.description}
           </p>
         </div>
@@ -167,14 +167,14 @@ export default function ServicePage() {
       <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6">
         <div
           className="rounded-2xl p-8 text-center relative overflow-hidden"
-          style={{ background: 'linear-gradient(135deg, #0A1628, #1A3A6B)' }}
+          style={{ background: 'linear-gradient(135deg, #141414, #3d3115)' }}
         >
-          <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, #0EA5E9 0%, transparent 50%), radial-gradient(circle at 80% 50%, #38BDF8 0%, transparent 50%)' }} />
+          <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, #c9a227 0%, transparent 50%), radial-gradient(circle at 80% 50%, #e8c766 0%, transparent 50%)' }} />
           <div className="relative">
             <h2 className="text-2xl font-black text-white mb-3" style={{ fontFamily: 'var(--font-display)' }}>
               ¿Listo para comenzar?
             </h2>
-            <p className="text-sm mb-6" style={{ color: '#94C8E8' }}>
+            <p className="text-sm mb-6" style={{ color: '#cbb98a' }}>
               Contáctenos hoy y reciba una consulta inicial sin costo. Nuestro equipo analizará las necesidades de su organización y le presentará una propuesta personalizada.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">

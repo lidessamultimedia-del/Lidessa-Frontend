@@ -52,7 +52,7 @@ export default function About() {
       {/* Hero */}
       <section
         className="py-28 relative overflow-hidden"
-        style={{ background: 'linear-gradient(135deg, #005187 0%, #003a63 50%, #001f38 100%)' }}
+        style={{ background: 'linear-gradient(135deg, #005187 0%, #3d3115 50%, #141414 100%)' }}
       >
         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', top: '20%', right: '10%', width: 350, height: 350, borderRadius: '50%', background: 'radial-gradient(circle, rgba(77,130,188,0.2) 0%, transparent 70%)', animation: 'orb1 12s ease-in-out infinite' }} />
@@ -249,7 +249,7 @@ export default function About() {
       {/* Contact block */}
       <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6">
         <div className="rounded-2xl p-8 reveal"
-          style={{ background: 'linear-gradient(135deg, #005187 0%, #003a63 100%)', color: 'white' }}>
+          style={{ background: 'linear-gradient(135deg, #005187 0%, #3d3115 100%)', color: 'white' }}>
           <div className="grid md:grid-cols-2 gap-8 items-center">
             <div>
               <h3 className="text-2xl font-black mb-3" style={{ fontFamily: 'var(--font-display)' }}>

@@ -13,13 +13,13 @@ export default function Blog() {
   return (
     <div>
       {/* Hero */}
-      <section className="py-16" style={{ background: 'linear-gradient(135deg, #0A1628 0%, #1A3A6B 100%)' }}>
+      <section className="py-16" style={{ background: 'linear-gradient(135deg, #141414 0%, #3d3115 100%)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#38BDF8' }}>Blog y noticias</p>
+          <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#e8c766' }}>Blog y noticias</p>
           <h1 className="text-4xl sm:text-5xl font-black text-white mb-4" style={{ fontFamily: 'var(--font-display)' }}>
             Actualidad normativa<br />y del sector
           </h1>
-          <p className="text-base max-w-2xl" style={{ color: '#A0C4E0' }}>
+          <p className="text-base max-w-2xl" style={{ color: '#cbb98a' }}>
             Mantenemos informados a nuestros clientes y aliados sobre las novedades legislativas, consultas normativas y publicaciones de interés para el mundo empresarial e institucional.
           </p>
         </div>

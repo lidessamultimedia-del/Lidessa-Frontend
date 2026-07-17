@@ -72,18 +72,16 @@ export default function Header({ theme, setTheme }) {
         >
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2.5 shrink-0">
-            <div
-              className="flex items-center justify-center text-white font-black text-lg rounded-xl"
+            <img
+              src="/assets/logolidessa.png"
+              alt="Lidessa"
               style={{
                 width: scrolled ? '34px' : '40px',
                 height: scrolled ? '34px' : '40px',
-                background: 'linear-gradient(135deg, #005187 0%, #4d82bc 100%)',
+                objectFit: 'contain',
                 transition: 'width 0.3s ease, height 0.3s ease',
-                boxShadow: '0 3px 10px rgba(0,81,135,0.3)',
               }}
-            >
-              N
-            </div>
+            />
             <div className="hidden sm:block leading-none">
               <span
                 className="font-black tracking-tight"

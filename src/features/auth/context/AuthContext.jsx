@@ -5,16 +5,6 @@ const AuthContext = createContext(null)
 const MOCK_USERS = [
   {
     id: '1',
-    name: 'María García',
-    email: 'cliente@lidessa.co',
-    password: '123456',
-    role: 'client',
-    company: 'Construcciones García S.A.S.',
-    phone: '+57 310 000 0001',
-    unreadNotifications: 2,
-  },
-  {
-    id: '2',
     name: 'Admin Lidessa',
     email: 'admin@lidessa.co',
     password: 'admin123',

@@ -9,8 +9,8 @@ import Blog from '@/features/blog/pages/Blog'
 import Store from '@/features/store/pages/Store'
 import Training from '@/features/training/pages/Training'
 import ServicePage from '@/features/services/pages/ServicePage'
-import ClientDashboard from '@/features/client-dashboard/pages/ClientDashboard'
 import AdminDashboard from '@/features/admin-dashboard/pages/AdminDashboard'
+import Login from '@/features/auth/pages/Login'
 import { useAuth } from '@/features/auth/context/AuthContext'
 
 function PublicLayout({ theme, setTheme }) {
@@ -33,38 +33,31 @@ function PublicLayout({ theme, setTheme }) {
   )
 }
 
-function ProtectedRoute({ role, children }) {
+function ProtectedRoute({ children }) {
   const { user } = useAuth()
-  if (!user) return <Navigate to="/" replace />
-  if (user.role !== role) return <Navigate to={user.role === 'admin' ? '/admin' : '/dashboard'} replace />
+  if (!user || user.role !== 'admin') return <Navigate to="/" replace />
   return <>{children}</>
 }
 
 export default function AppRoutes() {
-  const [theme, setTheme] = useState('auto')
+  const [theme, setTheme] = useState(() => {
+    const stored = localStorage.getItem('lidessa_theme')
+    if (stored === 'light' || stored === 'dark') return stored
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  })
 
   useEffect(() => {
     const root = document.documentElement
-    if (theme === 'dark') {
-      root.classList.add('dark')
-    } else if (theme === 'light') {
-      root.classList.remove('dark')
-    } else {
-      const mq = window.matchMedia('(prefers-color-scheme: dark)')
-      if (mq.matches) root.classList.add('dark')
-      else root.classList.remove('dark')
-    }
+    if (theme === 'dark') root.classList.add('dark')
+    else root.classList.remove('dark')
+    localStorage.setItem('lidessa_theme', theme)
   }, [theme])
 
   return (
     <Routes>
-      <Route path="/dashboard" element={
-        <ProtectedRoute role="client">
-          <ClientDashboard />
-        </ProtectedRoute>
-      } />
+      <Route path="/login" element={<Login />} />
       <Route path="/admin" element={
-        <ProtectedRoute role="admin">
+        <ProtectedRoute>
           <AdminDashboard />
         </ProtectedRoute>
       } />

@@ -112,7 +112,7 @@ export default function About() {
             </div>
             <div className="space-y-3">
               {acronym.map((a, i) => (
-                <div key={a.letter}
+                <div key={i}
                   className={`flex items-center gap-4 p-4 rounded-xl card-interactive glow-hover reveal stagger-${i + 1}`}
                   style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}
                 >
@@ -278,7 +278,7 @@ export default function About() {
               </div>
             </div>
             <ul className="space-y-3 text-sm opacity-90">
-              <li className="flex items-start gap-2"><span>📍</span> Cra. 15 #93-75 Piso 8, Bogotá D.C.</li>
+              <li className="flex items-start gap-2"><span>📍</span> Cra. 71 #46-28, Laureles, Medellín, Antioquia</li>
               <li className="flex items-start gap-2"><span>📱</span> +57 300 123 4567 (General)</li>
               <li className="flex items-start gap-2"><span>📱</span> +57 300 987 6543 (Comercial)</li>
               <li className="flex items-start gap-2"><span>📧</span> mercadeo@lidessa.co</li>

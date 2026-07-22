@@ -51,13 +51,13 @@
 .dark {
   --background: #000000;
   --foreground: #fcffff;
-  --card: #272727;
+  --card: #302f2c;
   --card-foreground: #fcffff;
   --primary: #4d82bc;
   --primary-foreground: #fcffff;
   --secondary: #454546;
   --secondary-foreground: #c4dafa;
-  --muted: #272727;
+  --muted: #17171a;
   --muted-foreground: #8c8c8c;
   --accent: #84b6f4;
   --accent-foreground: #000000;
@@ -101,6 +101,10 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--font-display); }
 @keyframes scaleIn {
   from { opacity: 0; transform: scale(0.92); }
   to   { opacity: 1; transform: scale(1); }
+}
+@keyframes modalPop {
+  from { opacity: 0; transform: scale(0.92) translateY(18px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 @keyframes gradientShift {
   0%   { background-position: 0% 50%; }

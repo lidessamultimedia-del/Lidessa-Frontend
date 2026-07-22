@@ -1,16 +1,17 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { megaMenu } from '@/shared/data/megaMenu'
-import AuthModal from '@/features/auth/components/AuthModal'
 
 export default function Header({ theme, setTheme }) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [megaOpen, setMegaOpen] = useState(false)
   const [mobileServicesOpen, setMobileServicesOpen] = useState(false)
   const [activeCategory, setActiveCategory] = useState(0)
-  const [authModal, setAuthModal] = useState(null)
   const [scrolled, setScrolled] = useState(false)
+  const [indicator, setIndicator] = useState({ left: 0, width: 0, opacity: 0 })
   const megaRef = useRef(null)
+  const navRef = useRef(null)
+  const linkRefs = useRef({})
   const location = useLocation()
 
   // Shrink header on scroll
@@ -37,36 +38,64 @@ export default function Header({ theme, setTheme }) {
     { label: 'Inicio', href: '/' },
     { label: 'Nosotros', href: '/nosotros' },
     { label: 'Blog', href: '/blog' },
-    { label: 'Tienda', href: '/tienda' },
     { label: 'Formación', href: '/formacion' },
   ]
 
-  const themeOpts = [
-    { value: 'light', icon: '☀️', label: 'Claro' },
-    { value: 'dark',  icon: '🌙', label: 'Oscuro' },
-    { value: 'auto',  icon: '⚙️', label: 'Auto' },
-  ]
-  const nextTheme = { light: 'dark', dark: 'auto', auto: 'light' }
-  const currentThemeOpt = themeOpts.find(t => t.value === theme)
+  const activeKey = navLinks.find(l => l.href === location.pathname)?.href
+    || (location.pathname.startsWith('/servicios') ? 'servicios' : null)
+
+  function moveIndicatorTo(key) {
+    const el = linkRefs.current[key]
+    const nav = navRef.current
+    if (!el || !nav) return
+    const elRect = el.getBoundingClientRect()
+    const navRect = nav.getBoundingClientRect()
+    setIndicator({ left: elRect.left - navRect.left, width: elRect.width, opacity: 1 })
+  }
+
+  function resetIndicator() {
+    if (activeKey) moveIndicatorTo(activeKey)
+    else setIndicator(i => ({ ...i, opacity: 0 }))
+  }
+
+  useEffect(() => {
+    resetIndicator()
+    const onResize = () => resetIndicator()
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname, scrolled])
+
+  const isDark = theme === 'dark'
 
   return (
-    <>
       <header
         style={{
           position: 'sticky',
           top: 0,
           zIndex: 50,
           width: '100%',
-          backgroundColor: 'var(--card)',
-          borderBottom: '1px solid var(--border)',
-          boxShadow: scrolled ? '0 4px 24px rgba(0,81,135,0.10)' : '0 1px 4px rgba(0,0,0,0.04)',
-          transition: 'box-shadow 0.3s ease, padding 0.3s ease',
+          padding: scrolled ? '10px 16px' : '16px 16px 8px',
+          transition: 'padding 0.3s ease',
         }}
       >
+        <div className="max-w-7xl mx-auto relative">
+          {/* Floating pill */}
+          <div
+            style={{
+              borderRadius: 9999,
+              backgroundColor: `color-mix(in srgb, var(--card) ${scrolled ? 90 : 78}%, transparent)`,
+              backdropFilter: 'blur(18px)',
+              WebkitBackdropFilter: 'blur(18px)',
+              border: '1px solid color-mix(in srgb, var(--border) 70%, transparent)',
+              boxShadow: scrolled ? '0 10px 34px rgba(0,81,135,0.16)' : '0 6px 22px rgba(0,81,135,0.08)',
+              transition: 'background-color 0.3s ease, box-shadow 0.3s ease',
+            }}
+          >
         <div
-          className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center gap-4"
+          className="px-4 sm:px-6 flex items-center gap-4"
           style={{
-            height: scrolled ? '56px' : '68px',
+            height: scrolled ? '52px' : '64px',
             transition: 'height 0.3s ease',
           }}
         >
@@ -109,21 +138,42 @@ export default function Header({ theme, setTheme }) {
           </Link>
 
           {/* Desktop nav */}
-          <nav className="hidden lg:flex items-center gap-0.5 flex-1">
+          <nav
+            ref={navRef}
+            className="hidden lg:flex items-center gap-0.5 flex-1 relative"
+            onMouseLeave={resetIndicator}
+          >
+            {/* Liquid sliding indicator */}
+            <div
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: 0,
+                height: '34px',
+                borderRadius: 9999,
+                backgroundColor: '#c4dafa',
+                opacity: indicator.opacity,
+                transform: `translate(${indicator.left}px, -50%)`,
+                width: indicator.width,
+                transition: 'transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), width 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease',
+                pointerEvents: 'none',
+                zIndex: 0,
+              }}
+            />
             {navLinks.map((l) => {
               const active = location.pathname === l.href
               return (
                 <Link
                   key={l.href}
+                  ref={el => { linkRefs.current[l.href] = el }}
                   to={l.href}
                   className="px-3 py-2 rounded-lg text-sm font-semibold relative"
                   style={{
                     color: active ? '#005187' : 'var(--foreground)',
-                    backgroundColor: active ? '#c4dafa' : 'transparent',
-                    transition: 'color 0.2s, background-color 0.2s',
+                    transition: 'color 0.2s',
+                    zIndex: 1,
                   }}
-                  onMouseEnter={e => { if (!active) e.currentTarget.style.backgroundColor = 'var(--muted)' }}
-                  onMouseLeave={e => { if (!active) e.currentTarget.style.backgroundColor = 'transparent' }}
+                  onMouseEnter={() => moveIndicatorTo(l.href)}
                 >
                   {l.label}
                 </Link>
@@ -131,14 +181,15 @@ export default function Header({ theme, setTheme }) {
             })}
 
             {/* Mega-menu */}
-            <div className="relative" ref={megaRef}>
+            <div className="relative" ref={megaRef} onMouseEnter={() => moveIndicatorTo('servicios')}>
               <button
+                ref={el => { linkRefs.current['servicios'] = el }}
                 onClick={() => setMegaOpen(!megaOpen)}
-                className="px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-1"
+                className="px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-1 relative"
                 style={{
-                  color: megaOpen ? '#005187' : 'var(--foreground)',
-                  backgroundColor: megaOpen ? '#c4dafa' : 'transparent',
-                  transition: 'color 0.2s, background-color 0.2s',
+                  color: megaOpen || activeKey === 'servicios' ? '#005187' : 'var(--foreground)',
+                  transition: 'color 0.2s',
+                  zIndex: 1,
                 }}
               >
                 Servicios
@@ -240,35 +291,77 @@ export default function Header({ theme, setTheme }) {
 
           {/* Right side */}
           <div className="flex items-center gap-2 ml-auto">
-            {/* Theme toggle */}
+            {/* Theme toggle — sun / moon switch */}
             <button
-              onClick={() => setTheme(nextTheme[theme])}
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border"
-              style={{ borderColor: 'var(--border)', color: 'var(--muted-foreground)', transition: 'border-color 0.2s, color 0.2s' }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = '#4d82bc'; e.currentTarget.style.color = '#005187' }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--muted-foreground)' }}
+              onClick={() => setTheme(isDark ? 'light' : 'dark')}
+              aria-label="Cambiar tema"
               title="Cambiar tema"
+              className="hidden sm:block relative shrink-0"
+              style={{
+                width: 56,
+                height: 28,
+                borderRadius: 9999,
+                border: '1px solid var(--border)',
+                background: isDark
+                  ? 'linear-gradient(135deg, #0f1b3d 0%, #1b2a4a 100%)'
+                  : 'linear-gradient(135deg, #bfe0ff 0%, #eaf6ff 100%)',
+                transition: 'background 0.4s ease',
+                overflow: 'hidden',
+              }}
             >
-              <span>{currentThemeOpt.icon}</span>
-              <span>{currentThemeOpt.label}</span>
+              {/* stars (dark mode) */}
+              <span style={{ position: 'absolute', top: 6, left: 9, width: 2, height: 2, borderRadius: '50%', backgroundColor: 'white', opacity: isDark ? 0.85 : 0, transition: 'opacity 0.4s ease' }} />
+              <span style={{ position: 'absolute', top: 16, left: 18, width: 2, height: 2, borderRadius: '50%', backgroundColor: 'white', opacity: isDark ? 0.6 : 0, transition: 'opacity 0.4s ease' }} />
+              <span style={{ position: 'absolute', top: 9, left: 26, width: 1.5, height: 1.5, borderRadius: '50%', backgroundColor: 'white', opacity: isDark ? 0.7 : 0, transition: 'opacity 0.4s ease' }} />
+
+              {/* sliding thumb */}
+              <span
+                style={{
+                  position: 'absolute',
+                  top: 3,
+                  left: isDark ? 31 : 3,
+                  width: 22,
+                  height: 22,
+                  borderRadius: '50%',
+                  backgroundColor: isDark ? '#e8eef7' : '#ffd35c',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
+                  transition: 'left 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.35s ease',
+                }}
+              >
+                {isDark ? (
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="#3d4d6b">
+                    <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5Z" />
+                  </svg>
+                ) : (
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#b8860b" strokeWidth="2" strokeLinecap="round">
+                    <circle cx="12" cy="12" r="4" fill="#b8860b" stroke="none" />
+                    <line x1="12" y1="1.5" x2="12" y2="3.5" />
+                    <line x1="12" y1="20.5" x2="12" y2="22.5" />
+                    <line x1="1.5" y1="12" x2="3.5" y2="12" />
+                    <line x1="20.5" y1="12" x2="22.5" y2="12" />
+                    <line x1="4.6" y1="4.6" x2="6" y2="6" />
+                    <line x1="18" y1="18" x2="19.4" y2="19.4" />
+                    <line x1="4.6" y1="19.4" x2="6" y2="18" />
+                    <line x1="18" y1="6" x2="19.4" y2="4.6" />
+                  </svg>
+                )}
+              </span>
             </button>
 
-            <button
-              onClick={() => setAuthModal('login')}
-              className="hidden md:block px-4 py-1.5 rounded-lg text-sm font-semibold border"
-              style={{ borderColor: '#005187', color: '#005187', transition: 'background-color 0.2s' }}
-              onMouseEnter={e => e.currentTarget.style.backgroundColor = '#c4dafa'}
-              onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
+            <Link
+              to="/login"
+              className="hidden md:flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-bold text-white btn-shimmer"
             >
               Iniciar sesión
-            </button>
-
-            <button
-              onClick={() => setAuthModal('register')}
-              className="hidden md:block px-4 py-1.5 rounded-lg text-sm font-bold text-white btn-shimmer"
-            >
-              Registrarme
-            </button>
+              <svg className="icon-nudge" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                <polyline points="10 17 15 12 10 7" />
+                <line x1="15" y1="12" x2="3" y2="12" />
+              </svg>
+            </Link>
 
             {/* Hamburger */}
             <button
@@ -287,17 +380,28 @@ export default function Header({ theme, setTheme }) {
             </button>
           </div>
         </div>
+          </div>
 
-        {/* Mobile drawer — animated */}
-        <div
-          style={{
-            overflow: 'hidden',
-            maxHeight: mobileOpen ? '600px' : '0',
-            transition: 'max-height 0.35s ease',
-            borderTop: mobileOpen ? '1px solid var(--border)' : 'none',
-            backgroundColor: 'var(--card)',
-          }}
-        >
+          {/* Mobile drawer — floating panel */}
+          <div
+            style={{
+              position: 'absolute',
+              top: 'calc(100% + 10px)',
+              left: 0,
+              right: 0,
+              borderRadius: 20,
+              overflow: 'hidden',
+              backgroundColor: `color-mix(in srgb, var(--card) 96%, transparent)`,
+              backdropFilter: 'blur(18px)',
+              WebkitBackdropFilter: 'blur(18px)',
+              border: '1px solid var(--border)',
+              boxShadow: '0 20px 50px rgba(0,81,135,0.18)',
+              maxHeight: mobileOpen ? '600px' : '0',
+              opacity: mobileOpen ? 1 : 0,
+              transition: 'max-height 0.35s ease, opacity 0.25s ease',
+              zIndex: 40,
+            }}
+          >
           <div className="px-4 py-3">
             {navLinks.map((l) => (
               <Link
@@ -347,21 +451,19 @@ export default function Header({ theme, setTheme }) {
             </div>
 
             <div className="flex gap-2 pt-3 pb-1">
-              <button onClick={() => { setAuthModal('login'); setMobileOpen(false) }}
-                className="flex-1 py-2.5 text-sm font-semibold rounded-lg border"
-                style={{ borderColor: '#005187', color: '#005187' }}>
+              <Link to="/login" onClick={() => setMobileOpen(false)}
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-bold rounded-lg text-white btn-shimmer">
                 Iniciar sesión
-              </button>
-              <button onClick={() => { setAuthModal('register'); setMobileOpen(false) }}
-                className="flex-1 py-2.5 text-sm font-bold rounded-lg text-white btn-shimmer">
-                Registrarme
-              </button>
+                <svg className="icon-nudge" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                  <polyline points="10 17 15 12 10 7" />
+                  <line x1="15" y1="12" x2="3" y2="12" />
+                </svg>
+              </Link>
             </div>
           </div>
         </div>
+        </div>
       </header>
-
-      {authModal && <AuthModal mode={authModal} onClose={() => setAuthModal(null)} />}
-    </>
   )
 }

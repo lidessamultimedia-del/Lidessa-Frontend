@@ -205,6 +205,16 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--font-display); }
   box-shadow: 0 10px 28px rgba(0,81,135,0.38);
 }
 
+/* ─── Login button — nudging arrow icon ─── */
+@keyframes iconNudge {
+  0%, 20%, 100% { transform: translateX(0); }
+  10%           { transform: translateX(3px); }
+}
+.icon-nudge {
+  display: inline-flex;
+  animation: iconNudge 1.8s ease-in-out infinite;
+}
+
 /* ─── Card interactive ─── */
 .card-interactive {
   transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;

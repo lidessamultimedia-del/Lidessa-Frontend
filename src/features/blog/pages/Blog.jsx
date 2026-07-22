@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { blogPosts } from '../data/blogPosts'
+import { useBlog } from '../context/BlogContext'
 import BlogModal from '../components/BlogModal'
 
 const categories = ['Todas', 'Noticias de actualidad', 'Consultas normativas', 'Publicaciones recientes']
 
 export default function Blog() {
+  const { posts: blogPosts } = useBlog()
   const [activeCategory, setActiveCategory] = useState('Todas')
   const [selectedPost, setSelectedPost] = useState(null)
 

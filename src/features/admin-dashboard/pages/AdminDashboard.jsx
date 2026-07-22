@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/features/auth/context/AuthContext'
 import { useToast } from '@/shared/context/ToastContext'
-import { blogPosts } from '@/features/blog/data/blogPosts'
+import { useBlog } from '@/features/blog/context/BlogContext'
+import BlogPostFormModal from '@/features/blog/components/BlogPostFormModal'
 import { courses } from '@/features/training/data/courses'
 import AnimatedCounter from '@/shared/components/AnimatedCounter'
 
@@ -37,11 +38,13 @@ export default function AdminDashboard() {
   const { user, logout } = useAuth()
   const { toast } = useToast()
   const navigate = useNavigate()
+  const { posts: blogPosts, addPost, updatePost, deletePost } = useBlog()
   const [section, setSection] = useState('dashboard')
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [bellOpen, setBellOpen] = useState(false)
   const [services, setServices] = useState(mockServices)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
+  const [blogModal, setBlogModal] = useState(null)
   const [settings, setSettings] = useState({
     phone: '+57 300 123 4567',
     email: 'info@lidessa.co',
@@ -62,8 +65,24 @@ export default function AdminDashboard() {
   }
 
   function handleDeleteConfirm() {
-    toast('success', 'Elemento eliminado', 'El registro fue eliminado correctamente.')
+    if (deleteConfirm.type === 'blog') {
+      deletePost(deleteConfirm.id)
+      toast('success', 'Publicación eliminada', deleteConfirm.label)
+    } else {
+      toast('success', 'Elemento eliminado', 'El registro fue eliminado correctamente.')
+    }
     setDeleteConfirm(null)
+  }
+
+  function handleSaveBlogPost(form) {
+    if (blogModal.mode === 'edit') {
+      updatePost(blogModal.post.id, form)
+      toast('success', 'Publicación actualizada', form.title)
+    } else {
+      addPost(form)
+      toast('success', 'Publicación creada', form.title)
+    }
+    setBlogModal(null)
   }
 
   function handleSettingsSave(e) {
@@ -334,7 +353,7 @@ export default function AdminDashboard() {
             <div style={{ animation: 'fadeUp 0.4s ease' }}>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-black" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Blog / Noticias</h2>
-                <button onClick={() => toast('info', 'Próximamente', 'Editor de publicaciones en desarrollo.')}
+                <button onClick={() => setBlogModal({ mode: 'new' })}
                   className="px-4 py-2 rounded-lg text-sm font-bold text-white"
                   style={{ backgroundColor: '#005187' }}>
                   + Nueva publicación
@@ -342,7 +361,7 @@ export default function AdminDashboard() {
               </div>
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {blogPosts.map(post => (
-                  <div key={post.title} className="rounded-xl overflow-hidden"
+                  <div key={post.id} className="rounded-xl overflow-hidden"
                     style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
                     <img src={post.image} alt={post.title} className="w-full h-36 object-cover" />
                     <div className="p-4">
@@ -354,12 +373,12 @@ export default function AdminDashboard() {
                       </h3>
                       <p className="text-xs mb-3" style={{ color: 'var(--muted-foreground)' }}>{post.date} · {post.author}</p>
                       <div className="flex gap-2">
-                        <button onClick={() => toast('info', 'Editar', `Editando: ${post.title}`)}
+                        <button onClick={() => setBlogModal({ mode: 'edit', post })}
                           className="flex-1 py-1.5 rounded-lg text-xs font-bold text-white"
                           style={{ backgroundColor: '#005187' }}>
                           Editar
                         </button>
-                        <button onClick={() => setDeleteConfirm(post.title)}
+                        <button onClick={() => setDeleteConfirm({ type: 'blog', id: post.id, label: post.title })}
                           className="px-3 py-1.5 rounded-lg text-xs font-bold"
                           style={{ border: '1px solid rgba(220,38,38,0.3)', color: '#dc2626' }}>
                           Eliminar
@@ -436,7 +455,7 @@ export default function AdminDashboard() {
                     </div>
                     <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>{u.company}</p>
                     <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>{u.joined}</p>
-                    <button onClick={() => setDeleteConfirm(`usuario ${u.name}`)}
+                    <button onClick={() => setDeleteConfirm({ type: 'user', label: `usuario ${u.name}` })}
                       className="text-xs px-3 py-1.5 rounded-lg font-medium shrink-0"
                       style={{ border: '1px solid rgba(220,38,38,0.3)', color: '#dc2626' }}
                       key={i}>
@@ -528,7 +547,7 @@ export default function AdminDashboard() {
               ¿Confirmar eliminación?
             </h3>
             <p className="text-sm text-center mb-5" style={{ color: 'var(--muted-foreground)' }}>
-              Está por eliminar <strong>{deleteConfirm}</strong>. Esta acción no se puede deshacer.
+              Está por eliminar <strong>{deleteConfirm.label}</strong>. Esta acción no se puede deshacer.
             </p>
             <div className="flex gap-3">
               <button onClick={() => setDeleteConfirm(null)}
@@ -544,6 +563,14 @@ export default function AdminDashboard() {
             </div>
           </div>
         </div>
+      )}
+
+      {blogModal && (
+        <BlogPostFormModal
+          post={blogModal.mode === 'edit' ? blogModal.post : null}
+          onSave={handleSaveBlogPost}
+          onClose={() => setBlogModal(null)}
+        />
       )}
     </div>
   )

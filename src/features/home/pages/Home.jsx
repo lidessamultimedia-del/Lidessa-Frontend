@@ -22,10 +22,16 @@ const featuredServices = [
   { slug: 'formacion-medida', image: '/assets/Capacitacion.png' },
 ].map(s => ({ ...s, ...servicesData.find(sd => sd.slug === s.slug) }))
 
+const pillarIcons = {
+  trophy: 'M6 9H4.5a2.5 2.5 0 0 1 0-5H6 M18 9h1.5a2.5 2.5 0 0 0 0-5H18 M4 22h16 M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22 M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22 M18 2H6v7a6 6 0 0 0 12 0V2Z',
+  refresh: 'M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8 M3 3v5h5 M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16 M16 16h5v5',
+  star: 'M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.6 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.363 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z',
+}
+
 const attributes = [
-  { icon: '🏆', title: 'Liderazgo', points: ['Validación de procesos internos', 'Gestión proactiva de riesgos', 'Técnicas de trabajo colaborativo'] },
-  { icon: '🔄', title: 'Transformación', points: ['Cambio organizacional sostenible', 'Desarrollo de capacidades internas', 'Crecimiento empresarial continuo'] },
-  { icon: '⭐', title: 'Compromiso', points: ['Empresa especializada y certificada', 'Excelencia en cada entrega', 'Actualización normativa permanente'] },
+  { icon: pillarIcons.trophy, title: 'Liderazgo', points: ['Validación de procesos internos', 'Gestión proactiva de riesgos', 'Técnicas de trabajo colaborativo'] },
+  { icon: pillarIcons.refresh, title: 'Transformación', points: ['Cambio organizacional sostenible', 'Desarrollo de capacidades internas', 'Crecimiento empresarial continuo'] },
+  { icon: pillarIcons.star, title: 'Compromiso', points: ['Empresa especializada y certificada', 'Excelencia en cada entrega', 'Actualización normativa permanente'] },
 ]
 
 
@@ -177,7 +183,12 @@ export default function Home() {
               className={`rounded-2xl p-7 card-interactive glow-hover reveal stagger-${i + 1}`}
               style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}
             >
-              <div className="text-3xl mb-3">{a.icon}</div>
+              <div className="w-11 h-11 rounded-xl flex items-center justify-center mb-4"
+                style={{ background: 'linear-gradient(135deg, #005187 0%, #4d82bc 100%)' }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d={a.icon} />
+                </svg>
+              </div>
               <h3 className="text-lg font-bold mb-3" style={{ fontFamily: 'var(--font-display)', color: '#005187' }}>{a.title}</h3>
               <ul className="space-y-1.5">
                 {a.points.map((p, j) => (

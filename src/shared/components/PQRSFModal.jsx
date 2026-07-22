@@ -6,6 +6,14 @@ export default function PQRSFModal({ onClose }) {
   const [form, setForm] = useState({ name: '', email: '', phone: '', type: 'Petición', subject: '', message: '' })
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [touched, setTouched] = useState({ subject: false, message: false, email: false })
+
+  const errors = {
+    subject: form.subject.trim() ? null : 'Este campo es obligatorio.',
+    message: form.message.trim() ? null : 'Este campo es obligatorio.',
+    email: form.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()) ? 'Ingrese un correo válido.' : null,
+  }
+  const isValid = !errors.subject && !errors.message && !errors.email
 
   useEffect(() => {
     document.body.style.overflow = 'hidden'
@@ -17,8 +25,13 @@ export default function PQRSFModal({ onClose }) {
     }
   }, [onClose])
 
+  const markTouched = (field) => setTouched(t => ({ ...t, [field]: true }))
+  const borderColor = (field) => (touched[field] && errors[field] ? '#dc2626' : 'var(--border)')
+
   const handleSubmit = (e) => {
     e.preventDefault()
+    setTouched({ subject: true, message: true, email: true })
+    if (!isValid) return
     setLoading(true)
     setTimeout(() => { setLoading(false); setSubmitted(true) }, 1400)
   }
@@ -75,8 +88,8 @@ export default function PQRSFModal({ onClose }) {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2 sm:col-span-1">
-                  <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--foreground)' }}>Nombre completo *</label>
-                  <input type="text" required placeholder="Su nombre" value={form.name}
+                  <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--foreground)' }}>Nombre completo</label>
+                  <input type="text" placeholder="Su nombre" value={form.name}
                     onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                     className="w-full px-4 py-2.5 rounded-lg text-sm outline-none"
                     style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
@@ -96,14 +109,17 @@ export default function PQRSFModal({ onClose }) {
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--foreground)' }}>Correo electrónico *</label>
-                <input type="email" required placeholder="correo@empresa.com" value={form.email}
+                <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--foreground)' }}>Correo electrónico</label>
+                <input type="email" placeholder="correo@empresa.com" value={form.email}
                   onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
                   className="w-full px-4 py-2.5 rounded-lg text-sm outline-none"
-                  style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
+                  style={{ backgroundColor: 'var(--muted)', border: `1px solid ${borderColor('email')}`, color: 'var(--foreground)' }}
                   onFocus={e => e.target.style.borderColor = 'var(--accent)'}
-                  onBlur={e => e.target.style.borderColor = 'var(--border)'}
+                  onBlur={() => markTouched('email')}
                 />
+                {touched.email && errors.email && (
+                  <p className="text-xs mt-1" style={{ color: '#dc2626' }}>{errors.email}</p>
+                )}
               </div>
               <div>
                 <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--foreground)' }}>Tipo de solicitud *</label>
@@ -128,29 +144,35 @@ export default function PQRSFModal({ onClose }) {
               </div>
               <div>
                 <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--foreground)' }}>Asunto *</label>
-                <input type="text" required placeholder="Resumen breve de su solicitud" value={form.subject}
+                <input type="text" placeholder="Resumen breve de su solicitud" value={form.subject}
                   onChange={e => setForm(f => ({ ...f, subject: e.target.value }))}
                   className="w-full px-4 py-2.5 rounded-lg text-sm outline-none"
-                  style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
+                  style={{ backgroundColor: 'var(--muted)', border: `1px solid ${borderColor('subject')}`, color: 'var(--foreground)' }}
                   onFocus={e => e.target.style.borderColor = 'var(--accent)'}
-                  onBlur={e => e.target.style.borderColor = 'var(--border)'}
+                  onBlur={() => markTouched('subject')}
                 />
+                {touched.subject && errors.subject && (
+                  <p className="text-xs mt-1" style={{ color: '#dc2626' }}>{errors.subject}</p>
+                )}
               </div>
               <div>
                 <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--foreground)' }}>Descripción detallada *</label>
-                <textarea required rows={4} placeholder="Describa su solicitud con el mayor detalle posible..." value={form.message}
+                <textarea rows={4} placeholder="Describa su solicitud con el mayor detalle posible..." value={form.message}
                   onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
                   className="w-full px-4 py-2.5 rounded-lg text-sm outline-none resize-none"
-                  style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
+                  style={{ backgroundColor: 'var(--muted)', border: `1px solid ${borderColor('message')}`, color: 'var(--foreground)' }}
                   onFocus={e => e.target.style.borderColor = 'var(--accent)'}
-                  onBlur={e => e.target.style.borderColor = 'var(--border)'}
+                  onBlur={() => markTouched('message')}
                 />
+                {touched.message && errors.message && (
+                  <p className="text-xs mt-1" style={{ color: '#dc2626' }}>{errors.message}</p>
+                )}
               </div>
               <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
                 Tiempo de respuesta: máximo 15 días hábiles. Sus datos serán tratados conforme a la{' '}
                 <button type="button" className="underline" style={{ color: 'var(--accent)' }}>política de privacidad</button>.
               </p>
-              <button type="submit" disabled={loading}
+              <button type="submit" disabled={loading || (touched.subject && touched.message && !isValid)}
                 className="w-full py-3 rounded-lg text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
                 style={{ backgroundColor: 'var(--primary)' }}
               >

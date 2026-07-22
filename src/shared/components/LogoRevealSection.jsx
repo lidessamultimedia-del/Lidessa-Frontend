@@ -1,12 +1,14 @@
 import { useEffect, useRef } from 'react'
+import { useIsDarkTheme } from '@/shared/hooks/useIsDarkTheme'
 
 const LIGHT_SRC = '/assets/lidessa.mp4'
-const DARK_SRC = '/assets/modooscuro.mp4'
+const DARK_SRC = '/assets/modooscuro-logo.mp4'
 
 export default function LogoRevealSection() {
   const sectionRef = useRef(null)
   const videoRef = useRef(null)
   const hasPlayedRef = useRef(false)
+  const isDark = useIsDarkTheme()
 
   useEffect(() => {
     const section = sectionRef.current
@@ -31,7 +33,7 @@ export default function LogoRevealSection() {
           playForCurrentTheme()
         }
       },
-      { threshold: 0.5 }
+      { threshold: 0.1 }
     )
     intersectionObserver.observe(section)
 
@@ -53,12 +55,15 @@ export default function LogoRevealSection() {
       className="py-16 flex items-center justify-center"
       style={{ backgroundColor: 'var(--background)' }}
     >
-      <video
-        ref={videoRef}
-        muted
-        playsInline
-        style={{ width: 'min(320px, 60vw)' }}
-      />
+      <div style={{ backgroundColor: 'var(--background)' }}>
+        <video
+          ref={videoRef}
+          muted
+          playsInline
+          preload="auto"
+          style={{ width: 'min(380px, 65vw)', mixBlendMode: isDark ? 'screen' : 'multiply', display: 'block' }}
+        />
+      </div>
     </section>
   )
 }

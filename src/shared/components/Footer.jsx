@@ -125,7 +125,7 @@ export default function Footer() {
                 </h4>
                 <ul className="space-y-2 text-sm">
                   <li><Link to="/nosotros" className="hover:text-white transition-colors">Quiénes somos</Link></li>
-                  <li><Link to="/blog" className="hover:text-white transition-colors">Blog y Noticias</Link></li>
+                  <li><Link to="/blog" className="hover:text-white transition-colors">Converge</Link></li>
                   <li><Link to="/formacion" className="hover:text-white transition-colors">Centro de formación</Link></li>
                   <li>
                     <button onClick={() => setPqrsfOpen(true)} className="hover:text-white transition-colors">

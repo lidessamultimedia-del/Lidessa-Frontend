@@ -37,7 +37,7 @@ export default function Header({ theme, setTheme }) {
   const navLinks = [
     { label: 'Inicio', href: '/' },
     { label: 'Nosotros', href: '/nosotros' },
-    { label: 'Blog', href: '/blog' },
+    { label: 'Converge', href: '/blog' },
     { label: 'Formación', href: '/formacion' },
   ]
 

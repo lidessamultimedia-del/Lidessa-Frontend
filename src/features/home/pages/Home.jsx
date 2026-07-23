@@ -293,7 +293,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-12 gap-4 reveal">
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#4d82bc' }}>Blog y actualidad</p>
+              <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#4d82bc' }}>Converge</p>
               <h2 className="text-4xl font-black" style={{ fontFamily: 'var(--font-display)' }}>
                 Novedades del <span className="gradient-text">sector</span>
               </h2>

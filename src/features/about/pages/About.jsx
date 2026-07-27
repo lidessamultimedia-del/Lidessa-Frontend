@@ -4,7 +4,7 @@ import { useIsDarkTheme } from '@/shared/hooks/useIsDarkTheme'
 import PQRSFModal from '@/shared/components/PQRSFModal'
 
 const whyChooseUs = [
-  'Más de 12 años de experiencia acompañando organizaciones en Colombia.',
+  'Más de 15 años de experiencia acompañando organizaciones en Colombia.',
   'Más de 280 clientes atendidos exitosamente en múltiples sectores.',
   'Reducción promedio del 35% en costos operativos de nuestros clientes.',
   'Hasta 90% de reducción en el riesgo de sanciones normativas.',
@@ -110,7 +110,7 @@ function CeoModal({ person, onClose }) {
     >
       <div
         className="relative rounded-2xl overflow-hidden shadow-2xl w-full max-w-2xl max-h-full overflow-y-auto"
-        style={{ backgroundColor: 'var(--card)', animation: 'modalPop 0.4s cubic-bezier(0.22, 1, 0.36, 1)' }}
+        style={{ backgroundColor: 'var(--card)', animation: 'modalPop 0.45s cubic-bezier(0.34, 1.4, 0.64, 1)' }}
       >
         <button
           onClick={onClose}
@@ -175,16 +175,16 @@ const acronym = [
   { letter: 'D', value: 'Dedicación', description: 'Acompañamos cada proyecto con compromiso total desde el inicio hasta el cierre.' },
   { letter: 'E', value: 'Excelencia', description: 'Entregamos resultados que superan las expectativas de nuestros clientes.' },
   { letter: 'S', value: 'Sostenibilidad', description: 'Promovemos prácticas responsables y soluciones duraderas.' },
-  { letter: 'S', value: 'Sinergia', description: 'Trabajamos en equipo contigo para alcanzar objetivos compartidos.' },
+  { letter: 'S', value: 'Sinergia', description: 'Trabajamos en equipo con usted para alcanzar objetivos compartidos.' },
   { letter: 'A', value: 'Actualización', description: 'Permanecemos al día con la normativa vigente para proteger a nuestros clientes.' },
 ]
 
 const differentials = [
-  { label: 'Enfoque Personalizado', text: 'Trabajamos estrechamente contigo para entender tus necesidades y ofrecer soluciones a medida.' },
+  { label: 'Enfoque Personalizado', text: 'Trabajamos estrechamente con usted para entender sus necesidades y ofrecer soluciones a medida.' },
   { label: 'Equipo Multidisciplinario', text: 'Contamos con expertos en diversas áreas para brindarte un servicio integral.' },
-  { label: 'Experiencia Comprobada', text: 'Más de una década de experiencia respaldan nuestra calidad y excelencia.' },
-  { label: 'Reducción de Costos', text: 'Nuestras soluciones eficientes pueden ayudarte a ahorrar recursos.' },
-  { label: 'Compromiso con la Excelencia', text: 'Nuestra misión es superar tus expectativas y garantizar tu satisfacción.' },
+  { label: 'Experiencia Comprobada', text: 'Más de 15 años de experiencia respaldan nuestra calidad y excelencia.' },
+  { label: 'Reducción de Costos', text: 'Nuestras soluciones eficientes pueden ayudarle a ahorrar recursos.' },
+  { label: 'Compromiso con la Excelencia', text: 'Nuestra misión es superar sus expectativas y garantizar su satisfacción.' },
   { label: 'Cercanía', text: 'Nos destacamos por trabajar por y para nuestros clientes. Sabemos que el empleado es fundamental para una empresa; entendemos que un buen apoyo a la administración hace la diferencia en el correcto manejo de una organización.' },
   { label: null, text: 'Somos claros en la actualización de la normativa, así que siempre estamos al corriente de la reglamentación.' },
 ]
@@ -200,6 +200,30 @@ export default function About() {
   const [activeCeo, setActiveCeo] = useState(null)
   const [infoTab, setInfoTab] = useState('quienes')
   const [pqrsfOpen, setPqrsfOpen] = useState(false)
+  const [tabIndicator, setTabIndicator] = useState({ left: 0, width: 0, opacity: 0 })
+  const [hoveredTab, setHoveredTab] = useState(null)
+  const tabNavRef = useRef(null)
+  const tabLinkRefs = useRef({})
+
+  function moveTabIndicatorTo(key) {
+    const el = tabLinkRefs.current[key]
+    const nav = tabNavRef.current
+    if (!el || !nav) return
+    const elRect = el.getBoundingClientRect()
+    const navRect = nav.getBoundingClientRect()
+    setTabIndicator({ left: elRect.left - navRect.left, width: elRect.width, opacity: 1 })
+    setHoveredTab(key)
+  }
+  function resetTabIndicator() {
+    moveTabIndicatorTo(infoTab)
+  }
+  useEffect(() => {
+    moveTabIndicatorTo(infoTab)
+    const onResize = () => moveTabIndicatorTo(infoTab)
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [infoTab])
 
   const logoVideoRef = useRef(null)
   const logoSectionRef = useRef(null)
@@ -260,7 +284,7 @@ export default function About() {
             <span style={{ color: '#84b6f4' }}>resultados que transforman</span>
           </h1>
           <p className="text-lg max-w-xl" style={{ color: '#c4dafa', fontFamily: 'var(--font-display)' }}>
-            12 años ayudando a empresas e instituciones colombianas a cumplir la norma y alcanzar la excelencia organizacional.
+            15 años ayudando a empresas e instituciones colombianas a cumplir la norma y alcanzar la excelencia organizacional.
           </p>
         </div>
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 50, overflow: 'hidden' }}>
@@ -411,20 +435,40 @@ export default function About() {
 
         <div className="rounded-2xl shadow-xl overflow-hidden reveal" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
           <div
-            className="flex flex-wrap justify-center gap-2 p-3.5"
+            ref={tabNavRef}
+            className="flex flex-wrap justify-center gap-2 p-3.5 relative"
             style={{ background: 'linear-gradient(135deg, #005187 0%, #4d82bc 55%, #b8860b 100%)' }}
+            onMouseLeave={resetTabIndicator}
           >
+            <div
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: 0,
+                height: 40,
+                borderRadius: 9999,
+                backgroundColor: 'white',
+                boxShadow: '0 4px 14px rgba(0,0,0,0.2)',
+                opacity: tabIndicator.opacity,
+                transform: `translate(${tabIndicator.left}px, -50%)`,
+                width: tabIndicator.width,
+                transition: 'transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), width 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease',
+                pointerEvents: 'none',
+                zIndex: 0,
+              }}
+            />
             {infoTabs.map(t => (
               <button
                 key={t.key}
+                ref={el => { tabLinkRefs.current[t.key] = el }}
                 onClick={() => setInfoTab(t.key)}
-                className="px-5 py-2.5 rounded-full text-sm font-bold"
+                onMouseEnter={() => moveTabIndicatorTo(t.key)}
+                className="px-5 py-2.5 rounded-full text-sm font-bold relative"
                 style={{
                   fontFamily: 'var(--font-display)',
-                  backgroundColor: infoTab === t.key ? 'white' : 'transparent',
-                  color: infoTab === t.key ? '#005187' : 'rgba(255,255,255,0.85)',
-                  boxShadow: infoTab === t.key ? '0 4px 14px rgba(0,0,0,0.2)' : 'none',
-                  transition: 'background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease',
+                  color: (hoveredTab ? hoveredTab === t.key : infoTab === t.key) ? '#005187' : 'rgba(255,255,255,0.85)',
+                  transition: 'color 0.3s ease',
+                  zIndex: 1,
                 }}
               >
                 {t.label}
@@ -432,20 +476,20 @@ export default function About() {
             ))}
           </div>
 
-          <div className="p-6 sm:p-10">
+          <div key={infoTab} className="p-6 sm:p-10" style={{ animation: 'fadeUpSoft 0.55s cubic-bezier(0.22, 1, 0.36, 1)' }}>
             {infoTab === 'quienes' && (
               <div className="grid md:grid-cols-2 gap-10 items-start">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#4d82bc' }}>Nuestra historia</p>
                   <h3 className="text-2xl font-black mb-4" style={{ fontFamily: 'var(--font-display)' }}>¿Quiénes somos?</h3>
                   <p className="text-sm leading-relaxed mb-4" style={{ color: bodyText }}>
-                    En Lidessa, no somos simplemente una empresa; nos consideramos un verdadero aliado estratégico en tu camino hacia el éxito empresarial. Con más de una década de experiencia en el mercado, nuestro compromiso con la excelencia y la innovación nos ha permitido desarrollar una profunda comprensión de las necesidades empresariales y de los desafíos del mercado actual.
+                    En Lidessa, no somos simplemente una empresa; nos consideramos un verdadero aliado estratégico en su camino hacia el éxito empresarial. Con más de 15 años de experiencia en el mercado, nuestro compromiso con la excelencia y la innovación nos ha permitido desarrollar una profunda comprensión de las necesidades empresariales y de los desafíos del mercado actual.
                   </p>
                   <p className="text-sm leading-relaxed mb-4" style={{ color: bodyText }}>
                     Desde nuestros inicios, hemos trabajado incansablemente para ofrecer soluciones integrales que no solo impulsan el crecimiento y la eficiencia de las empresas, sino que también aseguran la conformidad con las normativas vigentes. Nuestra amplia gama de servicios está diseñada para atender a empresas de todos los tamaños y sectores, adaptándonos a sus necesidades específicas para proporcionar soluciones personalizadas que realmente marquen la diferencia.
                   </p>
                   <p className="text-sm leading-relaxed" style={{ color: bodyText }}>
-                    Nos enorgullece ofrecer un enfoque proactivo y orientado a resultados. Nuestro equipo de expertos está dedicado a entender a fondo tu negocio y a trabajar junto a ti para diseñar e implementar estrategias que optimicen tus operaciones, mejoren la eficiencia y fortalezcan tu posición en el mercado. Creemos que el éxito de nuestros clientes es nuestro propio éxito, y es por eso que ponemos todo nuestro conocimiento y recursos a tu disposición.
+                    Nos enorgullece ofrecer un enfoque proactivo y orientado a resultados. Nuestro equipo de expertos está dedicado a entender a fondo su negocio y a trabajar junto a usted para diseñar e implementar estrategias que optimicen sus operaciones, mejoren la eficiencia y fortalezcan su posición en el mercado. Creemos que el éxito de nuestros clientes es nuestro propio éxito, y es por eso que ponemos todo nuestro conocimiento y recursos a su disposición.
                   </p>
                 </div>
                 <div className="md:border-l md:pl-10" style={{ borderColor: 'var(--border)' }}>
@@ -578,7 +622,7 @@ export default function About() {
                   <li className="flex items-start gap-2"><span>📍</span> Cra. 71 #46-28, Laureles, Medellín, Antioquia</li>
                   <li className="flex items-start gap-2"><span>📱</span> +57 300 123 4567 (General)</li>
                   <li className="flex items-start gap-2"><span>📱</span> +57 300 987 6543 (Comercial)</li>
-                  <li className="flex items-start gap-2"><span>📧</span> mercadeo@lidessa.co</li>
+                  <li className="flex items-start gap-2"><span>📧</span> comercial@lidessa.co</li>
                 </ul>
               </div>
             )}
@@ -605,7 +649,7 @@ export default function About() {
             ¿Tienes alguna duda o sugerencia?
           </h3>
           <p className="text-sm font-semibold mb-6" style={{ color: '#b8860b' }}>
-            Contáctanos, o envíanos tu comentario aquí
+            Contáctanos, o envíenos su comentario aquí
           </p>
           <button
             onClick={() => setPqrsfOpen(true)}
@@ -631,8 +675,9 @@ export default function About() {
             <ul className="space-y-3 text-sm">
               {[
                 { icon: '📍', text: 'Cra. 71 #46-28, Laureles, Medellín, Antioquia' },
-                { icon: '📞', text: '+57 300 123 4567', href: 'https://wa.me/573001234567' },
-                { icon: '📧', text: 'info@lidessa.co', href: 'mailto:info@lidessa.co' },
+                { icon: '📞', text: '+57 300 123 4567 (General)', href: 'https://wa.me/573001234567' },
+                { icon: '📞', text: '+57 300 987 6543 (Comercial)', href: 'https://wa.me/573009876543' },
+                { icon: '📧', text: 'comercial@lidessa.co', href: 'mailto:comercial@lidessa.co' },
               ].map(c => (
                 <li key={c.text}>
                   {c.href

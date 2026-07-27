@@ -39,27 +39,30 @@ export default function PQRSFModal({ onClose }) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-start justify-center pt-8 pb-6 px-4"
-      style={{ backgroundColor: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)' }}
+      style={{ backgroundColor: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', animation: 'fadeIn 0.25s ease' }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
     >
       <div
         className="rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden max-h-[90vh] overflow-y-auto"
-        style={{ backgroundColor: 'var(--card)' }}
+        style={{ backgroundColor: 'var(--card)', animation: 'modalPop 0.45s cubic-bezier(0.34, 1.4, 0.64, 1)' }}
       >
-        <div className="p-6 pb-4" style={{ borderBottom: '1px solid var(--border)' }}>
+        <div
+          className="p-6 pb-5"
+          style={{ background: 'linear-gradient(135deg, #005187 0%, #4d82bc 55%, #b8860b 100%)' }}
+        >
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-black" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
+              <h2 className="text-xl font-black text-white" style={{ fontFamily: 'var(--font-display)' }}>
                 Formulario PQRSF
               </h2>
-              <p className="text-xs mt-0.5" style={{ color: 'var(--muted-foreground)' }}>
+              <p className="text-xs mt-0.5" style={{ color: 'rgba(255,255,255,0.85)' }}>
                 Peticiones · Quejas · Reclamos · Sugerencias · Felicitaciones
               </p>
             </div>
-            <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center text-lg font-bold"
-              style={{ color: 'var(--muted-foreground)' }}
-              onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--muted)'}
-              onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
+            <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center text-lg font-bold text-white shrink-0"
+              style={{ backgroundColor: 'rgba(255,255,255,0.18)', transition: 'background-color 0.2s' }}
+              onMouseEnter={e => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.3)'}
+              onMouseLeave={e => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.18)'}
             >×</button>
           </div>
         </div>
@@ -74,13 +77,17 @@ export default function PQRSFModal({ onClose }) {
               <p className="text-sm mb-2" style={{ color: 'var(--muted-foreground)' }}>
                 Su <strong style={{ color: 'var(--foreground)' }}>{form.type}</strong> ha sido registrada bajo el número de radicado:
               </p>
-              <p className="text-lg font-black mb-4" style={{ color: 'var(--primary)', fontFamily: 'var(--font-display)' }}>
+              <p className="text-lg font-black mb-4" style={{ color: '#b8860b', fontFamily: 'var(--font-display)' }}>
                 PQRSF-2025-{String(Math.floor(Math.random() * 9000) + 1000)}
               </p>
               <p className="text-xs mb-6" style={{ color: 'var(--muted-foreground)' }}>
                 Daremos respuesta a <strong>{form.email}</strong> en un plazo máximo de 15 días hábiles conforme a la normativa vigente.
               </p>
-              <button onClick={onClose} className="px-6 py-2.5 rounded-lg text-sm font-bold text-white" style={{ backgroundColor: 'var(--primary)' }}>
+              <button
+                onClick={onClose}
+                className="px-6 py-2.5 rounded-lg text-sm font-bold text-white"
+                style={{ background: 'linear-gradient(135deg, #005187 0%, #4d82bc 55%, #b8860b 100%)' }}
+              >
                 Cerrar
               </button>
             </div>
@@ -131,10 +138,10 @@ export default function PQRSFModal({ onClose }) {
                       onClick={() => setForm(f => ({ ...f, type: t }))}
                       className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
                       style={{
-                        backgroundColor: form.type === t ? 'var(--primary)' : 'var(--muted)',
+                        background: form.type === t ? 'linear-gradient(135deg, #005187 0%, #4d82bc 55%, #b8860b 100%)' : 'var(--muted)',
                         color: form.type === t ? 'white' : 'var(--muted-foreground)',
                         border: '1px solid',
-                        borderColor: form.type === t ? 'var(--primary)' : 'var(--border)',
+                        borderColor: form.type === t ? 'transparent' : 'var(--border)',
                       }}
                     >
                       {t}
@@ -174,7 +181,7 @@ export default function PQRSFModal({ onClose }) {
               </p>
               <button type="submit" disabled={loading || (touched.subject && touched.message && !isValid)}
                 className="w-full py-3 rounded-lg text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
-                style={{ backgroundColor: 'var(--primary)' }}
+                style={{ background: 'linear-gradient(135deg, #005187 0%, #4d82bc 55%, #b8860b 100%)' }}
               >
                 {loading ? 'Enviando...' : 'Enviar solicitud'}
               </button>

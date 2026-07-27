@@ -39,7 +39,7 @@ export default function Header({ theme, setTheme }) {
     { label: 'Nosotros', href: '/nosotros' },
     { label: 'Converge', href: '/blog' },
     { label: 'V2suministros', href: '/tienda' },
-    { label: 'Formación', href: '/formacion' },
+    { label: 'CEET', href: '/formacion' },
   ]
 
   const activeKey = navLinks.find(l => l.href === location.pathname)?.href

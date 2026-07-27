@@ -21,17 +21,17 @@ export default function Store() {
       >
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(20,20,20,0.95) 50%, rgba(20,20,20,0.6))' }} />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
-          <img src="/assets/v2.png" alt="V2 Suministros" className="mb-4" style={{ height: 96, width: 'auto' }} />
-          <span className="text-xs font-bold uppercase tracking-widest px-2 py-1 rounded" style={{ backgroundColor: 'rgba(201,162,39,0.2)', color: '#e8c766' }}>
+          <img src="/assets/v2.png" alt="V2 Suministros" className="mb-4 reveal-scale" style={{ height: 96, width: 'auto' }} />
+          <span className="text-xs font-bold uppercase tracking-widest px-2 py-1 rounded reveal" style={{ backgroundColor: 'rgba(201,162,39,0.2)', color: '#e8c766' }}>
             V2 Suministros
           </span>
-          <h1 className="text-4xl sm:text-5xl font-black text-white mt-3 mb-4" style={{ fontFamily: 'var(--font-display)' }}>
+          <h1 className="text-4xl sm:text-5xl font-black text-white mt-3 mb-4 reveal stagger-1" style={{ fontFamily: 'var(--font-display)' }}>
             ¡Bienvenidos a V2 Suministros!
           </h1>
-          <p className="text-base max-w-2xl mb-3 leading-relaxed" style={{ color: '#cbb98a' }}>
+          <p className="text-base max-w-2xl mb-3 leading-relaxed reveal stagger-2" style={{ color: '#cbb98a' }}>
             En Lidessa nos enorgullece acompañar a las empresas en el cumplimiento de la normativa de seguridad y salud en el trabajo, con información actualizada y asesoría permanente sobre los estándares que aplican a su actividad.
           </p>
-          <p className="text-base max-w-2xl mb-6 leading-relaxed" style={{ color: '#cbb98a' }}>
+          <p className="text-base max-w-2xl mb-6 leading-relaxed reveal stagger-3" style={{ color: '#cbb98a' }}>
             V2 Suministros es nuestro espacio especializado en seguridad y salud en el trabajo, enfocado en orientarle sobre los equipos de protección personal y elementos que exige la normativa vigente para cada nivel de riesgo.
           </p>
         </div>
@@ -143,6 +143,7 @@ export default function Store() {
                     </svg>
                   ),
                   label: 'Cascos y protección craneal', norm: 'NTC 3610',
+                  detail: 'Obligatorios en zonas con riesgo de golpes o caída de objetos.',
                 },
                 {
                   icon: (
@@ -154,6 +155,7 @@ export default function Store() {
                     </svg>
                   ),
                   label: 'Guantes de protección', norm: 'NTC 2171',
+                  detail: 'Protegen las manos frente a cortes, químicos y superficies abrasivas.',
                 },
                 {
                   icon: (
@@ -166,6 +168,7 @@ export default function Store() {
                     </svg>
                   ),
                   label: 'Protección visual', norm: 'ANSI Z87.1',
+                  detail: 'Evitan lesiones oculares por partículas, salpicaduras o radiación.',
                 },
                 {
                   icon: (
@@ -175,12 +178,21 @@ export default function Store() {
                     </svg>
                   ),
                   label: 'Trabajo en alturas', norm: 'Res. 4272/2021',
+                  detail: 'Arnés y líneas de vida certificadas para labores con riesgo de caída.',
                 },
               ].map((item, i) => (
-                <div key={item.label} className={`rounded-xl p-3 reveal-scale stagger-${i + 1}`} style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
-                  <div className="w-7 h-7 mb-1.5" style={{ color: 'var(--primary)' }}>{item.icon}</div>
-                  <p className="text-xs font-semibold mb-0.5" style={{ color: 'var(--foreground)' }}>{item.label}</p>
-                  <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{item.norm}</p>
+                <div key={item.label} className={`flip-card h-[132px] reveal-scale stagger-${i + 1}`}>
+                  <div className="flip-card-inner">
+                    <div className="flip-card-front rounded-xl p-3" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
+                      <div className="w-7 h-7 mb-1.5" style={{ color: 'var(--primary)' }}>{item.icon}</div>
+                      <p className="text-xs font-semibold mb-0.5" style={{ color: 'var(--foreground)' }}>{item.label}</p>
+                      <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{item.norm}</p>
+                    </div>
+                    <div className="flip-card-back rounded-xl p-3 flex flex-col justify-center" style={{ backgroundColor: 'var(--primary)' }}>
+                      <p className="text-xs font-semibold mb-1 text-white">{item.norm}</p>
+                      <p className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.9)' }}>{item.detail}</p>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>

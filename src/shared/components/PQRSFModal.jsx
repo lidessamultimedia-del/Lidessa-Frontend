@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react'
+import { usePQRSF } from '@/features/pqrsf/context/PQRSFContext'
 
 const types = ['Petición', 'Queja', 'Reclamo', 'Sugerencia', 'Felicitación']
 
 export default function PQRSFModal({ onClose }) {
+  const { addTicket } = usePQRSF()
   const [form, setForm] = useState({ name: '', email: '', phone: '', type: 'Petición', subject: '', message: '' })
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
   const [touched, setTouched] = useState({ subject: false, message: false, email: false })
+  const [ticketId, setTicketId] = useState(null)
 
   const errors = {
     subject: form.subject.trim() ? null : 'Este campo es obligatorio.',
@@ -33,7 +36,12 @@ export default function PQRSFModal({ onClose }) {
     setTouched({ subject: true, message: true, email: true })
     if (!isValid) return
     setLoading(true)
-    setTimeout(() => { setLoading(false); setSubmitted(true) }, 1400)
+    setTimeout(() => {
+      const ticket = addTicket(form)
+      setTicketId(ticket.id)
+      setLoading(false)
+      setSubmitted(true)
+    }, 1400)
   }
 
   return (
@@ -78,10 +86,12 @@ export default function PQRSFModal({ onClose }) {
                 Su <strong style={{ color: 'var(--foreground)' }}>{form.type}</strong> ha sido registrada bajo el número de radicado:
               </p>
               <p className="text-lg font-black mb-4" style={{ color: '#b8860b', fontFamily: 'var(--font-display)' }}>
-                PQRSF-2025-{String(Math.floor(Math.random() * 9000) + 1000)}
+                {ticketId}
               </p>
               <p className="text-xs mb-6" style={{ color: 'var(--muted-foreground)' }}>
-                Daremos respuesta a <strong>{form.email}</strong> en un plazo máximo de 15 días hábiles conforme a la normativa vigente.
+                {form.email.trim()
+                  ? <>Daremos respuesta a <strong>{form.email}</strong> en un plazo máximo de 15 días hábiles conforme a la normativa vigente.</>
+                  : 'Daremos respuesta en un plazo máximo de 15 días hábiles conforme a la normativa vigente.'}
               </p>
               <button
                 onClick={onClose}

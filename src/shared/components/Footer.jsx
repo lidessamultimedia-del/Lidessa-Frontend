@@ -126,7 +126,7 @@ export default function Footer() {
                 <ul className="space-y-2 text-sm">
                   <li><Link to="/nosotros" className="hover:text-white transition-colors">Quiénes somos</Link></li>
                   <li><Link to="/blog" className="hover:text-white transition-colors">Converge</Link></li>
-                  <li><Link to="/formacion" className="hover:text-white transition-colors">Centro de formación</Link></li>
+                  <li><Link to="/formacion" className="hover:text-white transition-colors">CEET</Link></li>
                   <li>
                     <button onClick={() => setPqrsfOpen(true)} className="hover:text-white transition-colors">
                       Formulario PQRSF

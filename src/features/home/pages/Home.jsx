@@ -79,7 +79,7 @@ export default function Home() {
             <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full mb-6"
               style={{ backgroundColor: 'rgba(77,130,188,0.25)', color: '#84b6f4', border: '1px solid rgba(132,182,244,0.3)' }}>
               <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: '#84b6f4', display: 'inline-block' }} />
-              Consultoría · Formación · Cumplimiento normativo
+              Consultoría · CEET · Cumplimiento normativo
             </div>
             <h1 className="font-black leading-tight text-white mb-5"
               style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(2.2rem, 5vw, 3.6rem)' }}>
@@ -267,7 +267,7 @@ export default function Home() {
             <div className="relative">
               <span className="text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full inline-block mb-4"
                 style={{ backgroundColor: 'rgba(52,211,153,0.2)', color: '#34D399', border: '1px solid rgba(52,211,153,0.3)' }}>
-                Centro de formación
+                CEET
               </span>
               <h3 className="text-2xl font-black text-white mb-2" style={{ fontFamily: 'var(--font-display)' }}>
                 Cursos certificados en línea
@@ -309,37 +309,52 @@ export default function Home() {
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {blogPosts.slice(0, 3).map((post, i) => (
-              <div
-                key={post.id}
-                className={`rounded-2xl overflow-hidden cursor-pointer card-interactive glow-hover reveal stagger-${i + 1}`}
-                style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}
-                onClick={() => setSelectedPost(post)}
-              >
-                <div className="h-44 overflow-hidden relative" style={{ backgroundColor: 'var(--secondary)' }}>
-                  <img src={post.image} alt={post.title} className="w-full h-full object-cover"
-                    style={{ transition: 'transform 0.5s ease' }}
-                    onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.06)'}
-                    onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-                  />
-                </div>
-                <div className="p-5">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
-                      style={{ backgroundColor: '#c4dafa', color: '#005187' }}>
-                      {post.category}
-                    </span>
-                    <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{post.date}</span>
+              <div key={post.id} className={`flip-card h-[380px] reveal-scale stagger-${i + 1}`}>
+                <div className="flip-card-inner">
+                  {/* Front — image poster */}
+                  <div className="flip-card-front rounded-2xl overflow-hidden cursor-pointer"
+                    style={{ backgroundColor: 'var(--secondary)', border: '1px solid var(--border)' }}
+                    onClick={() => setSelectedPost(post)}>
+                    <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
+                    <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.85), rgba(0,0,0,0.15) 55%, transparent)' }} />
+                    <div className="absolute top-3 right-3">
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: '#c4dafa', color: '#005187' }}>
+                        {post.category}
+                      </span>
+                    </div>
+                    <div className="absolute bottom-0 left-0 right-0 p-5">
+                      <span className="text-xs" style={{ color: '#cbd5e1' }}>{post.date}</span>
+                      <h3 className="font-bold text-lg mt-1 leading-snug text-white" style={{ fontFamily: 'var(--font-display)' }}>
+                        {post.title}
+                      </h3>
+                    </div>
                   </div>
-                  <h3 className="font-bold text-base mb-3 leading-snug" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
-                    {post.title}
-                  </h3>
-                  <button className="text-sm font-bold inline-flex items-center gap-1"
-                    style={{ color: '#4d82bc', transition: 'color 0.2s, gap 0.2s' }}
-                    onMouseEnter={e => { e.currentTarget.style.color = '#005187'; e.currentTarget.style.gap = '6px' }}
-                    onMouseLeave={e => { e.currentTarget.style.color = '#4d82bc'; e.currentTarget.style.gap = '4px' }}
-                  >
-                    Más información <span>→</span>
-                  </button>
+
+                  {/* Back — details */}
+                  <div className="flip-card-back rounded-2xl overflow-hidden p-5 flex flex-col cursor-pointer"
+                    style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}
+                    onClick={() => setSelectedPost(post)}>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                        style={{ backgroundColor: '#c4dafa', color: '#005187' }}>
+                        {post.category}
+                      </span>
+                      <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{post.date}</span>
+                    </div>
+                    <h3 className="font-bold text-base mb-3 leading-snug" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
+                      {post.title}
+                    </h3>
+                    <p className="text-sm mb-4 leading-relaxed flex-1 overflow-hidden" style={{ color: 'var(--muted-foreground)' }}>
+                      {post.excerpt}
+                    </p>
+                    <button className="text-sm font-bold inline-flex items-center gap-1"
+                      style={{ color: '#4d82bc', transition: 'color 0.2s, gap 0.2s' }}
+                      onMouseEnter={e => { e.currentTarget.style.color = '#005187'; e.currentTarget.style.gap = '6px' }}
+                      onMouseLeave={e => { e.currentTarget.style.color = '#4d82bc'; e.currentTarget.style.gap = '4px' }}
+                    >
+                      Más información <span>→</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}

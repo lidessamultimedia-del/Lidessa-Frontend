@@ -1,11 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 
-export default function CourseModal({ course, onClose, initialTab = 'info' }) {
-  const [form, setForm] = useState({ name: '', email: '', phone: '', company: '' })
-  const [submitted, setSubmitted] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [tab, setTab] = useState(initialTab)
-
+export default function CourseModal({ course, onClose }) {
   useEffect(() => {
     document.body.style.overflow = 'hidden'
     const handler = (e) => { if (e.key === 'Escape') onClose() }
@@ -15,12 +10,6 @@ export default function CourseModal({ course, onClose, initialTab = 'info' }) {
       window.removeEventListener('keydown', handler)
     }
   }, [onClose])
-
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    setLoading(true)
-    setTimeout(() => { setLoading(false); setSubmitted(true) }, 1200)
-  }
 
   const modalityColor = {
     Virtual: '#10B981',
@@ -61,127 +50,78 @@ export default function CourseModal({ course, onClose, initialTab = 'info' }) {
                 {course.name}
               </h2>
             </div>
-            <p className="text-xl font-black shrink-0" style={{ color: '#10B981', fontFamily: 'var(--font-display)' }}>
+            <p className="text-lg font-black shrink-0" style={{ color: '#b8860b', fontFamily: 'var(--font-display)' }}>
               {course.price}
             </p>
           </div>
 
-          <div className="flex gap-1 mb-5 rounded-lg overflow-hidden" style={{ backgroundColor: 'var(--muted)' }}>
-            <button
-              onClick={() => setTab('info')}
-              className="flex-1 py-2 text-sm font-bold transition-all"
-              style={{
-                backgroundColor: tab === 'info' ? 'var(--primary)' : 'transparent',
-                color: tab === 'info' ? 'white' : 'var(--muted-foreground)',
-                borderRadius: '6px',
-              }}
-            >
-              Información
-            </button>
-            <button
-              onClick={() => setTab('enroll')}
-              className="flex-1 py-2 text-sm font-bold transition-all"
-              style={{
-                backgroundColor: tab === 'enroll' ? 'var(--primary)' : 'transparent',
-                color: tab === 'enroll' ? 'white' : 'var(--muted-foreground)',
-                borderRadius: '6px',
-              }}
-            >
-              Inscribirme
-            </button>
+          <p className="text-sm leading-relaxed mb-5" style={{ color: 'var(--muted-foreground)' }}>
+            {course.description}
+          </p>
+
+          <div className="grid grid-cols-3 gap-3 mb-6">
+            {[
+              { label: 'Duración', value: course.duration },
+              { label: 'Modalidad', value: course.modality },
+              { label: 'Certificado', value: 'Sí' },
+            ].map(s => (
+              <div key={s.label} className="rounded-xl p-3 text-center" style={{ backgroundColor: 'var(--muted)' }}>
+                <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{s.label}</p>
+                <p className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>{s.value}</p>
+              </div>
+            ))}
           </div>
 
-          {tab === 'info' ? (
-            <div>
-              <p className="text-sm leading-relaxed mb-5" style={{ color: 'var(--muted-foreground)' }}>
-                {course.description}
-              </p>
-              <div className="grid grid-cols-3 gap-3 mb-5">
-                {[
-                  { icon: '⏱', label: 'Duración', value: course.duration },
-                  { icon: '📡', label: 'Modalidad', value: course.modality },
-                  { icon: '🎓', label: 'Certificado', value: 'Sí' },
-                ].map(s => (
-                  <div key={s.label} className="rounded-xl p-3 text-center" style={{ backgroundColor: 'var(--muted)' }}>
-                    <div className="text-xl mb-1">{s.icon}</div>
-                    <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{s.label}</p>
-                    <p className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>{s.value}</p>
-                  </div>
-                ))}
-              </div>
-              <button
-                onClick={() => setTab('enroll')}
-                className="w-full py-3 rounded-lg text-sm font-bold text-white transition-opacity hover:opacity-90"
-                style={{ backgroundColor: '#10B981' }}
-              >
-                Inscribirme ahora →
-              </button>
-            </div>
-          ) : submitted ? (
-            <div className="text-center py-6">
-              <div className="text-5xl mb-4">🎓</div>
-              <h3 className="text-xl font-bold mb-2" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
-                ¡Inscripción recibida!
+          {course.intro && (
+            <div className="mb-6">
+              <h3 className="text-sm font-bold uppercase tracking-wide mb-2" style={{ fontFamily: 'var(--font-display)', color: '#b8860b' }}>
+                Introducción
               </h3>
-              <p className="text-sm mb-4" style={{ color: 'var(--muted-foreground)' }}>
-                Hemos recibido su solicitud de inscripción al curso <strong style={{ color: 'var(--foreground)' }}>{course.name}</strong>. Nos contactaremos a <strong>{form.email}</strong> en las próximas 24 horas para confirmar y coordinar el pago.
+              <p className="text-sm leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
+                {course.intro}
               </p>
-              <button onClick={onClose} className="px-6 py-2.5 rounded-lg text-sm font-bold text-white" style={{ backgroundColor: '#10B981' }}>
-                Cerrar
-              </button>
             </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--foreground)' }}>Nombre completo *</label>
-                <input type="text" required placeholder="Su nombre completo" value={form.name}
-                  onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                  className="w-full px-4 py-2.5 rounded-lg text-sm outline-none"
-                  style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
-                  onFocus={e => e.target.style.borderColor = '#10B981'}
-                  onBlur={e => e.target.style.borderColor = 'var(--border)'}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--foreground)' }}>Correo *</label>
-                  <input type="email" required placeholder="correo@empresa.com" value={form.email}
-                    onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                    className="w-full px-4 py-2.5 rounded-lg text-sm outline-none"
-                    style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
-                    onFocus={e => e.target.style.borderColor = '#10B981'}
-                    onBlur={e => e.target.style.borderColor = 'var(--border)'}
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--foreground)' }}>WhatsApp *</label>
-                  <input type="tel" required placeholder="+57 300 000 0000" value={form.phone}
-                    onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
-                    className="w-full px-4 py-2.5 rounded-lg text-sm outline-none"
-                    style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
-                    onFocus={e => e.target.style.borderColor = '#10B981'}
-                    onBlur={e => e.target.style.borderColor = 'var(--border)'}
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--foreground)' }}>Empresa / Institución</label>
-                <input type="text" placeholder="Nombre de su organización" value={form.company}
-                  onChange={e => setForm(f => ({ ...f, company: e.target.value }))}
-                  className="w-full px-4 py-2.5 rounded-lg text-sm outline-none"
-                  style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
-                  onFocus={e => e.target.style.borderColor = '#10B981'}
-                  onBlur={e => e.target.style.borderColor = 'var(--border)'}
-                />
-              </div>
-              <button type="submit" disabled={loading}
-                className="w-full py-3 rounded-lg text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
-                style={{ backgroundColor: '#10B981' }}
-              >
-                {loading ? 'Enviando solicitud...' : `Confirmar inscripción — ${course.price}`}
-              </button>
-            </form>
           )}
+
+          {course.objectives?.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-sm font-bold uppercase tracking-wide mb-2" style={{ fontFamily: 'var(--font-display)', color: '#b8860b' }}>
+                Objetivos
+              </h3>
+              <ul className="space-y-1.5">
+                {course.objectives.map((o, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                    <span style={{ color: '#b8860b' }}>✓</span> {o}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {course.modules?.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-sm font-bold uppercase tracking-wide mb-2" style={{ fontFamily: 'var(--font-display)', color: '#b8860b' }}>
+                Qué verás en el curso
+              </h3>
+              <ul className="space-y-1.5">
+                {course.modules.map((m, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm" style={{ color: 'var(--foreground)' }}>
+                    <span style={{ color: '#b8860b' }}>•</span> {m}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <a
+            href={`https://wa.me/573009876543?text=${encodeURIComponent(`Hola, quiero inscribirme en el curso "${course.name}"`)}`}
+            target="_blank"
+            rel="noreferrer"
+            className="block w-full text-center py-3 rounded-lg text-sm font-bold text-white transition-opacity hover:opacity-90"
+            style={{ background: 'linear-gradient(135deg, #005187 0%, #4d82bc 55%, #b8860b 100%)' }}
+          >
+            Inscribirse
+          </a>
         </div>
       </div>
     </div>

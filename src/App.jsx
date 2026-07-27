@@ -4,6 +4,7 @@ import ScrollToTop from '@/shared/components/ScrollToTop'
 import { AuthProvider } from '@/features/auth/context/AuthContext'
 import { ToastProvider } from '@/shared/context/ToastContext'
 import { BlogProvider } from '@/features/blog/context/BlogContext'
+import { PQRSFProvider } from '@/features/pqrsf/context/PQRSFContext'
 import AppRoutes from './routes'
 
 export default function App() {
@@ -13,8 +14,10 @@ export default function App() {
       <ToastProvider>
         <AuthProvider>
           <BlogProvider>
-            <AppRoutes />
-            <ToastContainer />
+            <PQRSFProvider>
+              <AppRoutes />
+              <ToastContainer />
+            </PQRSFProvider>
           </BlogProvider>
         </AuthProvider>
       </ToastProvider>

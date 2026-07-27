@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/features/auth/context/AuthContext'
 import { useToast } from '@/shared/context/ToastContext'
 import { useBlog } from '@/features/blog/context/BlogContext'
+import { usePQRSF } from '@/features/pqrsf/context/PQRSFContext'
 import BlogPostFormModal from '@/features/blog/components/BlogPostFormModal'
 import { courses } from '@/features/training/data/courses'
 import AnimatedCounter from '@/shared/components/AnimatedCounter'
@@ -11,12 +12,6 @@ const mockUsers = [
   { id: '1', name: 'María García', email: 'cliente@lidessa.co', role: 'client', company: 'Construcciones García S.A.S.', joined: '2025-05-12' },
   { id: '3', name: 'Carlos Rodríguez', email: 'carlos.r@empresa.com', role: 'client', company: 'Distribuidora del Pacífico', joined: '2025-06-01' },
   { id: '4', name: 'Ana Martínez', email: 'ana.m@colegio.edu.co', role: 'client', company: 'IED La Esperanza', joined: '2025-07-02' },
-]
-
-const mockPQRSF = [
-  { id: 'PQRSF-2025-0041', type: 'Solicitud', from: 'María García', subject: 'Cotización SG-SST para empresa de 25 empleados', date: '2025-07-10', status: 'Pendiente' },
-  { id: 'PQRSF-2025-0038', type: 'Queja', from: 'Carlos Rodríguez', subject: 'Demora en entrega de certificado de capacitación', date: '2025-07-03', status: 'Respondida' },
-  { id: 'PQRSF-2025-0029', type: 'Sugerencia', from: 'Ana Martínez', subject: 'Habilitar más horarios de cursos virtuales nocturnos', date: '2025-06-22', status: 'Revisando' },
 ]
 
 const mockServices = [
@@ -39,6 +34,7 @@ export default function AdminDashboard() {
   const { toast } = useToast()
   const navigate = useNavigate()
   const { posts: blogPosts, addPost, updatePost, deletePost } = useBlog()
+  const { tickets: pqrsfTickets, updateTicket: updatePQRSF } = usePQRSF()
   const [section, setSection] = useState('dashboard')
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [bellOpen, setBellOpen] = useState(false)
@@ -244,7 +240,7 @@ export default function AdminDashboard() {
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                 {[
                   { label: 'Clientes registrados', value: 47, icon: '👥', color: '#005187' },
-                  { label: 'PQRSF pendientes', value: 6, icon: '📋', color: '#d97706' },
+                  { label: 'PQRSF pendientes', value: pqrsfTickets.filter(p => p.status === 'Pendiente').length, icon: '📋', color: '#d97706' },
                   { label: 'Cursos activos', value: 12, icon: '🎓', color: '#16a34a' },
                   { label: 'Publicaciones del mes', value: 4, icon: '📰', color: '#7c3aed' },
                 ].map(s => (
@@ -283,7 +279,7 @@ export default function AdminDashboard() {
               {/* Recent PQRSF */}
               <h2 className="font-bold text-sm mb-3" style={{ color: 'var(--foreground)', fontFamily: 'var(--font-display)' }}>Últimas solicitudes PQRSF</h2>
               <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-                {mockPQRSF.slice(0, 3).map((p, i) => (
+                {pqrsfTickets.slice(0, 3).map((p, i) => (
                   <div key={p.id} style={{
                     display: 'flex', gap: 12, padding: '12px 16px', alignItems: 'center',
                     borderBottom: i < 2 ? '1px solid var(--border)' : 'none',
@@ -472,10 +468,10 @@ export default function AdminDashboard() {
             <div style={{ animation: 'fadeUp 0.4s ease' }}>
               <h2 className="text-xl font-black mb-6" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Bandeja PQRSF</h2>
               <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-                {mockPQRSF.map((p, i) => (
+                {pqrsfTickets.map((p, i) => (
                   <div key={p.id} style={{
                     display: 'flex', gap: 12, padding: '16px', alignItems: 'flex-start',
-                    borderBottom: i < mockPQRSF.length - 1 ? '1px solid var(--border)' : 'none',
+                    borderBottom: i < pqrsfTickets.length - 1 ? '1px solid var(--border)' : 'none',
                     backgroundColor: p.status === 'Pendiente' ? 'rgba(217,119,6,0.05)' : 'var(--card)',
                   }}>
                     <div className="flex-1">

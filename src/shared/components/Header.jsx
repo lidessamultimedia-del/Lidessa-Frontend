@@ -38,6 +38,7 @@ export default function Header({ theme, setTheme }) {
     { label: 'Inicio', href: '/' },
     { label: 'Nosotros', href: '/nosotros' },
     { label: 'Converge', href: '/blog' },
+    { label: 'V2suministros', href: '/tienda' },
     { label: 'Formación', href: '/formacion' },
   ]
 

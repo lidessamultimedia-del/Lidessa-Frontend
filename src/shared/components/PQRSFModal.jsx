@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { usePQRSF } from '@/features/pqrsf/context/PQRSFContext'
+import { Inbox } from '@/shared/components/Icons'
 
 const types = ['Petición', 'Queja', 'Reclamo', 'Sugerencia', 'Felicitación']
 
@@ -78,7 +79,7 @@ export default function PQRSFModal({ onClose }) {
         <div className="p-6">
           {submitted ? (
             <div className="text-center py-8">
-              <div className="text-5xl mb-4">📬</div>
+              <div className="flex justify-center mb-4" style={{ color: 'var(--primary)' }}><Inbox size={44} /></div>
               <h3 className="text-xl font-bold mb-2" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
                 ¡Recibido con éxito!
               </h3>

@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { MessageCircle } from '@/shared/components/Icons'
 
 export default function BlogModal({ post, onClose }) {
   useEffect(() => {
@@ -63,7 +64,7 @@ export default function BlogModal({ post, onClose }) {
               className="px-4 py-2 rounded-lg text-sm font-bold text-white transition-opacity hover:opacity-90"
               style={{ backgroundColor: '#25D366' }}
             >
-              💬 Consultar al autor
+              <span className="inline-flex items-center gap-1.5"><MessageCircle size={15} /> Consultar al autor</span>
             </a>
             <button
               onClick={onClose}

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import PQRSFModal from '@/shared/components/PQRSFModal'
 import { useScrollReveal } from '@/shared/hooks/useScrollReveal'
+import { Clipboard } from '@/shared/components/Icons'
 
 export default function Store() {
   const [pqrsfOpen, setPqrsfOpen] = useState(false)
@@ -76,7 +77,7 @@ export default function Store() {
       <section className="py-4" style={{ backgroundColor: 'var(--secondary)', borderBottom: '1px solid var(--border)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex flex-wrap gap-3 items-center reveal">
-            <p className="text-sm font-semibold" style={{ color: 'var(--primary)' }}>📋 Normativa aplicable:</p>
+            <p className="text-sm font-semibold inline-flex items-center gap-1.5" style={{ color: 'var(--primary)' }}><Clipboard size={15} /> Normativa aplicable:</p>
             {['Resolución 0312 de 2019', 'NTC 3610 (cascos)', 'ANSI Z87.1 (gafas)', 'NTC 2171 (guantes)', 'Res. 4272/2021 (trabajo en alturas)'].map(n => (
               <span key={n} className="text-xs px-2 py-1 rounded" style={{ backgroundColor: 'var(--card)', color: 'var(--muted-foreground)', border: '1px solid var(--border)' }}>
                 {n}
@@ -99,8 +100,18 @@ export default function Store() {
       {/* Compliance CTA — norma 0705 */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 pb-16">
         <div className="rounded-2xl p-8 text-center reveal-scale" style={{ backgroundColor: '#141414' }}>
-          <h3 className="text-xl sm:text-2xl font-black mb-3" style={{ fontFamily: 'var(--font-display)', color: '#e8c766' }}>
-            ✨ ¿Qué pasa si no cumples con la norma 0705? ✨
+          <h3 className="flex items-center justify-center gap-2 text-xl sm:text-2xl font-black mb-3" style={{ fontFamily: 'var(--font-display)', color: '#e8c766' }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e8c766" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+              <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
+            ¿Qué pasa si no cumples con la norma 0705?
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e8c766" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+              <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" />
+              <line x1="12" y1="9" x2="12" y2="13" />
+              <line x1="12" y1="17" x2="12.01" y2="17" />
+            </svg>
           </h3>
           <p className="text-sm max-w-2xl mx-auto mb-2 leading-relaxed" style={{ color: '#cbb98a' }}>
             No cumplir con la Resolución 0705 de 2007 podría resultar en sanciones por parte de la autoridad competente, como multas, suspensiones o incluso cierres temporales del establecimiento.
@@ -181,7 +192,7 @@ export default function Store() {
                   detail: 'Arnés y líneas de vida certificadas para labores con riesgo de caída.',
                 },
               ].map((item, i) => (
-                <div key={item.label} className={`flip-card h-[132px] reveal-scale stagger-${i + 1}`}>
+                <div key={item.label} className={`flip-card h-33 reveal-scale stagger-${i + 1}`}>
                   <div className="flip-card-inner">
                     <div className="flip-card-front rounded-xl p-3" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
                       <div className="w-7 h-7 mb-1.5" style={{ color: 'var(--primary)' }}>{item.icon}</div>

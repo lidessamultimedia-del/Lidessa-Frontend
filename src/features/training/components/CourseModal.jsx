@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { Check } from '@/shared/components/Icons'
 
 export default function CourseModal({ course, onClose }) {
   useEffect(() => {
@@ -91,7 +92,7 @@ export default function CourseModal({ course, onClose }) {
               <ul className="space-y-1.5">
                 {course.objectives.map((o, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm" style={{ color: 'var(--muted-foreground)' }}>
-                    <span style={{ color: '#b8860b' }}>✓</span> {o}
+                    <span style={{ color: '#b8860b' }} className="shrink-0 mt-0.5"><Check size={13} strokeWidth="3" /></span> {o}
                   </li>
                 ))}
               </ul>

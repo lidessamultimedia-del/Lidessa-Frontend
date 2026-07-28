@@ -8,6 +8,7 @@ import About from '@/features/about/pages/About'
 import Blog from '@/features/blog/pages/Blog'
 import Store from '@/features/store/pages/Store'
 import Training from '@/features/training/pages/Training'
+import ServicesOverview from '@/features/services/pages/ServicesOverview'
 import ServicePage from '@/features/services/pages/ServicePage'
 import AdminDashboard from '@/features/admin-dashboard/pages/AdminDashboard'
 import Login from '@/features/auth/pages/Login'
@@ -24,6 +25,7 @@ function PublicLayout({ theme, setTheme }) {
           <Route path="/blog" element={<Blog />} />
           <Route path="/tienda" element={<Store />} />
           <Route path="/formacion" element={<Training />} />
+          <Route path="/servicios" element={<ServicesOverview />} />
           <Route path="/servicios/:slug" element={<ServicePage />} />
         </Routes>
       </main>

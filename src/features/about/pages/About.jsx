@@ -2,6 +2,7 @@ import { useRef, useEffect, useState } from 'react'
 import { useScrollReveal } from '@/shared/hooks/useScrollReveal'
 import { useIsDarkTheme } from '@/shared/hooks/useIsDarkTheme'
 import PQRSFModal from '@/shared/components/PQRSFModal'
+import { MessageCircle, Mail, MapPin, Phone, Check, Sparkle } from '@/shared/components/Icons'
 
 const whyChooseUs = [
   'Más de 15 años de experiencia acompañando organizaciones en Colombia.',
@@ -71,9 +72,9 @@ function CheckItem({ label, children }) {
     <div className="flex items-start gap-3">
       <span
         className="shrink-0 flex items-center justify-center rounded-full text-white"
-        style={{ width: 22, height: 22, marginTop: 1, fontSize: '0.65rem', fontWeight: 900, background: 'linear-gradient(135deg, #e6c158, #b8860b)', boxShadow: '0 2px 6px rgba(184,134,11,0.4)' }}
+        style={{ width: 22, height: 22, marginTop: 1, background: 'linear-gradient(135deg, #e6c158, #b8860b)', boxShadow: '0 2px 6px rgba(184,134,11,0.4)' }}
       >
-        ✓
+        <Check size={13} strokeWidth="3" />
       </span>
       <p className="text-sm leading-relaxed" style={{ color: 'var(--foreground)' }}>
         {label && <strong style={{ color: brandBlue, fontFamily: 'var(--font-display)' }}>{label}: </strong>}
@@ -353,7 +354,7 @@ export default function About() {
             >
               <div className="flex items-center justify-center gap-2 mb-2">
                 <span style={{ width: 36, height: 1, backgroundColor: '#d4af37' }} />
-                <span style={{ color: '#d4af37', fontSize: '0.8rem' }}>✦</span>
+                <span style={{ color: '#d4af37' }}><Sparkle width={13} height={13} /></span>
                 <span style={{ width: 36, height: 1, backgroundColor: '#d4af37' }} />
               </div>
               <h3 className="font-black text-xl leading-tight" style={{ fontFamily: 'var(--font-display)', color: brandNavy }}>
@@ -393,7 +394,7 @@ export default function About() {
 
               <div className="flex items-center justify-center gap-2 mb-4">
                 <span style={{ width: 28, height: 1, backgroundColor: '#d4af37' }} />
-                <span style={{ color: '#d4af37', fontSize: '0.7rem' }}>✦</span>
+                <span style={{ color: '#d4af37' }}><Sparkle width={11} height={11} /></span>
                 <span style={{ width: 28, height: 1, backgroundColor: '#d4af37' }} />
               </div>
 
@@ -606,7 +607,7 @@ export default function About() {
                       onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
                       onMouseLeave={e => e.currentTarget.style.opacity = '1'}
                     >
-                      💬 WhatsApp
+                      <span className="inline-flex items-center gap-1.5"><MessageCircle size={15} /> WhatsApp</span>
                     </a>
                     <a href="mailto:comercial@lidessa.co"
                       className="px-5 py-2.5 rounded-xl text-sm font-bold"
@@ -614,15 +615,15 @@ export default function About() {
                       onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--muted)'}
                       onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
-                      📧 comercial@lidessa.co
+                      <span className="inline-flex items-center gap-1.5"><Mail size={15} /> comercial@lidessa.co</span>
                     </a>
                   </div>
                 </div>
                 <ul className="space-y-3 text-sm" style={{ color: bodyText }}>
-                  <li className="flex items-start gap-2"><span>📍</span> Cra. 71 #46-28, Laureles, Medellín, Antioquia</li>
-                  <li className="flex items-start gap-2"><span>📱</span> +57 300 123 4567 (General)</li>
-                  <li className="flex items-start gap-2"><span>📱</span> +57 300 987 6543 (Comercial)</li>
-                  <li className="flex items-start gap-2"><span>📧</span> comercial@lidessa.co</li>
+                  <li className="flex items-start gap-2"><MapPin size={15} className="shrink-0 mt-0.5" /> Cra. 71 #46-28, Laureles, Medellín, Antioquia</li>
+                  <li className="flex items-start gap-2"><Phone size={15} className="shrink-0 mt-0.5" /> +57 300 123 4567 (General)</li>
+                  <li className="flex items-start gap-2"><Phone size={15} className="shrink-0 mt-0.5" /> +57 300 987 6543 (Comercial)</li>
+                  <li className="flex items-start gap-2"><Mail size={15} className="shrink-0 mt-0.5" /> comercial@lidessa.co</li>
                 </ul>
               </div>
             )}
@@ -658,7 +659,7 @@ export default function About() {
             onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
             onMouseLeave={e => e.currentTarget.style.opacity = '1'}
           >
-            📧 PQRSF
+            <span className="inline-flex items-center gap-1.5"><Mail size={15} /> PQRSF</span>
           </button>
         </div>
       </section>
@@ -674,10 +675,10 @@ export default function About() {
             </p>
             <ul className="space-y-3 text-sm">
               {[
-                { icon: '📍', text: 'Cra. 71 #46-28, Laureles, Medellín, Antioquia' },
-                { icon: '📞', text: '+57 300 123 4567 (General)', href: 'https://wa.me/573001234567' },
-                { icon: '📞', text: '+57 300 987 6543 (Comercial)', href: 'https://wa.me/573009876543' },
-                { icon: '📧', text: 'comercial@lidessa.co', href: 'mailto:comercial@lidessa.co' },
+                { icon: MapPin, text: 'Cra. 71 #46-28, Laureles, Medellín, Antioquia' },
+                { icon: Phone, text: '+57 300 123 4567 (General)', href: 'https://wa.me/573001234567' },
+                { icon: Phone, text: '+57 300 987 6543 (Comercial)', href: 'https://wa.me/573009876543' },
+                { icon: Mail, text: 'comercial@lidessa.co', href: 'mailto:comercial@lidessa.co' },
               ].map(c => (
                 <li key={c.text}>
                   {c.href
@@ -687,10 +688,10 @@ export default function About() {
                         onMouseEnter={e => e.currentTarget.style.color = '#4d82bc'}
                         onMouseLeave={e => e.currentTarget.style.color = brandBlue}
                       >
-                        <span>{c.icon}</span> {c.text}
+                        <c.icon size={15} /> {c.text}
                       </a>
                     : <span className="flex items-center gap-2" style={{ color: 'var(--foreground)', fontWeight: 600 }}>
-                        <span>{c.icon}</span> {c.text}
+                        <c.icon size={15} /> {c.text}
                       </span>
                   }
                 </li>

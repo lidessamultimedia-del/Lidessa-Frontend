@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import PQRSFModal from './PQRSFModal'
+import { MessageCircle, LinkIcon } from './Icons'
 
 const icons = {
   facebook: 'M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036 26.805 26.805 0 0 0-.733-.009c-.707 0-1.259.096-1.675.309a1.686 1.686 0 0 0-.679.622c-.258.42-.374.995-.374 1.752v1.297h3.919l-.386 1.913-.287 1.754h-3.246v7.98H9.101Z',
@@ -57,7 +58,7 @@ export default function Footer() {
                 onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'rgba(132,182,244,0.2)'; e.currentTarget.style.color = '#84b6f4' }}
                 onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = 'white' }}
               >
-                {s.asterisk ? <span className="text-lg leading-none">✳</span> : <Icon path={s.icon} />}
+                {s.asterisk ? <LinkIcon size={18} /> : <Icon path={s.icon} />}
               </a>
             ))}
           </div>
@@ -112,7 +113,7 @@ export default function Footer() {
                     <a href="https://wa.me/573001234567" target="_blank" rel="noreferrer"
                       className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold text-white transition-opacity hover:opacity-90"
                       style={{ backgroundColor: '#25D366' }}>
-                      💬 WhatsApp disponible
+                      <MessageCircle size={14} /> WhatsApp disponible
                     </a>
                   </li>
                 </ul>

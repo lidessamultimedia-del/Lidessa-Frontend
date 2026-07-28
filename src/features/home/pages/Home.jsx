@@ -8,6 +8,7 @@ import ClientMarquee from '@/shared/components/ClientMarquee'
 import LogoRevealSection from '@/shared/components/LogoRevealSection'
 import { useScrollReveal } from '@/shared/hooks/useScrollReveal'
 import { clients } from '@/shared/data/clients'
+import { MapPin, Phone, Mail, Check } from '@/shared/components/Icons'
 
 const allyNames = ['Dental Service', 'Hydro Bombas', 'Converge', 'CEET', 'Ópticas Visión Éxito']
 const allies = allyNames.map(n => clients.find(c => c.name === n)).filter(Boolean)
@@ -139,7 +140,7 @@ export default function Home() {
                 }}
               >
                 <img
-                  src="/assets/DD.jpg"
+                  src="/assets/DD.png"
                   alt="Equipo Lidessa"
                   className="w-full h-full object-cover"
                   style={{ transition: 'transform 0.4s ease' }}
@@ -193,7 +194,7 @@ export default function Home() {
               <ul className="space-y-1.5">
                 {a.points.map((p, j) => (
                   <li key={j} className="text-sm flex items-start gap-2" style={{ color: 'var(--muted-foreground)' }}>
-                    <span style={{ color: '#4d82bc', marginTop: 2, fontWeight: 700 }}>✓</span> {p}
+                    <span style={{ color: '#4d82bc', marginTop: 2 }}><Check size={13} strokeWidth="3" /></span> {p}
                   </li>
                 ))}
               </ul>
@@ -309,7 +310,7 @@ export default function Home() {
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {blogPosts.slice(0, 3).map((post, i) => (
-              <div key={post.id} className={`flip-card h-[380px] reveal-scale stagger-${i + 1}`}>
+              <div key={post.id} className={`flip-card h-95 reveal-scale stagger-${i + 1}`}>
                 <div className="flip-card-inner">
                   {/* Front — image poster */}
                   <div className="flip-card-front rounded-2xl overflow-hidden cursor-pointer"
@@ -373,9 +374,9 @@ export default function Home() {
             </p>
             <ul className="space-y-3 text-sm">
               {[
-                { icon: '📍', text: 'Cra. 71 #46-28, Laureles, Medellín, Antioquia' },
-                { icon: '📞', text: '+57 300 123 4567', href: 'https://wa.me/573001234567' },
-                { icon: '📧', text: 'info@lidessa.co', href: 'mailto:info@lidessa.co' },
+                { icon: MapPin, text: 'Cra. 71 #46-28, Laureles, Medellín, Antioquia' },
+                { icon: Phone, text: '+57 300 123 4567', href: 'https://wa.me/573001234567' },
+                { icon: Mail, text: 'info@lidessa.co', href: 'mailto:info@lidessa.co' },
               ].map(c => (
                 <li key={c.text}>
                   {c.href
@@ -385,10 +386,10 @@ export default function Home() {
                         onMouseEnter={e => e.currentTarget.style.color = '#4d82bc'}
                         onMouseLeave={e => e.currentTarget.style.color = '#005187'}
                       >
-                        <span>{c.icon}</span> {c.text}
+                        <c.icon size={15} /> {c.text}
                       </a>
                     : <span className="flex items-center gap-2" style={{ color: 'var(--foreground)', fontWeight: 600 }}>
-                        <span>{c.icon}</span> {c.text}
+                        <c.icon size={15} /> {c.text}
                       </span>
                   }
                 </li>

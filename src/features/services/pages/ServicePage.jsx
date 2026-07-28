@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { servicesData } from '../data/servicesData'
+import { Clipboard, MessageCircle, Check } from '@/shared/components/Icons'
 
 export default function ServicePage() {
   const { slug } = useParams()
@@ -11,7 +12,7 @@ export default function ServicePage() {
   if (!service) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center px-4">
-        <div className="text-5xl mb-4">📋</div>
+        <div className="flex justify-center mb-4" style={{ color: 'var(--muted-foreground)' }}><Clipboard size={44} /></div>
         <h1 className="text-2xl font-black mb-2" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
           Servicio en preparación
         </h1>
@@ -31,7 +32,7 @@ export default function ServicePage() {
             className="px-4 py-2 rounded-lg text-sm font-bold text-white"
             style={{ backgroundColor: '#25D366' }}
           >
-            💬 Consultar por WhatsApp
+            <span className="inline-flex items-center gap-1.5"><MessageCircle size={15} /> Consultar por WhatsApp</span>
           </a>
         </div>
       </div>
@@ -40,22 +41,9 @@ export default function ServicePage() {
 
   return (
     <div>
-      {/* Back button */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6">
-        <Link
-          to="/"
-          className="inline-flex items-center gap-2 text-sm font-medium transition-colors"
-          style={{ color: 'var(--muted-foreground)' }}
-          onMouseEnter={(e) => e.currentTarget.style.color = 'var(--primary)'}
-          onMouseLeave={(e) => e.currentTarget.style.color = 'var(--muted-foreground)'}
-        >
-          ← Regresar
-        </Link>
-      </div>
-
       {/* Hero */}
       <section
-        className="py-20 mt-4 relative"
+        className="py-20 relative"
         style={{
           backgroundImage: `url(${service.hero})`,
           backgroundSize: 'cover',
@@ -93,74 +81,124 @@ export default function ServicePage() {
           ))}
         </div>
 
-        <div className="grid md:grid-cols-2 gap-8 items-start">
-          <div>
-            <p className="text-sm leading-relaxed mb-5" style={{ color: 'var(--muted-foreground)' }}>
-              {service.tabs[activeTab].content}
-            </p>
-            <ul className="space-y-3">
-              {service.tabs[activeTab].bullets.map((b, i) => (
+        {service.tabs[activeTab].checklist ? (
+          <div className="max-w-3xl mx-auto">
+            {service.tabs[activeTab].title && (
+              <h2 className="text-2xl font-black text-center mb-6" style={{ fontFamily: 'var(--font-display)', color: 'var(--primary)' }}>
+                {service.tabs[activeTab].title}
+              </h2>
+            )}
+            {service.tabs[activeTab].intro && (
+              <div className="rounded-2xl p-6 mb-8" style={{ border: '1px solid var(--primary)', backgroundColor: 'var(--card)' }}>
+                <p className="text-sm text-center leading-relaxed" style={{ color: 'var(--foreground)' }}>
+                  {service.tabs[activeTab].intro}
+                </p>
+              </div>
+            )}
+            <ul className="space-y-5 mb-10">
+              {service.tabs[activeTab].checklist.map((item, i) => (
                 <li key={i} className="flex items-start gap-3">
-                  <span
-                    className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold shrink-0 mt-0.5"
-                    style={{ backgroundColor: 'var(--primary)', color: 'white' }}
-                  >
-                    ✓
+                  <span className="shrink-0 mt-0.5" style={{ color: 'var(--primary)' }}>
+                    <Check size={18} strokeWidth="3" />
                   </span>
-                  <span className="text-sm" style={{ color: 'var(--foreground)' }}>{b}</span>
+                  <p className="text-sm leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>{item}</p>
                 </li>
               ))}
             </ul>
+            {service.tabs[activeTab].structure && (
+              <div>
+                <h3 className="text-lg font-bold mb-6" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
+                  {service.tabs[activeTab].structure.title}
+                </h3>
+                {service.tabs[activeTab].structure.image ? (
+                  <div className="flex justify-center">
+                    <img
+                      src={service.tabs[activeTab].structure.image}
+                      alt={service.tabs[activeTab].structure.title}
+                      className="max-w-sm w-full"
+                    />
+                  </div>
+                ) : (
+                  <ol className="space-y-4">
+                    {service.tabs[activeTab].structure.steps.map((step, i) => (
+                      <li key={i} className="flex items-center gap-4">
+                        <span
+                          className="shrink-0 rounded-full flex items-center justify-center text-sm font-bold text-white"
+                          style={{ width: 40, height: 40, backgroundColor: i % 2 === 0 ? 'var(--primary)' : '#4d82bc' }}
+                        >
+                          {String(i + 1).padStart(2, '0')}
+                        </span>
+                        <span className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>{step}</span>
+                      </li>
+                    ))}
+                  </ol>
+                )}
+              </div>
+            )}
           </div>
-          <div
-            className="rounded-2xl p-6"
-            style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}
-          >
-            <div className="text-4xl mb-3">📊</div>
-            <h3 className="text-lg font-bold mb-2" style={{ fontFamily: 'var(--font-display)', color: 'var(--primary)' }}>
-              ¿Por qué implementar este servicio?
-            </h3>
-            <p className="text-sm leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
-              Nuestro equipo de especialistas acompaña cada etapa del proceso con metodologías probadas, asegurando resultados sostenibles y el cumplimiento de todos los requisitos legales y normativos vigentes.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Scope */}
-      <section className="py-14" style={{ backgroundColor: 'var(--muted)' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: 'var(--accent)' }}>Alcance del servicio</p>
-          <h2 className="text-2xl font-black mb-8" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
-            Actividades y entregables
-          </h2>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="rounded-2xl p-6" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
-              <h3 className="font-bold mb-4 flex items-center gap-2" style={{ fontFamily: 'var(--font-display)', color: 'var(--primary)' }}>
-                🏢 Actividades presenciales
-              </h3>
-              <ul className="space-y-2">
-                {service.presencial.map((item, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm" style={{ color: 'var(--muted-foreground)' }}>
-                    <span style={{ color: 'var(--accent)', marginTop: '2px' }}>→</span> {item}
-                  </li>
+        ) : (
+        <div className="max-w-3xl mx-auto text-center">
+            {service.tabs[activeTab].sections ? (
+              <div className="space-y-6">
+                {service.tabs[activeTab].title && (
+                  <h2 className="text-2xl font-black mb-2" style={{ fontFamily: 'var(--font-display)', color: 'var(--primary)' }}>
+                    {service.tabs[activeTab].title}
+                  </h2>
+                )}
+                {service.tabs[activeTab].sections.map((section, i) => (
+                  <div key={i} className={section.boxed ? 'rounded-2xl p-6 text-left' : ''} style={section.boxed ? { border: '1px solid var(--primary)', backgroundColor: 'var(--card)' } : undefined}>
+                    {section.heading && (
+                      <h3 className="font-bold text-base mb-2" style={{ fontFamily: 'var(--font-display)', color: 'var(--primary)' }}>
+                        {section.heading}
+                      </h3>
+                    )}
+                    {section.text && (
+                      <p className="text-sm leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
+                        {section.text}
+                      </p>
+                    )}
+                    {section.bullets && (
+                      <ul className="space-y-3 mt-1 text-left">
+                        {section.bullets.map((b, j) => (
+                          <li key={j} className="flex items-start gap-3">
+                            <span
+                              className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5"
+                              style={{ backgroundColor: 'var(--primary)', color: 'white' }}
+                            >
+                              <Check size={12} strokeWidth="3" />
+                            </span>
+                            <span className="text-sm" style={{ color: 'var(--foreground)' }}>
+                              <strong style={{ color: 'var(--foreground)' }}>{b.label}</strong> {b.text}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
                 ))}
-              </ul>
-            </div>
-            <div className="rounded-2xl p-6" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
-              <h3 className="font-bold mb-4 flex items-center gap-2" style={{ fontFamily: 'var(--font-display)', color: 'var(--primary)' }}>
-                💻 Actividades virtuales / a distancia
-              </h3>
-              <ul className="space-y-2">
-                {service.virtual.map((item, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm" style={{ color: 'var(--muted-foreground)' }}>
-                    <span style={{ color: 'var(--accent)', marginTop: '2px' }}>→</span> {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
+              </div>
+            ) : (
+              <>
+                <p className="text-sm leading-relaxed mb-5" style={{ color: 'var(--muted-foreground)' }}>
+                  {service.tabs[activeTab].content}
+                </p>
+                <ul className="space-y-3 text-left">
+                  {service.tabs[activeTab].bullets.map((b, i) => (
+                    <li key={i} className="flex items-start gap-3">
+                      <span
+                        className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5"
+                        style={{ backgroundColor: 'var(--primary)', color: 'white' }}
+                      >
+                        <Check size={12} strokeWidth="3" />
+                      </span>
+                      <span className="text-sm" style={{ color: 'var(--foreground)' }}>{b}</span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
         </div>
+        )}
       </section>
 
       {/* CTA */}
@@ -183,14 +221,7 @@ export default function ServicePage() {
                 className="px-6 py-3 rounded-lg text-sm font-bold text-white transition-opacity hover:opacity-90"
                 style={{ backgroundColor: '#25D366' }}
               >
-                💬 Escribirnos por WhatsApp
-              </a>
-              <a
-                href="mailto:comercial@lidessa.co"
-                className="px-6 py-3 rounded-lg text-sm font-bold border transition-all hover:bg-white/10"
-                style={{ borderColor: 'rgba(255,255,255,0.3)', color: 'white' }}
-              >
-                📧 Enviar correo
+                <span className="inline-flex items-center gap-1.5"><MessageCircle size={15} /> Escribirnos por WhatsApp</span>
               </a>
             </div>
           </div>

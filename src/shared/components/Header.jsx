@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { megaMenu } from '@/shared/data/megaMenu'
+import { MessageCircle } from '@/shared/components/Icons'
 
 export default function Header({ theme, setTheme }) {
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -274,7 +275,13 @@ export default function Header({ theme, setTheme }) {
                   className="px-5 py-3 flex items-center justify-between"
                   style={{ borderTop: '1px solid var(--border)', backgroundColor: 'var(--muted)' }}
                 >
-                  <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>¿No encuentra su servicio?</p>
+                  <Link
+                    to="/servicios"
+                    className="text-xs font-bold"
+                    style={{ color: '#005187' }}
+                  >
+                    Ver todos los servicios →
+                  </Link>
                   <a
                     href="https://wa.me/573001234567?text=Hola, quisiera información sobre un servicio"
                     target="_blank" rel="noreferrer"
@@ -283,7 +290,7 @@ export default function Header({ theme, setTheme }) {
                     onMouseEnter={e => e.currentTarget.style.opacity = '0.85'}
                     onMouseLeave={e => e.currentTarget.style.opacity = '1'}
                   >
-                    💬 Consúltenos
+                    <span className="inline-flex items-center gap-1.5"><MessageCircle size={13} /> Consúltenos</span>
                   </a>
                 </div>
               </div>
@@ -435,6 +442,9 @@ export default function Header({ theme, setTheme }) {
 
             <div style={{ maxHeight: mobileServicesOpen ? '600px' : '0', overflow: 'hidden', transition: 'max-height 0.3s ease' }}>
               <div className="pl-3 pb-2">
+                <Link to="/servicios" className="block py-1.5 pt-3 text-sm font-bold" style={{ color: '#005187' }}>
+                  Ver todos los servicios →
+                </Link>
                 {megaMenu.map((cat, i) => (
                   <div key={i}>
                     <p className="text-xs font-bold uppercase tracking-wider pt-3 pb-1" style={{ color: '#4d82bc' }}>{cat.label}</p>

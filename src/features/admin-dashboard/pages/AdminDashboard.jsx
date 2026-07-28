@@ -7,6 +7,7 @@ import { usePQRSF } from '@/features/pqrsf/context/PQRSFContext'
 import BlogPostFormModal from '@/features/blog/components/BlogPostFormModal'
 import { courses } from '@/features/training/data/courses'
 import AnimatedCounter from '@/shared/components/AnimatedCounter'
+import { BarChart2, Building, FileText, GraduationCap, Users, Clipboard, Sliders, Bell, User, AlertTriangle, Edit2, Plus, Send } from '@/shared/components/Icons'
 
 const mockUsers = [
   { id: '1', name: 'María García', email: 'cliente@lidessa.co', role: 'client', company: 'Construcciones García S.A.S.', joined: '2025-05-12' },
@@ -87,13 +88,13 @@ export default function AdminDashboard() {
   }
 
   const navItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: '📊' },
-    { id: 'services', label: 'Servicios', icon: '🏢' },
-    { id: 'blog', label: 'Blog / Noticias', icon: '📰' },
-    { id: 'courses', label: 'Cursos', icon: '🎓' },
-    { id: 'users', label: 'Clientes', icon: '👥' },
-    { id: 'pqrsf', label: 'PQRSF', icon: '📋' },
-    { id: 'settings', label: 'Configuración', icon: '⚙️' },
+    { id: 'dashboard', label: 'Dashboard', icon: BarChart2 },
+    { id: 'services', label: 'Servicios', icon: Building },
+    { id: 'blog', label: 'Blog / Noticias', icon: FileText },
+    { id: 'courses', label: 'Cursos', icon: GraduationCap },
+    { id: 'users', label: 'Clientes', icon: Users },
+    { id: 'pqrsf', label: 'PQRSF', icon: Clipboard },
+    { id: 'settings', label: 'Configuración', icon: Sliders },
   ]
 
   return (
@@ -136,7 +137,7 @@ export default function AdminDashboard() {
               onMouseEnter={e => { if (section !== item.id) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.06)' }}
               onMouseLeave={e => { if (section !== item.id) e.currentTarget.style.backgroundColor = 'transparent' }}
             >
-              <span style={{ fontSize: 16, flexShrink: 0, width: 20, textAlign: 'center' }}>{item.icon}</span>
+              <span style={{ flexShrink: 0, width: 20, display: 'flex', justifyContent: 'center' }}><item.icon size={16} /></span>
               {sidebarOpen && <span className="text-sm font-medium truncate">{item.label}</span>}
             </button>
           ))}
@@ -169,8 +170,8 @@ export default function AdminDashboard() {
             {/* Bell */}
             <div style={{ position: 'relative' }}>
               <button onClick={() => setBellOpen(o => !o)}
-                style={{ position: 'relative', background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, color: 'var(--foreground)' }}>
-                🔔
+                style={{ position: 'relative', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--foreground)' }}>
+                <Bell size={20} />
                 <span style={{
                   position: 'absolute', top: -4, right: -4,
                   width: 18, height: 18, borderRadius: '50%',
@@ -190,15 +191,15 @@ export default function AdminDashboard() {
                     <span className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>Notificaciones admin</span>
                   </div>
                   {[
-                    { icon: '📋', text: 'Nueva PQRSF de María García', time: 'Hace 1 hora' },
-                    { icon: '👤', text: 'Nuevo cliente registrado: Ana Martínez', time: 'Hace 3 horas' },
-                    { icon: '🎓', text: '3 nuevas inscripciones en "Auditoría Interna"', time: 'Ayer' },
-                    { icon: '⚠️', text: 'Servicio "PEI" requiere actualización normativa', time: 'Hace 2 días' },
-                    { icon: '📰', text: 'Publicación programada lista para revisión', time: 'Hace 3 días' },
+                    { icon: Clipboard, text: 'Nueva PQRSF de María García', time: 'Hace 1 hora' },
+                    { icon: User, text: 'Nuevo cliente registrado: Ana Martínez', time: 'Hace 3 horas' },
+                    { icon: GraduationCap, text: '3 nuevas inscripciones en "Auditoría Interna"', time: 'Ayer' },
+                    { icon: AlertTriangle, text: 'Servicio "PEI" requiere actualización normativa', time: 'Hace 2 días' },
+                    { icon: FileText, text: 'Publicación programada lista para revisión', time: 'Hace 3 días' },
                   ].map((n, i) => (
                     <div key={i} style={{ padding: '10px 16px', borderBottom: '1px solid var(--border)', backgroundColor: i < 2 ? 'rgba(0,81,135,0.05)' : 'transparent' }}>
                       <div className="flex gap-3">
-                        <span style={{ fontSize: 16, flexShrink: 0 }}>{n.icon}</span>
+                        <span style={{ flexShrink: 0, color: 'var(--muted-foreground)' }}><n.icon size={16} /></span>
                         <div>
                           <p className="text-xs" style={{ color: 'var(--foreground)' }}>{n.text}</p>
                           <p className="text-xs" style={{ color: 'var(--muted-foreground)', opacity: 0.7 }}>{n.time}</p>
@@ -239,15 +240,15 @@ export default function AdminDashboard() {
               <p className="text-sm mb-6" style={{ color: 'var(--muted-foreground)' }}>Resumen general de Lidessa</p>
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                 {[
-                  { label: 'Clientes registrados', value: 47, icon: '👥', color: '#005187' },
-                  { label: 'PQRSF pendientes', value: pqrsfTickets.filter(p => p.status === 'Pendiente').length, icon: '📋', color: '#d97706' },
-                  { label: 'Cursos activos', value: 12, icon: '🎓', color: '#16a34a' },
-                  { label: 'Publicaciones del mes', value: 4, icon: '📰', color: '#7c3aed' },
+                  { label: 'Clientes registrados', value: 47, icon: Users, color: '#005187' },
+                  { label: 'PQRSF pendientes', value: pqrsfTickets.filter(p => p.status === 'Pendiente').length, icon: Clipboard, color: '#d97706' },
+                  { label: 'Cursos activos', value: 12, icon: GraduationCap, color: '#16a34a' },
+                  { label: 'Publicaciones del mes', value: 4, icon: FileText, color: '#7c3aed' },
                 ].map(s => (
                   <div key={s.label} className="rounded-xl p-5"
                     style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
                     <div className="flex items-center justify-between mb-3">
-                      <span style={{ fontSize: 28 }}>{s.icon}</span>
+                      <span style={{ color: s.color }}><s.icon size={26} /></span>
                       <AnimatedCounter target={s.value} suffix="" style={{ fontSize: 32, fontFamily: 'var(--font-display)', color: s.color, fontWeight: 900 }} />
                     </div>
                     <p className="text-xs font-medium" style={{ color: 'var(--muted-foreground)' }}>{s.label}</p>
@@ -259,10 +260,10 @@ export default function AdminDashboard() {
               <h2 className="font-bold text-sm mb-3" style={{ color: 'var(--foreground)', fontFamily: 'var(--font-display)' }}>Acciones rápidas</h2>
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
                 {[
-                  { label: 'Nueva publicación', icon: '✏️', section: 'blog' },
-                  { label: 'Agregar curso', icon: '➕', section: 'courses' },
-                  { label: 'Ver PQRSF', icon: '📨', section: 'pqrsf' },
-                  { label: 'Gestionar usuarios', icon: '👤', section: 'users' },
+                  { label: 'Nueva publicación', icon: Edit2, section: 'blog' },
+                  { label: 'Agregar curso', icon: Plus, section: 'courses' },
+                  { label: 'Ver PQRSF', icon: Send, section: 'pqrsf' },
+                  { label: 'Gestionar usuarios', icon: User, section: 'users' },
                 ].map(a => (
                   <button key={a.label} onClick={() => setSection(a.section)}
                     className="rounded-xl p-4 text-left transition-all hover:shadow-md"
@@ -270,7 +271,7 @@ export default function AdminDashboard() {
                     onMouseEnter={e => { e.currentTarget.style.borderColor = '#4d82bc' }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)' }}
                   >
-                    <span style={{ fontSize: 24, display: 'block', marginBottom: 8 }}>{a.icon}</span>
+                    <span style={{ display: 'block', marginBottom: 8, color: 'var(--primary)' }}><a.icon size={22} /></span>
                     <span className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{a.label}</span>
                   </button>
                 ))}
@@ -538,7 +539,7 @@ export default function AdminDashboard() {
           style={{ backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}>
           <div className="rounded-2xl p-6 max-w-sm w-full shadow-2xl"
             style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', animation: 'fadeUp 0.25s ease' }}>
-            <div className="text-4xl mb-3 text-center">⚠️</div>
+            <div className="flex justify-center mb-3" style={{ color: '#d97706' }}><AlertTriangle size={40} /></div>
             <h3 className="text-base font-black text-center mb-2" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
               ¿Confirmar eliminación?
             </h3>

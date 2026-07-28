@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useToast } from '@/shared/context/ToastContext'
+import { Check, X, AlertTriangle, Info } from '@/shared/components/Icons'
 
 const typeConfig = {
-  success: { bg: '#16a34a', icon: '✓', label: 'Éxito' },
-  error:   { bg: '#dc2626', icon: '✕', label: 'Error' },
-  warning: { bg: '#d97706', icon: '⚠', label: 'Advertencia' },
-  info:    { bg: '#005187', icon: 'ℹ', label: 'Información' },
+  success: { bg: '#16a34a', icon: Check, label: 'Éxito' },
+  error:   { bg: '#dc2626', icon: X, label: 'Error' },
+  warning: { bg: '#d97706', icon: AlertTriangle, label: 'Advertencia' },
+  info:    { bg: '#005187', icon: Info, label: 'Información' },
 }
 
 function ToastItem({ t, onDismiss }) {
@@ -49,9 +50,9 @@ function ToastItem({ t, onDismiss }) {
         backgroundColor: cfg.bg,
         color: 'white',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: 14, fontWeight: 700, flexShrink: 0,
+        flexShrink: 0,
       }}>
-        {cfg.icon}
+        <cfg.icon size={15} strokeWidth="2.5" />
       </span>
       <div style={{ flex: 1, minWidth: 0 }}>
         <p style={{ fontWeight: 700, fontSize: 13, color: 'var(--foreground)', marginBottom: t.message ? 2 : 0 }}>

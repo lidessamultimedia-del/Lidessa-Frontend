@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { MessageCircle, Briefcase } from '@/shared/components/Icons'
 
 export default function WhatsAppButton() {
   const [open, setOpen] = useState(false)
@@ -32,7 +33,7 @@ export default function WhatsAppButton() {
           onMouseEnter={e => { e.currentTarget.style.opacity = '0.9'; e.currentTarget.style.transform = 'translateY(-1px)' }}
           onMouseLeave={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'translateY(0)' }}
         >
-          <span>💬</span> Atención general
+          <MessageCircle size={16} /> Atención general
         </a>
         <a
           href="https://wa.me/573009876543?text=Hola, me gustaría hablar con el área comercial."
@@ -42,7 +43,7 @@ export default function WhatsAppButton() {
           onMouseEnter={e => { e.currentTarget.style.opacity = '0.9'; e.currentTarget.style.transform = 'translateY(-1px)' }}
           onMouseLeave={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'translateY(0)' }}
         >
-          <span>🤝</span> Atención comercial
+          <Briefcase size={16} /> Atención comercial
         </a>
       </div>
 

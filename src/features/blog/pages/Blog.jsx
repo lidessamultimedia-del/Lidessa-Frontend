@@ -58,7 +58,7 @@ export default function Blog() {
         </h2>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {blogPosts.map((post, i) => (
-            <div key={post.id} className={`flip-card h-[380px] reveal-scale stagger-${(i % 6) + 1}`}>
+            <div key={post.id} className={`flip-card h-95 reveal-scale stagger-${(i % 6) + 1}`}>
               <div className="flip-card-inner">
                 {/* Front — image poster */}
                 <div className="flip-card-front rounded-2xl overflow-hidden cursor-pointer"

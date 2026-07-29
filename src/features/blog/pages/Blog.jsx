@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { useBlog } from '../context/BlogContext'
 import BlogModal from '../components/BlogModal'
-import { useIsDarkTheme } from '@/shared/hooks/useIsDarkTheme'
 import { useScrollReveal } from '@/shared/hooks/useScrollReveal'
 
+const GOLD = '#e8c766'
+
 export default function Blog() {
-  const isDark = useIsDarkTheme()
   const { posts: blogPosts } = useBlog()
   const [selectedPost, setSelectedPost] = useState(null)
   const pageRef = useScrollReveal('reveal')
@@ -14,38 +14,84 @@ export default function Blog() {
   return (
     <div ref={pageRef}>
       {/* Hero — bienvenida Converge */}
-      <section className="py-16 overflow-hidden" style={{ backgroundColor: 'var(--muted)' }}>
+      <section className="py-16 overflow-hidden" style={{ background: 'linear-gradient(135deg, #10294d 0%, #071426 55%, #0c0c0c 100%)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 grid lg:grid-cols-5 gap-6 items-stretch">
           <div
             className="lg:col-span-3 rounded-3xl p-8 sm:p-12 flex flex-col justify-center reveal"
-            style={{ background: isDark ? '#000000' : 'linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%)' }}
+            style={{ backgroundColor: 'rgba(0,0,0,0.35)', border: '1px solid rgba(232,199,102,0.18)' }}
           >
-            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: isDark ? '#e8c766' : 'var(--secondary)' }}>Converge</p>
-            <h1 className="text-4xl sm:text-5xl font-black mb-5" style={{ fontFamily: 'var(--font-display)', color: isDark ? '#e8c766' : 'white' }}>
-              ¡Bienvenidos a Converge!
+            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: GOLD }}>Converge</p>
+            <h1 className="text-4xl sm:text-5xl font-black mb-4 leading-tight" style={{ fontFamily: 'var(--font-display)' }}>
+              <span style={{ color: 'white' }}>¡Bienvenidos a</span><br />
+              <span style={{ color: GOLD }}>Converge!</span>
             </h1>
-            <p className="text-sm sm:text-base leading-relaxed mb-4" style={{ color: isDark ? '#cbb98a' : 'rgba(255,255,255,0.92)' }}>
-              Nos alegra que se una a nuestra comunidad de información. En Converge estamos comprometidos a ofrecerle las noticias más actuales, relevantes y confiables del panorama empresarial, normativo e institucional, para mantenerlo siempre al tanto de lo que más importa.
+            <div className="w-16 h-0.5 mb-5 rounded-full" style={{ backgroundColor: GOLD, opacity: 0.6 }} />
+            <p className="text-sm sm:text-base leading-relaxed mb-5" style={{ color: 'rgba(255,255,255,0.88)' }}>
+              Nos alegra que se una a nuestra comunidad de información. En <span style={{ color: GOLD, fontWeight: 600 }}>Converge</span> estamos comprometidos a ofrecerle las <span style={{ color: GOLD, fontWeight: 600 }}>noticias más actuales, relevantes y confiables</span> del panorama empresarial, normativo e institucional, para mantenerlo siempre al tanto de lo que más importa.
             </p>
-            <p className="text-sm sm:text-base leading-relaxed mb-4" style={{ color: isDark ? '#cbb98a' : 'rgba(255,255,255,0.92)' }}>
-              Aquí no solo reportamos noticias: también fomentamos el diálogo y la reflexión. Queremos ser su fuente de información confiable y su espacio para el intercambio de ideas.
-            </p>
-            <p className="text-sm sm:text-base leading-relaxed font-semibold" style={{ color: isDark ? '#e8c766' : 'white' }}>
-              Gracias por confiar en nosotros para mantenerte informado. ¡Vamos a converger en la verdad y el conocimiento!
-            </p>
+
+            <div className="rounded-2xl p-4 mb-5 flex gap-3 items-start" style={{ backgroundColor: 'rgba(232,199,102,0.06)', border: '1px solid rgba(232,199,102,0.25)' }}>
+              <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ border: `1.5px solid ${GOLD}` }}>
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+                </svg>
+              </div>
+              <p className="text-sm sm:text-base leading-relaxed" style={{ color: 'rgba(255,255,255,0.88)' }}>
+                Aquí no solo reportamos noticias: también fomentamos el <span style={{ color: GOLD, fontWeight: 600 }}>diálogo</span> y la <span style={{ color: GOLD, fontWeight: 600 }}>reflexión</span>. Queremos ser su fuente de información confiable y su espacio para el <span style={{ color: GOLD, fontWeight: 600 }}>intercambio de ideas</span>.
+              </p>
+            </div>
+
+            <div className="w-16 h-0.5 mb-3 rounded-full" style={{ backgroundColor: GOLD, opacity: 0.6 }} />
+            <div className="flex gap-3 items-start">
+              <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0" style={{ border: `1.5px solid ${GOLD}` }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill={GOLD} stroke={GOLD}>
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                </svg>
+              </div>
+              <p className="text-sm sm:text-base leading-relaxed">
+                <span style={{ color: 'rgba(255,255,255,0.88)' }}>Gracias por confiar en nosotros para mantenerte informado. </span>
+                <span style={{ color: GOLD, fontWeight: 700 }}>¡Vamos a converger en la verdad y el conocimiento!</span>
+              </p>
+            </div>
           </div>
 
           <div
-            className="lg:col-span-2 rounded-3xl overflow-hidden min-h-65 reveal-scale"
-            style={{ backgroundColor: '#000000' }}
+            className="lg:col-span-2 rounded-3xl overflow-hidden min-h-65 reveal-scale relative flex items-center justify-center"
+            style={{ background: 'radial-gradient(ellipse 75% 65% at 50% 42%, #10294d 0%, #071426 55%, #020712 100%)' }}
           >
-            <video
-              autoPlay
-              loop
-              muted
-              playsInline
-              src="/assets/logoanimado.mp4"
-              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+            {/* Glow ring */}
+            <div
+              className="absolute pointer-events-none"
+              style={{
+                width: '94%',
+                height: '76%',
+                top: '9%',
+                left: '3%',
+                borderRadius: '50%',
+                border: '1.5px solid rgba(232,199,102,0.55)',
+                boxShadow: '0 0 70px 12px rgba(232,199,102,0.3), inset 0 0 45px rgba(232,199,102,0.12)',
+                transform: 'rotate(-4deg)',
+              }}
+            />
+            {/* Pedestal glow */}
+            <div
+              className="absolute pointer-events-none"
+              style={{
+                bottom: '3%',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '65%',
+                height: '13%',
+                borderRadius: '50%',
+                background: 'radial-gradient(ellipse at center, rgba(232,199,102,0.45), transparent 70%)',
+                filter: 'blur(6px)',
+              }}
+            />
+            <img
+              src="/assets/logo_converge.png"
+              alt="Converge"
+              className="relative"
+              style={{ width: '96%', height: '96%', objectFit: 'contain', display: 'block', zIndex: 2 }}
             />
           </div>
         </div>
@@ -53,9 +99,12 @@ export default function Blog() {
 
       {/* Posts grid */}
       <section className="py-14 max-w-7xl mx-auto px-4 sm:px-6">
-        <h2 className="text-2xl font-black mb-8 reveal" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
-          Tendencia
-        </h2>
+        <div className="flex items-center gap-4 mb-8 reveal">
+          <h2 className="text-2xl font-black shrink-0" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
+            Tendencia
+          </h2>
+          <div className="h-0.5 flex-1 rounded-full" style={{ background: `linear-gradient(to right, ${GOLD}, transparent)` }} />
+        </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {blogPosts.map((post, i) => (
             <div key={post.id} className={`flip-card h-95 reveal-scale stagger-${(i % 6) + 1}`}>
@@ -67,7 +116,7 @@ export default function Blog() {
                   <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
                   <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.85), rgba(0,0,0,0.15) 55%, transparent)' }} />
                   <div className="absolute top-3 right-3">
-                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: '#c4dafa', color: '#005187' }}>
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: GOLD, color: '#141414' }}>
                       {post.category}
                     </span>
                   </div>
@@ -85,7 +134,7 @@ export default function Blog() {
                   onClick={() => setSelectedPost(post)}>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
-                      style={{ backgroundColor: 'var(--secondary)', color: 'var(--primary)' }}>
+                      style={{ backgroundColor: 'rgba(232,199,102,0.15)', color: '#c9a227' }}>
                       {post.category}
                     </span>
                     <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{post.date}</span>
@@ -97,8 +146,8 @@ export default function Blog() {
                     {post.excerpt}
                   </p>
                   <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0"
-                      style={{ background: 'linear-gradient(135deg, var(--primary), var(--accent))' }}>
+                    <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+                      style={{ background: 'linear-gradient(135deg, #c9a227, #e8c766)', color: '#141414' }}>
                       {post.author[0]}
                     </div>
                     <div>

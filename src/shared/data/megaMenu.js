@@ -37,8 +37,7 @@ export const megaMenu = [
   {
     label: 'Supervisión e interventoría',
     items: [
-      { label: 'Supervisión de proyectos', slug: 'supervision-proyectos' },
-      { label: 'Interventoría de obras', slug: 'interventoria-obras' },
+      { label: 'Supervisión e interventoría', slug: 'supervision-interventoria' },
     ],
   },
 ]

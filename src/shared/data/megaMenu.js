@@ -11,7 +11,7 @@ export const megaMenu = [
     label: 'Instituciones educativas',
     items: [
       { label: 'Manuales de convivencia', slug: 'manuales-convivencia' },
-      { label: 'Proyecto educativo institucional', slug: 'proyecto-educativo' },
+      { label: 'Diseño de PEI', slug: 'proyecto-educativo' },
       { label: 'Mallas curriculares', slug: 'mallas-curriculares' },
       { label: 'Evaluación docente', slug: 'evaluacion-docente' },
       { label: 'Evaluación institucional', slug: 'evaluacion-institucional' },

@@ -61,6 +61,7 @@ export default function BlogModal({ post, onClose }) {
           <div className="flex flex-wrap gap-3">
             <a
               href="https://wa.me/573001234567"
+              target="_blank" rel="noreferrer"
               className="px-4 py-2 rounded-lg text-sm font-bold text-white transition-opacity hover:opacity-90"
               style={{ backgroundColor: '#25D366' }}
             >

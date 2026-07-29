@@ -43,14 +43,14 @@ export default function Store() {
         <div className="grid md:grid-cols-2 gap-10 items-center">
           <div className="reveal-left">
             <h2 className="text-2xl sm:text-3xl font-black mb-5" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
-              ¿Por qué recargar tu botiquín de primeros auxilios?
+              ¿Por qué recargar su botiquín de primeros auxilios?
             </h2>
             <ul className="space-y-3 mb-6">
               {[
                 { label: 'Conformidad legal:', text: 'cumple con regulaciones, evita sanciones y asegura un entorno laboral conforme.' },
                 { label: 'Máxima preparación:', text: 'estar siempre listo para emergencias y cumplir con normativas laborales.' },
                 { label: 'Rápida respuesta:', text: 'recarga regular para suministros inmediatos y respuestas rápidas ante incidentes.' },
-                { label: 'Protección del personal:', text: 'cuida a tu equipo con insumos de calidad para un entorno seguro.' },
+                { label: 'Protección del personal:', text: 'cuida a su equipo con insumos de calidad para un entorno seguro.' },
               ].map(item => (
                 <li key={item.label} className="flex gap-2 text-sm leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
                   <span style={{ color: 'var(--primary)' }}>●</span>
@@ -59,7 +59,7 @@ export default function Store() {
               ))}
             </ul>
             <p className="text-sm mb-5" style={{ color: 'var(--muted-foreground)' }}>
-              Recuerda, nuestro asesoramiento es totalmente gratuito. ¡Estamos aquí para ayudarte!
+              Recuerde, nuestro asesoramiento es totalmente gratuito. ¡Estamos aquí para ayudarle!
             </p>
             <a href="https://wa.me/573009876543?text=Hola, quisiera asesoramiento gratuito sobre botiquines de primeros auxilios" target="_blank" rel="noreferrer"
               className="inline-block px-5 py-2.5 rounded-lg text-sm font-bold text-white transition-opacity hover:opacity-90"

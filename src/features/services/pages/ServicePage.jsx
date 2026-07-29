@@ -2,10 +2,13 @@ import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { servicesData } from '../data/servicesData'
 import { Clipboard, MessageCircle, Check } from '@/shared/components/Icons'
+import { useScrollReveal } from '@/shared/hooks/useScrollReveal'
 
 export default function ServicePage() {
   const { slug } = useParams()
   const [activeTab, setActiveTab] = useState(0)
+  const pageRef = useScrollReveal('reveal')
+  useScrollReveal('reveal-scale')
 
   const service = servicesData.find(s => s.slug === slug)
 
@@ -29,6 +32,7 @@ export default function ServicePage() {
           </Link>
           <a
             href="https://wa.me/573001234567"
+            target="_blank" rel="noreferrer"
             className="px-4 py-2 rounded-lg text-sm font-bold text-white"
             style={{ backgroundColor: '#25D366' }}
           >
@@ -40,7 +44,7 @@ export default function ServicePage() {
   }
 
   return (
-    <div>
+    <div ref={pageRef}>
       {/* Hero */}
       <section
         className="py-20 relative"
@@ -52,11 +56,11 @@ export default function ServicePage() {
       >
         <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(20,20,20,0.93) 0%, rgba(20,20,20,0.7) 100%)' }} />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
-          <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#e8c766' }}>Servicio</p>
-          <h1 className="text-4xl sm:text-5xl font-black text-white mb-5" style={{ fontFamily: 'var(--font-display)' }}>
+          <p className="text-xs font-bold uppercase tracking-widest mb-3 reveal" style={{ color: '#e8c766' }}>Servicio</p>
+          <h1 className="text-4xl sm:text-5xl font-black text-white mb-5 reveal stagger-1" style={{ fontFamily: 'var(--font-display)' }}>
             {service.title}
           </h1>
-          <p className="text-base max-w-2xl leading-relaxed" style={{ color: '#cbb98a' }}>
+          <p className="text-base max-w-2xl leading-relaxed reveal stagger-2" style={{ color: '#cbb98a' }}>
             {service.description}
           </p>
         </div>
@@ -82,32 +86,44 @@ export default function ServicePage() {
         </div>
 
         {service.tabs[activeTab].checklist ? (
-          <div className="max-w-3xl mx-auto">
+          <div key={activeTab} className="max-w-3xl mx-auto animate-fade-up">
             {service.tabs[activeTab].title && (
               <h2 className="text-2xl font-black text-center mb-6" style={{ fontFamily: 'var(--font-display)', color: 'var(--primary)' }}>
                 {service.tabs[activeTab].title}
               </h2>
             )}
             {service.tabs[activeTab].intro && (
-              <div className="rounded-2xl p-6 mb-8" style={{ border: '1px solid var(--primary)', backgroundColor: 'var(--card)' }}>
-                <p className="text-sm text-center leading-relaxed" style={{ color: 'var(--foreground)' }}>
+              <div
+                className="rounded-2xl p-6 sm:p-7 mb-10 relative overflow-hidden text-left"
+                style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', borderLeft: '4px solid var(--primary)' }}
+              >
+                <p className="text-sm leading-relaxed" style={{ color: 'var(--foreground)' }}>
                   {service.tabs[activeTab].intro}
                 </p>
               </div>
             )}
-            <ul className="space-y-5 mb-10">
+            <ul className="grid gap-3 mb-12 text-left">
               {service.tabs[activeTab].checklist.map((item, i) => (
-                <li key={i} className="flex items-start gap-3">
-                  <span className="shrink-0 mt-0.5" style={{ color: 'var(--primary)' }}>
-                    <Check size={18} strokeWidth="3" />
+                <li
+                  key={i}
+                  className="flex items-start gap-3 rounded-xl p-4 animate-fade-up transition-transform"
+                  style={{ animationDelay: `${i * 0.08}s`, opacity: 0, backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateX(4px)'; e.currentTarget.style.borderColor = 'var(--primary)' }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = 'translateX(0)'; e.currentTarget.style.borderColor = 'var(--border)' }}
+                >
+                  <span
+                    className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center"
+                    style={{ background: 'linear-gradient(135deg, #005187 0%, #4d82bc 55%, #b8860b 100%)', color: 'white' }}
+                  >
+                    <Check size={13} strokeWidth="3" />
                   </span>
-                  <p className="text-sm leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>{item}</p>
+                  <p className="text-sm leading-relaxed" style={{ color: 'var(--foreground)' }}>{item}</p>
                 </li>
               ))}
             </ul>
             {service.tabs[activeTab].structure && (
-              <div>
-                <h3 className="text-lg font-bold mb-6" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
+              <div className="text-left">
+                <h3 className="text-lg font-bold mb-6 text-center" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
                   {service.tabs[activeTab].structure.title}
                 </h3>
                 {service.tabs[activeTab].structure.image ? (
@@ -119,16 +135,25 @@ export default function ServicePage() {
                     />
                   </div>
                 ) : (
-                  <ol className="space-y-4">
+                  <ol className="relative">
+                    <span
+                      className="hidden sm:block absolute left-5 top-2 bottom-2 w-px"
+                      style={{ backgroundColor: 'var(--border)' }}
+                    />
                     {service.tabs[activeTab].structure.steps.map((step, i) => (
-                      <li key={i} className="flex items-center gap-4">
+                      <li key={i} className="relative flex items-center gap-4 pb-6 last:pb-0 animate-fade-up" style={{ animationDelay: `${i * 0.08}s`, opacity: 0 }}>
                         <span
-                          className="shrink-0 rounded-full flex items-center justify-center text-sm font-bold text-white"
-                          style={{ width: 40, height: 40, backgroundColor: i % 2 === 0 ? 'var(--primary)' : '#4d82bc' }}
+                          className="shrink-0 rounded-full flex items-center justify-center text-sm font-bold text-white relative z-10"
+                          style={{ width: 40, height: 40, background: 'linear-gradient(135deg, #005187 0%, #4d82bc 55%, #b8860b 100%)' }}
                         >
                           {String(i + 1).padStart(2, '0')}
                         </span>
-                        <span className="text-sm font-medium" style={{ color: 'var(--foreground)' }}>{step}</span>
+                        <span
+                          className="text-sm font-medium rounded-lg px-4 py-3 flex-1"
+                          style={{ color: 'var(--foreground)', backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}
+                        >
+                          {step}
+                        </span>
                       </li>
                     ))}
                   </ol>
@@ -137,45 +162,67 @@ export default function ServicePage() {
             )}
           </div>
         ) : (
-        <div className="max-w-3xl mx-auto text-center">
+        <div key={activeTab} className="max-w-3xl mx-auto text-left animate-fade-up">
             {service.tabs[activeTab].sections ? (
-              <div className="space-y-6">
+              <div className="space-y-8">
                 {service.tabs[activeTab].title && (
-                  <h2 className="text-2xl font-black mb-2" style={{ fontFamily: 'var(--font-display)', color: 'var(--primary)' }}>
+                  <h2 className="text-2xl font-black mb-2 text-center" style={{ fontFamily: 'var(--font-display)', color: 'var(--primary)' }}>
                     {service.tabs[activeTab].title}
                   </h2>
                 )}
-                {service.tabs[activeTab].sections.map((section, i) => (
-                  <div key={i} className={section.boxed ? 'rounded-2xl p-6 text-left' : ''} style={section.boxed ? { border: '1px solid var(--primary)', backgroundColor: 'var(--card)' } : undefined}>
+                {service.tabs[activeTab].sections.map((section, i) => {
+                  const isLead = !section.heading && !section.boxed
+                  return (
+                  <div
+                    key={i}
+                    className="animate-fade-up"
+                    style={{
+                      animationDelay: `${i * 0.1}s`, opacity: 0,
+                      ...(section.boxed ? { borderRadius: 16, padding: 24, border: '1px solid var(--border)', borderLeft: '4px solid #b8860b', backgroundColor: 'var(--card)' } : {}),
+                    }}
+                  >
                     {section.heading && (
-                      <h3 className="font-bold text-base mb-2" style={{ fontFamily: 'var(--font-display)', color: 'var(--primary)' }}>
+                      <h3 className="font-bold text-lg mb-3 flex items-center gap-2" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
+                        <span style={{ width: 6, height: 6, borderRadius: 999, background: 'linear-gradient(135deg, #005187, #b8860b)' }} />
                         {section.heading}
                       </h3>
                     )}
                     {section.text && (
-                      <p className="text-sm leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
+                      <p
+                        className="leading-relaxed"
+                        style={isLead
+                          ? { fontSize: '1.0625rem', color: 'var(--foreground)' }
+                          : { fontSize: '0.875rem', color: 'var(--muted-foreground)', marginBottom: section.bullets ? 14 : 0 }}
+                      >
                         {section.text}
                       </p>
                     )}
                     {section.bullets && (
-                      <ul className="space-y-3 mt-1 text-left">
+                      <div className="grid sm:grid-cols-2 gap-3 mt-1">
                         {section.bullets.map((b, j) => (
-                          <li key={j} className="flex items-start gap-3">
+                          <div
+                            key={j}
+                            className="rounded-xl p-4 animate-fade-up transition-transform"
+                            style={{ animationDelay: `${j * 0.06}s`, opacity: 0, backgroundColor: 'var(--muted)', border: '1px solid var(--border)' }}
+                            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.borderColor = '#b8860b' }}
+                            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = 'var(--border)' }}
+                          >
                             <span
-                              className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5"
-                              style={{ backgroundColor: 'var(--primary)', color: 'white' }}
+                              className="w-6 h-6 rounded-full flex items-center justify-center mb-2"
+                              style={{ background: 'linear-gradient(135deg, #005187 0%, #4d82bc 55%, #b8860b 100%)', color: 'white' }}
                             >
-                              <Check size={12} strokeWidth="3" />
+                              <Check size={13} strokeWidth="3" />
                             </span>
-                            <span className="text-sm" style={{ color: 'var(--foreground)' }}>
-                              <strong style={{ color: 'var(--foreground)' }}>{b.label}</strong> {b.text}
-                            </span>
-                          </li>
+                            <p className="text-sm" style={{ color: 'var(--foreground)' }}>
+                              <strong>{b.label}</strong> {b.text}
+                            </p>
+                          </div>
                         ))}
-                      </ul>
+                      </div>
                     )}
                   </div>
-                ))}
+                  )
+                })}
               </div>
             ) : (
               <>
@@ -184,7 +231,7 @@ export default function ServicePage() {
                 </p>
                 <ul className="space-y-3 text-left">
                   {service.tabs[activeTab].bullets.map((b, i) => (
-                    <li key={i} className="flex items-start gap-3">
+                    <li key={i} className="flex items-start gap-3 animate-fade-up" style={{ animationDelay: `${i * 0.06}s`, opacity: 0 }}>
                       <span
                         className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 mt-0.5"
                         style={{ backgroundColor: 'var(--primary)', color: 'white' }}
@@ -204,7 +251,7 @@ export default function ServicePage() {
       {/* CTA */}
       <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6">
         <div
-          className="rounded-2xl p-8 text-center relative overflow-hidden"
+          className="rounded-2xl p-8 text-center relative overflow-hidden reveal-scale"
           style={{ background: 'linear-gradient(135deg, #141414, #3d3115)' }}
         >
           <div className="absolute inset-0 opacity-5" style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, #c9a227 0%, transparent 50%), radial-gradient(circle at 80% 50%, #e8c766 0%, transparent 50%)' }} />
@@ -217,7 +264,8 @@ export default function ServicePage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <a
-                href="https://wa.me/573001234567?text=Hola, me interesa el servicio de {service.title}"
+                href={`https://wa.me/573001234567?text=Hola, me interesa el servicio de ${service.title}`}
+                target="_blank" rel="noreferrer"
                 className="px-6 py-3 rounded-lg text-sm font-bold text-white transition-opacity hover:opacity-90"
                 style={{ backgroundColor: '#25D366' }}
               >

@@ -661,29 +661,73 @@ export const servicesData = [
     virtual: ['Asesoría en diseño del plan', 'Entrega del plan en formato editable', 'Capacitación virtual a la brigada', 'Seguimiento remoto a indicadores'],
   },
   {
-    slug: 'supervision-proyectos',
-    title: 'Supervisión de Proyectos',
-    description: 'Prestamos servicios de supervisión técnica, administrativa y financiera de proyectos de obra civil, infraestructura y mejoras locativas, garantizando el cumplimiento del objeto contractual.',
-    hero: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=1400&h=600&fit=crop&auto=format',
+    slug: 'supervision-interventoria',
+    title: 'Supervisión e Interventoría',
+    description: 'Prestamos servicios de supervisión técnica, administrativa y financiera, e interventoría integral —técnica, administrativa, financiera y jurídica— de proyectos de obra civil e infraestructura, garantizando el cumplimiento del objeto contractual y velando por los intereses del contratante en cada etapa del proyecto.',
+    hero: '/assets/programacion.png',
     tabs: [
-      { label: 'Técnica', content: 'Verificamos que los trabajos se ejecuten conforme a diseños, especificaciones técnicas y normas de construcción vigentes.', bullets: ['Revisión de planos y especificaciones', 'Control de calidad de materiales y procesos', 'Verificación de cumplimiento normativo NSR-10', 'Informes técnicos periódicos'] },
-      { label: 'Administrativa', content: 'Controlamos el cumplimiento contractual, los cronogramas de obra y los procedimientos administrativos del proyecto.', bullets: ['Control de cronograma y avance físico', 'Revisión de contratos y modificaciones', 'Gestión de permisos y licencias', 'Actas de comité de obra'] },
-      { label: 'Financiera', content: 'Hacemos seguimiento al presupuesto, las cuentas de cobro y el uso eficiente de los recursos del proyecto.', bullets: ['Control presupuestal del proyecto', 'Revisión de cuentas de cobro y actas parciales', 'Análisis de desviaciones presupuestales', 'Informe financiero al comitente'] },
+      {
+        label: 'Gestión',
+        sections: [
+          { boxed: true, text: 'En Lidessa, nos comprometemos a ofrecer servicios de supervisión e interventoría de alta calidad, alineados con las normativas legales vigentes y las mejores prácticas en gestión de proyectos. Este servicio está diseñado para garantizar el cumplimiento de los objetivos de los contratos, supervisando cada etapa, con el fin de asegurar eficiencia, calidad, y sostenibilidad.' },
+          { text: 'El servicio de interventoría de Lidessa está orientado a acompañar y supervisar proyectos en diversas etapas de su ciclo de vida, asegurando el cumplimiento de los términos contractuales, normativos y técnicos y cubre aspectos esenciales como:' },
+          {
+            heading: 'Gestión Ambiental y Social:',
+            bullets: [
+              { text: 'Aseguramos que las actividades del proyecto respeten las normativas ambientales y promuevan prácticas sostenibles.' },
+              { text: 'Realizamos seguimiento a los impactos sociales, minimizando riesgos y promoviendo relaciones positivas con las comunidades involucradas.' },
+            ],
+          },
+          {
+            heading: 'Gestión Contractual:',
+            bullets: [
+              { text: 'Verificamos el cumplimiento de las obligaciones contractuales por parte de los contratistas.' },
+              { text: 'Emitimos informes periódicos que reflejan el estado del proyecto y ofrecen recomendaciones para la mejora continua.' },
+            ],
+          },
+          {
+            heading: 'Mitigación de Riesgos:',
+            bullets: [
+              { text: 'Identificamos riesgos potenciales en el desarrollo del proyecto y proponemos medidas correctivas oportunas.' },
+            ],
+          },
+        ],
+      },
+      {
+        label: 'Beneficios',
+        sections: [
+          {
+            heading: 'Beneficios del Servicio:',
+            bullets: [
+              { label: 'Garantía de Calidad:', text: 'Supervisamos cada detalle del proyecto para cumplir con estándares de excelencia.' },
+              { label: 'Eficiencia:', text: 'Optimizamos recursos, tiempo y presupuesto.' },
+              { label: 'Cumplimiento Normativo:', text: 'Aseguramos que las actividades cumplan con las normativas locales e internacionales.' },
+              { label: 'Transparencia:', text: 'Ofrecemos informes detallados que promueven la confianza entre las partes interesadas.' },
+              { label: 'Sostenibilidad:', text: 'Fomentamos prácticas responsables que minimicen impactos negativos.' },
+            ],
+          },
+        ],
+      },
+      {
+        label: 'Sectores',
+        sections: [
+          {
+            heading: 'Sectores de Aplicación:',
+            text: 'Este servicio está diseñado para adaptarse a proyectos en sectores como:',
+            bullets: [
+              { text: 'Construcción' },
+              { text: 'Infraestructura' },
+              { text: 'Energía' },
+              { text: 'Medio Ambiente' },
+              { text: 'Entre otros' },
+            ],
+          },
+          { heading: '¿Por qué elegir Lidessa?' },
+          { boxed: true, text: 'Nuestra experiencia y el respaldo de un equipo altamente calificado nos permiten ofrecer un servicio integral que aporta valor a los proyectos de nuestros clientes. En Lidessa, entendemos que cada proyecto es único, y trabajamos en estrecha colaboración con nuestros clientes para garantizar resultados exitosos.' },
+        ],
+      },
     ],
-    presencial: ['Visitas periódicas a la obra', 'Reuniones de comité de obra', 'Mediciones y levantamiento de cantidades', 'Pruebas de calidad in-situ'],
-    virtual: ['Reportes de avance digitales', 'Gestión documental en línea', 'Reuniones virtuales de seguimiento', 'Control de cronograma con software'],
-  },
-  {
-    slug: 'interventoria-obras',
-    title: 'Interventoría de Obras',
-    description: 'Ejercemos la interventoría técnica, administrativa, financiera y jurídica de contratos de obra, velando por los intereses del contratante y el cumplimiento íntegro del objeto contractual.',
-    hero: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=1400&h=600&fit=crop&auto=format',
-    tabs: [
-      { label: 'Alcance', content: 'La interventoría integral abarca las dimensiones técnica, administrativa, financiera y jurídica del contrato de obra o servicio.', bullets: ['Control técnico de la ejecución', 'Seguimiento administrativo y contractual', 'Control financiero y presupuestal', 'Gestión jurídica y de riesgos'] },
-      { label: 'Informes', content: 'Elaboramos informes periódicos de interventoría con alto nivel de detalle y respaldo documental para el contratante.', bullets: ['Informes semanales de avance', 'Informe mensual de interventoría', 'Informe final de cierre del contrato', 'Libro de obra y actas de reunión'] },
-      { label: 'Liquidación', content: 'Acompañamos el proceso de liquidación del contrato verificando el cumplimiento total del objeto y las obligaciones de las partes.', bullets: ['Recibo final de obras ejecutadas', 'Verificación de garantías vigentes', 'Acta de liquidación bilateral', 'Informe final de interventoría'] },
-    ],
-    presencial: ['Visitas de interventoría en obra', 'Comités de obra y reuniones técnicas', 'Verificación de entregables físicos', 'Actas de recibo parcial y final'],
-    virtual: ['Gestión documental del contrato', 'Revisión de informes del contratista', 'Reuniones de seguimiento virtual', 'Consolidación de indicadores del contrato'],
+    presencial: ['Visitas periódicas de supervisión e interventoría en obra', 'Comités de obra y reuniones técnicas', 'Mediciones y levantamiento de cantidades', 'Verificación de entregables y actas de recibo parcial y final'],
+    virtual: ['Reportes de avance e informes digitales', 'Gestión documental del contrato en línea', 'Reuniones virtuales de seguimiento', 'Consolidación de indicadores y control de cronograma con software'],
   },
 ]

@@ -335,7 +335,7 @@ export const servicesData = [
     slug: 'manuales-convivencia',
     title: 'Manuales de Convivencia Escolar',
     description: 'Creamos y actualizamos manuales de convivencia claros, inclusivos y conformes a la normativa educativa vigente en Colombia.',
-    hero: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=1400&h=600&fit=crop&auto=format',
+    hero: '/assets/Manuales de Convivencia.png',
     tabs: [
       {
         label: 'Manuales de Convivencia',
@@ -368,7 +368,7 @@ export const servicesData = [
     slug: 'proyecto-educativo',
     title: 'Diseño de PEI',
     description: 'Diseñamos e implementamos el Proyecto Educativo Institucional, alineado con la misión, visión y directrices del Ministerio de Educación Nacional.',
-    hero: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=1400&h=600&fit=crop&auto=format',
+    hero: '/assets/Diseño de PEI.png',
     tabs: [
       {
         label: 'Diseño de PEI',
@@ -398,7 +398,7 @@ export const servicesData = [
     slug: 'mallas-curriculares',
     title: 'Diseño de Mallas Curriculares',
     description: 'Elaboramos y revisamos mallas curriculares que organizan los contenidos educativos de forma secuencial y coherente, garantizando el desarrollo progresivo de competencias en los estudiantes.',
-    hero: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=1400&h=600&fit=crop&auto=format',
+    hero: '/assets/Mallas Curriculares.png',
     tabs: [
       {
         label: 'Mallas Curriculares',
@@ -432,7 +432,7 @@ export const servicesData = [
     slug: 'evaluacion-docente',
     title: 'Evaluación Docente',
     description: 'Ofrecemos un servicio integral de evaluación de docentes, basado en criterios objetivos y alineado con las normativas del Ministerio de Educación Nacional.',
-    hero: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1400&h=600&fit=crop&auto=format',
+    hero: '/assets/Evaluación Docente.png',
     tabs: [
       {
         label: 'Evaluación Docente',
@@ -465,7 +465,7 @@ export const servicesData = [
     slug: 'evaluacion-institucional',
     title: 'Evaluación Institucional',
     description: 'Ofrecemos un servicio de evaluación institucional exhaustivo que acompaña a las instituciones educativas en su proceso de mejora continua y cumplimiento normativo.',
-    hero: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=1400&h=600&fit=crop&auto=format',
+    hero: '/assets/Evaluación Institucional.png',
     tabs: [
       {
         label: 'Evaluación Institucional',
@@ -530,15 +530,96 @@ export const servicesData = [
   {
     slug: 'seguridad-salud',
     title: 'Seguridad y Salud en el Trabajo (SG-SST)',
-    description: 'Diseñamos e implementamos el Sistema de Gestión de Seguridad y Salud en el Trabajo (SG-SST) adaptado a su sector, cumpliendo con el Decreto 1072 y la Resolución 0312.',
-    hero: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?w=1400&h=600&fit=crop&auto=format',
+    description: 'Proveemos a su empresa con un servicio integral de consultoría gerencial para fortalecer la toma de decisiones estratégicas. A través de nuestro enfoque en la Inteligencia y Planificación Estratégica (IPS), le ayudamos a anticipar cambios en el entorno empresarial, gestionar riesgos y aprovechar oportunidades. Trabajamos de la mano con la alta dirección para diseñar y ejecutar planes que maximicen el rendimiento de su empresa.',
+    hero: '/assets/seguridad_salud_trabajo.png',
     tabs: [
-      { label: 'SG-SST', content: 'El Sistema de Gestión de Seguridad y Salud en el Trabajo es obligatorio para todas las empresas colombianas según el Decreto 1072 de 2015.', bullets: ['Evaluación inicial del SG-SST (Res. 0312)', 'Matriz de peligros y valoración de riesgos', 'Plan anual de trabajo del sistema', 'Indicadores mínimos de seguimiento'] },
-      { label: 'Beneficios', content: 'Un SG-SST bien implementado protege a sus colaboradores, reduce la accidentalidad y evita sanciones del Ministerio de Trabajo.', bullets: ['Reducción de accidentes y enfermedades laborales', 'Cumplimiento ante inspecciones del MinTrabajo', 'Reducción del ausentismo por accidentes', 'Mejora del clima y cultura organizacional'] },
-      { label: 'Sectores', content: 'Atendemos propiedades horizontales, conjuntos residenciales, empresas de construcción y servicios con experiencia probada.', bullets: ['Conjuntos residenciales y copropiedades', 'Empresas constructoras y de infraestructura', 'Comercio, servicios y oficinas', 'Industria manufacturera y logística'] },
+      {
+        label: 'SG-SST',
+        sections: [
+          { text: 'Si necesita diseñar, implementar o actualizar su sistema de seguridad y salud en el trabajo, Lidessa está aquí para asistirle. Comenzaremos el proceso con usted o con la persona que designe al interior de su entidad, siguiendo los lineamientos del Decreto 1072 de 2015, la resolución 0312 de 2019 y todas aquellas normas que las sustituyan o modifiquen.' },
+          {
+            heading: 'Actividades Presenciales',
+            bullets: [
+              { text: 'Levantamiento de información para planes de emergencia, inspección de equipos de seguridad y elaboración de inventarios.' },
+              { text: 'Capacitaciones en primeros auxilios y evacuaciones.' },
+              { text: 'Gestión del riesgo para residentes y empleados.' },
+              { text: 'Evaluación de señaléticas de emergencia, demarcaciones y guías.' },
+              { text: 'Análisis integral de puestos de trabajo.' },
+              { text: 'Seguimiento de proveedores y contratistas.' },
+              { text: 'Acompañamiento en visitas y revisiones de entidades de regulación.' },
+              { text: 'Simulación de eventos e intervención de accidentados.' },
+              { text: 'Jornada de salud con actividades de promoción, prevención y diagnóstico.' },
+              { text: 'Inspecciones locativas y levantamiento de perfiles sociodemográficos laborales y habitacionales.' },
+              { text: 'Reuniones informativas y de gestión, tanto virtuales como presenciales.' },
+            ],
+          },
+          {
+            heading: 'Actividades a Distancia',
+            bullets: [
+              { text: 'Diseño o rediseño del SG-SST según cambios normativos y necesidades del cliente.' },
+              { text: 'Elaboración de planes de emergencia y administración del SG-SST.' },
+              { text: 'Elaboración de manuales de funciones del SST y asesoría virtual en SST.' },
+              { text: 'Capacitación virtual para residentes, empleados y administradores.' },
+              { text: 'Gestión documental.' },
+              { text: 'Elaboración de sistemas de vigilancia epidemiológica (SVE).' },
+              { text: 'Elaboración de informes detallados de inspecciones y análisis de perfiles sociodemográficos.' },
+              { text: 'Certificación y registro del sistema ante el fondo de riesgos laborales y la ARL.' },
+            ],
+          },
+          { text: 'En la fase de diseño, garantizamos que su empresa cumpla con todos los requisitos de SST, incluyendo la formación de comités, capacitación y la inducción de los empleados. Revisaremos la matriz de riesgos y las normativas correspondientes, y al final de esta fase, validaremos y certificaremos que el diseño del SG-SST cumple con los requisitos mínimos establecidos por la normativa vigente. Implementaremos los procesos necesarios para asegurar que su SG-SST funcione de manera efectiva durante todo el año, manteniendo su continuidad y efectividad.' },
+          { boxed: true, text: 'Licencia SG-SST No S2017060095482 de 2017 y S2018060230500 de 2018, por medio de las cuales la secretaría de Salud del Departamento de Antioquia concede licencia para ofertar servicios de seguridad y salud en el trabajo a Nivel nacional a persona jurídica.' },
+        ],
+      },
+      {
+        label: 'Administración Asistida',
+        sections: [
+          {
+            heading: 'Administración asistida',
+            text: 'En nuestra empresa, ofrecemos un servicio integral de administración asistida diseñado para optimizar el funcionamiento y la eficiencia de su organización. Este servicio se centra en apoyar y mejorar las operaciones administrativas de su empresa mediante una gestión experta y personalizada. Características Clave del Servicio:',
+            bullets: [
+              { label: 'Gestión Administrativa Personalizada:', text: 'Nos encargamos de las tareas administrativas diarias, adaptándonos a las necesidades específicas de su empresa para asegurar un funcionamiento fluido y eficiente.' },
+              { label: 'Optimización de Procesos:', text: 'Evaluamos y mejoramos los procesos administrativos existentes, implementando prácticas y herramientas que aumentan la eficiencia y reducen costos operativos.' },
+              { label: 'Soporte en la Toma de Decisiones:', text: 'Proporcionamos análisis y recomendaciones basadas en datos para apoyar la toma de decisiones estratégicas y operativas, ayudándole a alcanzar sus objetivos empresariales.' },
+              { label: 'Coordinación de Recursos:', text: 'Gestionamos los recursos humanos y materiales necesarios para las operaciones administrativas, asegurando que su equipo y sus recursos estén alineados y optimizados.' },
+              { label: 'Cumplimiento Normativo:', text: 'Aseguramos que todas las prácticas y procesos administrativos cumplan con las normativas y regulaciones vigentes, reduciendo riesgos y evitando sanciones.' },
+              { label: 'Gestión de Documentación y Registros:', text: 'Manejamos la documentación y los registros importantes de su empresa de manera organizada y segura, garantizando un acceso eficiente y el cumplimiento de los requisitos legales.' },
+              { label: 'Capacitación y Desarrollo:', text: 'Ofrecemos formación y apoyo continuo a su equipo en áreas clave de administración para mejorar sus habilidades y capacidades, fomentando un entorno de trabajo más productivo.' },
+              { label: 'Informe y Retroalimentación:', text: 'Proporcionamos informes periódicos sobre el desempeño administrativo, junto con retroalimentación y recomendaciones para la mejora continua.' },
+            ],
+          },
+          {
+            heading: 'Beneficios del Servicio:',
+            bullets: [
+              { label: 'Eficiencia Operativa:', text: 'Procesos administrativos más ágiles y organizados en el día a día.' },
+              { label: 'Reducción de Costos:', text: 'Optimización de recursos que disminuye gastos operativos innecesarios.' },
+              { label: 'Mejora en la Toma de Decisiones:', text: 'Información y análisis oportunos que respaldan decisiones estratégicas.' },
+              { label: 'Cumplimiento Asegurado:', text: 'Prácticas administrativas alineadas con la normativa vigente.' },
+            ],
+          },
+          { text: 'Con nuestro servicio de administración asistida, su empresa puede beneficiarse de una gestión administrativa experta y eficiente, permitiéndole centrarse en lo que realmente importa: hacer crecer su negocio.' },
+        ],
+      },
+      {
+        label: 'Consultoría en Gestión RRHH',
+        sections: [
+          {
+            heading: 'Consultoría y gestión RRHH',
+            text: 'En nuestra empresa, ofrecemos un servicio integral de Recursos Humanos (RRHH) diseñado para optimizar la gestión del personal y fomentar un entorno laboral eficiente y positivo. Nuestro objetivo es apoyar a las empresas en todas las áreas relacionadas con el manejo de su capital humano, asegurando el alineamiento con los objetivos organizacionales y el cumplimiento de las normativas vigentes.',
+            bullets: [
+              { label: 'Reclutamiento y Selección:', text: 'Gestionamos todo el proceso de reclutamiento, desde la publicación de vacantes hasta la selección de candidatos adecuados. Utilizamos técnicas avanzadas para asegurar que atraiga y elija a los mejores talentos para su empresa.' },
+              { label: 'Capacitación y Desarrollo:', text: 'Diseñamos e implementamos programas de formación y desarrollo para mejorar las habilidades y competencias de sus empleados. Esto incluye formación inicial, capacitación continua y programas de liderazgo.' },
+              { label: 'Gestión del Desempeño:', text: 'Implementamos sistemas para la evaluación y gestión del desempeño, proporcionando herramientas y procesos para medir y mejorar la productividad y el compromiso de los empleados.' },
+              { label: 'Compensación y Beneficios:', text: 'Desarrollamos y gestionamos estructuras de compensación competitivas, así como paquetes de beneficios que atraigan y retengan talento, asegurando que cumplan con las expectativas y normativas laborales.' },
+              { label: 'Bienestar y Clima Laboral:', text: 'Promovemos el bienestar de los empleados mediante programas de salud, seguridad y bienestar, y trabajamos para mantener un clima laboral positivo y productivo.' },
+              { label: 'Cumplimiento Normativo:', text: 'Aseguramos que todas las prácticas y políticas de Recursos Humanos cumplan con la legislación laboral vigente y las normativas locales e internacionales, reduciendo riesgos y garantizando el cumplimiento.' },
+              { label: 'Gestión de Relaciones Laborales:', text: 'Manejamos las relaciones con los empleados y sindicatos, resolviendo conflictos y promoviendo una comunicación abierta y efectiva.' },
+              { label: 'Administración de Nómina:', text: 'Gestionamos la nómina de manera precisa y oportuna, asegurando que los salarios, impuestos y beneficios se administren correctamente.' },
+              { label: 'Consultoría Estratégica:', text: 'Ofrecemos asesoramiento estratégico en la planificación de recursos humanos, alineando las prácticas de RRHH con los objetivos y estrategias generales de la empresa.' },
+            ],
+          },
+        ],
+      },
     ],
-    presencial: ['Inspección de instalaciones y puestos de trabajo', 'Investigación de accidentes in-situ', 'Simulacros de emergencia y evacuación', 'Capacitación de brigadas de primeros auxilios'],
-    virtual: ['Capacitación en plataforma e-learning certificada', 'Asesoría normativa en línea', 'Reporte y análisis de indicadores digital', 'Auditorías documentales remotas'],
   },
   {
     slug: 'manejo-residuos',

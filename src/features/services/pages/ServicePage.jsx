@@ -49,18 +49,19 @@ export default function ServicePage() {
       <section
         className="py-20 relative"
         style={{
-          backgroundImage: `url(${service.hero})`,
+          backgroundImage: `url("${service.hero}")`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         }}
       >
         <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(20,20,20,0.93) 0%, rgba(20,20,20,0.7) 100%)' }} />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="relative max-w-3xl mx-auto px-4 sm:px-6 text-center">
+          <img src="/assets/logolidessa.png" alt="Lidessa" className="mx-auto mb-5 reveal" style={{ width: 80, height: 80, objectFit: 'contain' }} />
           <p className="text-xs font-bold uppercase tracking-widest mb-3 reveal" style={{ color: '#e8c766' }}>Servicio</p>
           <h1 className="text-4xl sm:text-5xl font-black text-white mb-5 reveal stagger-1" style={{ fontFamily: 'var(--font-display)' }}>
             {service.title}
           </h1>
-          <p className="text-base max-w-2xl leading-relaxed reveal stagger-2" style={{ color: '#cbb98a' }}>
+          <p className="text-base max-w-2xl mx-auto leading-relaxed reveal stagger-2" style={{ color: '#cbb98a' }}>
             {service.description}
           </p>
         </div>
@@ -68,7 +69,7 @@ export default function ServicePage() {
 
       {/* Tabs */}
       <section className="py-14 max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="flex gap-2 flex-wrap mb-8" style={{ borderBottom: '2px solid var(--border)', paddingBottom: '2px' }}>
+        <div className="flex gap-2 flex-wrap justify-center mb-8" style={{ borderBottom: '2px solid var(--border)', paddingBottom: '2px' }}>
           {service.tabs.map((tab, i) => (
             <button
               key={i}
@@ -198,22 +199,22 @@ export default function ServicePage() {
                       </p>
                     )}
                     {section.bullets && (
-                      <div className="grid sm:grid-cols-2 gap-3 mt-1">
+                      <div className="space-y-3 mt-1">
                         {section.bullets.map((b, j) => (
                           <div
                             key={j}
-                            className="rounded-xl p-4 animate-fade-up transition-transform"
+                            className="flex items-start gap-3 rounded-xl p-4 animate-fade-up transition-transform"
                             style={{ animationDelay: `${j * 0.06}s`, opacity: 0, backgroundColor: 'var(--muted)', border: '1px solid var(--border)' }}
-                            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.borderColor = '#b8860b' }}
-                            onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.borderColor = 'var(--border)' }}
+                            onMouseEnter={e => { e.currentTarget.style.transform = 'translateX(4px)'; e.currentTarget.style.borderColor = '#b8860b' }}
+                            onMouseLeave={e => { e.currentTarget.style.transform = 'translateX(0)'; e.currentTarget.style.borderColor = 'var(--border)' }}
                           >
                             <span
-                              className="w-6 h-6 rounded-full flex items-center justify-center mb-2"
+                              className="shrink-0 w-6 h-6 rounded-full flex items-center justify-center mt-0.5"
                               style={{ background: 'linear-gradient(135deg, #005187 0%, #4d82bc 55%, #b8860b 100%)', color: 'white' }}
                             >
                               <Check size={13} strokeWidth="3" />
                             </span>
-                            <p className="text-sm" style={{ color: 'var(--foreground)' }}>
+                            <p className="text-sm leading-relaxed" style={{ color: 'var(--foreground)' }}>
                               <strong>{b.label}</strong> {b.text}
                             </p>
                           </div>

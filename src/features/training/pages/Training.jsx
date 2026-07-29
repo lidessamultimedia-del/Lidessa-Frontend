@@ -38,7 +38,7 @@ export default function Training() {
       <section id="cursos" className="py-12 max-w-7xl mx-auto px-4 sm:px-6">
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {courses.map((course, i) => (
-            <div key={course.id} className={`flip-card h-[420px] reveal-scale stagger-${i + 1}`}>
+            <div key={course.id} className={`flip-card h-105 reveal-scale stagger-${i + 1}`}>
               <div className="flip-card-inner">
                 {/* Front — image poster */}
                 <div className="flip-card-front rounded-2xl overflow-hidden cursor-pointer"

@@ -15,7 +15,7 @@ const infoTabs = [
   { key: 'quienes', label: '¿Quiénes Somos?' },
   { key: 'servicios', label: 'Nuestros Servicios' },
   { key: 'porque', label: '¿Por qué Elegirnos?' },
-  { key: 'contacto', label: 'Contáctanos' },
+  { key: 'contacto', label: 'Contáctenos' },
 ]
 
 const timelineItems = [
@@ -596,7 +596,7 @@ export default function About() {
               <div className="grid sm:grid-cols-2 gap-8 items-center">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#4d82bc' }}>Hablemos</p>
-                  <h3 className="text-2xl font-black mb-4" style={{ fontFamily: 'var(--font-display)' }}>Contáctanos</h3>
+                  <h3 className="text-2xl font-black mb-4" style={{ fontFamily: 'var(--font-display)' }}>Contáctenos</h3>
                   <p className="text-sm leading-relaxed mb-5" style={{ color: bodyText }}>
                     Escríbanos y un asesor le atenderá a la brevedad para resolver sus dudas o iniciar su proceso de consultoría.
                   </p>
@@ -650,7 +650,7 @@ export default function About() {
             ¿Tienes alguna duda o sugerencia?
           </h3>
           <p className="text-sm font-semibold mb-6" style={{ color: '#b8860b' }}>
-            Contáctanos, o envíenos su comentario aquí
+            Contáctenos, o envíenos su comentario aquí
           </p>
           <button
             onClick={() => setPqrsfOpen(true)}

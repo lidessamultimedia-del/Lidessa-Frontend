@@ -9,13 +9,13 @@ export const servicesData = [
         label: 'ISO',
         sections: [
           { heading: '¿Qué es ISO?', text: 'ISO (Organización Internacional de Normalización) es una entidad independiente y no gubernamental que desarrolla y publica normas internacionales. Estas normas ayudan a asegurar la calidad, seguridad y eficiencia de productos, servicios y sistemas a nivel global.' },
-          { heading: '¿Cómo contribuye Lidessa al cumplimiento de la Norma?', text: 'En Lidessa, ofrecemos servicios de consultoría y soporte para la implementación y mantenimiento de sistemas de gestión basados en normas ISO. Trabajamos contigo para adaptar estas normas a las necesidades específicas de tu empresa, garantizando que cumplan con los requisitos internacionales y mejoren continuamente la calidad y eficiencia de tus procesos.' },
+          { heading: '¿Cómo contribuye Lidessa al cumplimiento de la Norma?', text: 'En Lidessa, ofrecemos servicios de consultoría y soporte para la implementación y mantenimiento de sistemas de gestión basados en normas ISO. Trabajamos con usted para adaptar estas normas a las necesidades específicas de su empresa, garantizando que cumplan con los requisitos internacionales y mejoren continuamente la calidad y eficiencia de sus procesos.' },
           {
-            heading: 'Beneficios para tu empresa:',
+            heading: 'Beneficios para su empresa:',
             bullets: [
-              { label: 'Certificación Internacional:', text: 'Obtén certificaciones ISO que validen la calidad y eficiencia de tus operaciones.' },
-              { label: 'Mejora Continua:', text: 'Implementa prácticas que promuevan la mejora continua y la satisfacción del cliente.' },
-              { label: 'Ventaja Competitiva:', text: 'Destaca en el mercado al cumplir con estándares internacionales reconocidos.' },
+              { label: 'Certificación Internacional:', text: 'Obtenga certificaciones ISO que validen la calidad y eficiencia de sus operaciones.' },
+              { label: 'Mejora Continua:', text: 'Implemente prácticas que promuevan la mejora continua y la satisfacción del cliente.' },
+              { label: 'Ventaja Competitiva:', text: 'Destaque en el mercado al cumplir con estándares internacionales reconocidos.' },
               { label: 'Ventaja en Licitaciones:', text: 'Mejoras en los puntajes de licitación empresarial.' },
             ],
           },
@@ -25,13 +25,13 @@ export const servicesData = [
         label: 'NTC',
         sections: [
           { heading: '¿Qué son las NTC?', text: 'NTC (Normas Técnicas Colombianas) son normas elaboradas por la Oficina de Normas de Colombia para establecer especificaciones y criterios técnicos que aseguren la calidad y seguridad de productos y servicios en el país.' },
-          { heading: '¿Cómo contribuye Lidessa al cumplimiento de la Norma?', text: 'Lidessa facilita la integración de las NTC en tu empresa, ayudándote a cumplir con las regulaciones locales y asegurar que tus productos y servicios cumplan con los estándares nacionales. Nuestro equipo te guía en la implementación de estas normas, lo que te permite adaptarte a las exigencias del mercado colombiano.' },
+          { heading: '¿Cómo contribuye Lidessa al cumplimiento de la Norma?', text: 'Lidessa facilita la integración de las NTC en su empresa, ayudándole a cumplir con las regulaciones locales y asegurar que sus productos y servicios cumplan con los estándares nacionales. Nuestro equipo le guía en la implementación de estas normas, lo que le permite adaptarse a las exigencias del mercado colombiano.' },
           {
-            heading: 'Beneficios para tu empresa:',
+            heading: 'Beneficios para su empresa:',
             bullets: [
-              { label: 'Cumplimiento Regulatorio:', text: 'Asegura que tus productos y servicios cumplan con las regulaciones locales.' },
-              { label: 'Acceso a Mercados Locales:', text: 'Mejora tu acceso y aceptación en el mercado colombiano.' },
-              { label: 'Calidad Asegurada:', text: 'Asegura la calidad y seguridad de tus productos y servicios conforme a estándares nacionales.' },
+              { label: 'Cumplimiento Regulatorio:', text: 'Asegure que sus productos y servicios cumplan con las regulaciones locales.' },
+              { label: 'Acceso a Mercados Locales:', text: 'Mejore su acceso y aceptación en el mercado colombiano.' },
+              { label: 'Calidad Asegurada:', text: 'Asegure la calidad y seguridad de sus productos y servicios conforme a estándares nacionales.' },
             ],
           },
         ],
@@ -40,13 +40,13 @@ export const servicesData = [
         label: 'NTS',
         sections: [
           { heading: '¿Qué son las NTS?', text: 'Las NTS (Normas Técnicas Sectoriales) son normas específicas para diferentes sectores de la industria, desarrolladas para abordar requisitos y desafíos particulares en áreas como la construcción, alimentos, turismo y más.' },
-          { heading: '¿Cómo contribuye Lidessa al cumplimiento de la Norma?', text: 'En Lidessa, proporcionamos asesoría especializada para la implementación de NTS en tu sector. Nuestro objetivo es ayudarte a cumplir con las normas técnicas sectoriales relevantes, asegurando que tus procesos y productos se ajusten a las especificaciones requeridas para tu industria.' },
+          { heading: '¿Cómo contribuye Lidessa al cumplimiento de la Norma?', text: 'En Lidessa, proporcionamos asesoría especializada para la implementación de NTS en su sector. Nuestro objetivo es ayudarle a cumplir con las normas técnicas sectoriales relevantes, asegurando que sus procesos y productos se ajusten a las especificaciones requeridas para su industria.' },
           {
-            heading: 'Beneficios para tu empresa:',
+            heading: 'Beneficios para su empresa:',
             bullets: [
-              { label: 'Cumplimiento Específico:', text: 'Adapta tus operaciones a las normas técnicas específicas de tu sector.' },
-              { label: 'Optimización del Proceso:', text: 'Mejora la eficiencia y efectividad de tus procesos internos.' },
-              { label: 'Conformidad Sectorial:', text: 'Cumple con los requisitos y expectativas del sector en el que operas.' },
+              { label: 'Cumplimiento Específico:', text: 'Adapte sus operaciones a las normas técnicas específicas de su sector.' },
+              { label: 'Optimización del Proceso:', text: 'Mejore la eficiencia y efectividad de sus procesos internos.' },
+              { label: 'Conformidad Sectorial:', text: 'Cumpla con los requisitos y expectativas del sector en el que opera.' },
             ],
           },
         ],
@@ -86,8 +86,8 @@ export const servicesData = [
         label: 'Vinculación',
         sections: [
           { heading: 'Vinculación', text: 'El proceso de vinculación inicia con un análisis detallado de los perfiles que la empresa requiere, seguido de una búsqueda exhaustiva en nuestro amplio banco de talentos. Luego, llevamos a cabo un proceso de selección riguroso, que incluye entrevistas, evaluaciones psicotécnicas y verificaciones de referencias, asegurando que los candidatos propuestos cumplan con los estándares exigidos.' },
-          { heading: 'De tu interés', text: 'En Colombia, la vinculación de empleados está regida por el Código Sustantivo del Trabajo y otras normativas laborales, como la Ley 789 de 2002 y la Ley 1562 de 2012. Estas leyes exigen que las empresas contraten de manera formal, cumpliendo con las obligaciones de seguridad social, riesgos laborales y garantizando condiciones dignas de trabajo. Las empresas que no cumplen con estas normativas pueden enfrentar sanciones como multas por parte del Ministerio del Trabajo, demandas laborales, y el riesgo de ser incluidas en listas negras que dificultan la contratación futura de personal. La falta de afiliación a la seguridad social o a riesgos laborales, por ejemplo, puede generar multas que varían entre 1 y 5.000 salarios mínimos mensuales legales vigentes, dependiendo de la gravedad del incumplimiento.' },
-          { heading: '¿Cómo te ayuda Lidessa?', text: 'Lidessa ofrece un servicio de vinculación integral que asegura que las empresas cumplan con todas las normativas laborales vigentes. Al gestionar el proceso de reclutamiento y selección de manera eficiente, Lidessa garantiza que los empleados contratados estén debidamente afiliados a los sistemas de seguridad social y riesgos laborales, reduciendo así el riesgo de sanciones. Además, la empresa ofrece asesoría continua para mantener la conformidad con las leyes laborales.' },
+          { heading: 'De su interés', text: 'En Colombia, la vinculación de empleados está regida por el Código Sustantivo del Trabajo y otras normativas laborales, como la Ley 789 de 2002 y la Ley 1562 de 2012. Estas leyes exigen que las empresas contraten de manera formal, cumpliendo con las obligaciones de seguridad social, riesgos laborales y garantizando condiciones dignas de trabajo. Las empresas que no cumplen con estas normativas pueden enfrentar sanciones como multas por parte del Ministerio del Trabajo, demandas laborales, y el riesgo de ser incluidas en listas negras que dificultan la contratación futura de personal. La falta de afiliación a la seguridad social o a riesgos laborales, por ejemplo, puede generar multas que varían entre 1 y 5.000 salarios mínimos mensuales legales vigentes, dependiendo de la gravedad del incumplimiento.' },
+          { heading: '¿Cómo le ayuda Lidessa?', text: 'Lidessa ofrece un servicio de vinculación integral que asegura que las empresas cumplan con todas las normativas laborales vigentes. Al gestionar el proceso de reclutamiento y selección de manera eficiente, Lidessa garantiza que los empleados contratados estén debidamente afiliados a los sistemas de seguridad social y riesgos laborales, reduciendo así el riesgo de sanciones. Además, la empresa ofrece asesoría continua para mantener la conformidad con las leyes laborales.' },
         ],
       },
       {
@@ -129,7 +129,7 @@ export const servicesData = [
         sections: [
           { heading: 'Manual de Funciones', text: 'El Manual de Funciones es una herramienta clave para definir claramente las responsabilidades, funciones y procesos dentro de una empresa. Lidessa ofrece la creación y actualización de manuales de funciones que alinean las operaciones con los objetivos estratégicos de la organización. Este servicio incluye la elaboración de un documento exhaustivo que detalla las funciones de cada puesto dentro de la organización, así como las competencias necesarias, los flujos de trabajo y los indicadores de desempeño. Este manual es fundamental para mejorar la eficiencia operativa, facilitar la formación del personal y asegurar la claridad en los roles y responsabilidades.' },
           {
-            heading: 'Lidessa te ofrece:',
+            heading: 'Lidessa le ofrece:',
             bullets: [
               { label: 'Diagnóstico organizacional:', text: 'Análisis de la estructura actual de la empresa para identificar áreas de mejora.' },
               { label: 'Definición de roles:', text: 'Clarificación de funciones, responsabilidades y expectativas para cada puesto de trabajo.' },
@@ -138,7 +138,7 @@ export const servicesData = [
             ],
           },
           {
-            heading: 'Recuerda:',
+            heading: 'Recuerde:',
             boxed: true,
             text: 'El Manual de Funciones es un documento fundamental para el cumplimiento de varias normativas laborales en Colombia, incluyendo el Código Sustantivo del Trabajo y el Decreto 1072 de 2015. Este manual ayuda a formalizar y clarificar las responsabilidades de los empleados, facilitando la gestión de recursos humanos y asegurando que se cumplan los estándares de eficiencia y transparencia en las operaciones empresariales. La ausencia de un manual de funciones o la falta de claridad en los roles y responsabilidades puede llevar a conflictos laborales, sanciones por parte de entidades de inspección laboral, y demandas por incumplimientos contractuales. Las sanciones pueden incluir multas y, en casos extremos, la suspensión temporal de actividades hasta que se subsanen las deficiencias en la organización.',
           },
@@ -188,7 +188,7 @@ export const servicesData = [
           {
             heading: 'Importante',
             boxed: true,
-            text: 'La multa que se te asignará, debido a que el Decreto 472 del 17 de marzo de 2015 estableció sanciones que inician desde los 50 salarios mínimos legales vigentes. Adicionalmente recuerda que la Resolución 1111 de 2017 establece los Estándares Mínimo de obligatorio cumplimiento en Seguridad y Salud en el Trabajo, con los cuales la empresa vela por el bienestar físico y mental del empleado. Recuerda que la única persona autorizada en Colombia para realizar la evaluación y generar diagnósticos para la prevención y el control de enfermedades generadas por los riesgos psicosociales, es un Psicólogo graduado como Especialista en Seguridad y Salud en el Trabajo.',
+            text: 'La multa que se le asignará, debido a que el Decreto 472 del 17 de marzo de 2015 estableció sanciones que inician desde los 50 salarios mínimos legales vigentes. Adicionalmente recuerde que la Resolución 1111 de 2017 establece los Estándares Mínimo de obligatorio cumplimiento en Seguridad y Salud en el Trabajo, con los cuales la empresa vela por el bienestar físico y mental del empleado. Recuerde que la única persona autorizada en Colombia para realizar la evaluación y generar diagnósticos para la prevención y el control de enfermedades generadas por los riesgos psicosociales, es un Psicólogo graduado como Especialista en Seguridad y Salud en el Trabajo.',
           },
         ],
       },
@@ -201,7 +201,7 @@ export const servicesData = [
           { text: 'Además, proporcionamos una caracterización detallada de los datos organizacionales, identificando los tipos de datos tratados y estableciendo mecanismos claros para su manejo seguro. También ofrecemos soporte en la definición de un Oficial de Protección de Datos Personales (OPD) y la conformación de un comité interno, integrado por diferentes dependencias de la organización, que toma decisiones estratégicas en relación con el tratamiento de datos. Asimismo, nos encargamos de realizar el registro ante la Superintendencia de Industria y Comercio (SIC) cuando es requerido.' },
           { text: 'Con Lidessa, las empresas no solo aseguran el cumplimiento normativo, sino que también protegen su reputación corporativa, evitando sanciones costosas y garantizando que los derechos de los titulares de los datos sean respetados.' },
           {
-            heading: 'Te ofrecemos:',
+            heading: 'Le ofrecemos:',
             bullets: [
               { label: 'Diseño personalizado:', text: 'Creación de bases de datos estructuradas según las necesidades y procesos específicos de la empresa, incluyendo manuales de tratamiento de datos y políticas alineadas con la normativa vigente.' },
               { label: 'Mantenimiento continuo:', text: 'Actualización y optimización de las bases de datos para asegurar su eficiencia y cumplimiento a largo plazo, adaptándose a los cambios regulatorios y tecnológicos.' },
@@ -219,7 +219,7 @@ export const servicesData = [
         sections: [
           { text: 'Un Plan de Emergencia es un conjunto de procedimientos y directrices diseñados para manejar situaciones imprevistas o crisis de manera efectiva. Este plan tiene como objetivo minimizar el impacto de emergencias, garantizar la seguridad de las personas y proteger los activos de la organización. Un plan de emergencia bien elaborado permite una respuesta organizada y eficiente ante eventos como incendios, desastres naturales, accidentes graves, fallos de infraestructura o cualquier otra situación de emergencia que pueda afectar a una organización o comunidad.' },
           {
-            heading: 'Te ofrecemos:',
+            heading: 'Le ofrecemos:',
             bullets: [
               { label: 'Identificación de Riesgos:', text: 'Evaluación y análisis de los riesgos potenciales que podrían afectar a la organización o comunidad. Clasificación de riesgos según su probabilidad y severidad.' },
               { label: 'Procedimientos de Evacuación:', text: 'Diseño de rutas de evacuación claras y señalizadas. Establecimiento de puntos de reunión seguros para todos los ocupantes.' },
@@ -232,7 +232,7 @@ export const servicesData = [
         ],
       },
     ],
-    presencial: ['Talleres estratégicos con directivos', 'Sesiones de coachig organizacional', 'Facilitación de reuniones de planeación', 'Visitas de seguimiento y mentoring'],
+    presencial: ['Talleres estratégicos con directivos', 'Sesiones de coaching organizacional', 'Facilitación de reuniones de planeación', 'Visitas de seguimiento y mentoring'],
     virtual: ['Consultoría estratégica en línea', 'Gestión de tableros digitales', 'Reuniones de seguimiento por videollamada', 'Informes de avance automatizados'],
   },
   {
@@ -244,7 +244,7 @@ export const servicesData = [
       {
         label: 'SST',
         sections: [
-          { heading: 'Seguridad y Salud en el Trabajo (SG-SST)', text: 'Si necesitas diseñar, implementar o actualizar tu sistema de seguridad y salud en el trabajo, Lidessa está aquí para asistirte. Comenzaremos el proceso contigo o con la persona que designes al interior de tu entidad, siguiendo los lineamientos del Decreto 1072 de 2015, la resolución 0312 de 2019 y todas aquellas normas que las sustituyan o modifiquen.' },
+          { heading: 'Seguridad y Salud en el Trabajo (SG-SST)', text: 'Si necesita diseñar, implementar o actualizar su sistema de seguridad y salud en el trabajo, Lidessa está aquí para asistirle. Comenzaremos el proceso con usted o con la persona que designe al interior de su entidad, siguiendo los lineamientos del Decreto 1072 de 2015, la resolución 0312 de 2019 y todas aquellas normas que las sustituyan o modifiquen.' },
           {
             heading: 'Actividades Presenciales:',
             bullets: [
@@ -274,7 +274,7 @@ export const servicesData = [
               { text: 'Certificación y registro del sistema ante el fondo de riesgos laborales y la ARL.' },
             ],
           },
-          { text: 'En la fase de diseño, garantizamos que tu empresa cumpla con todos los requisitos de SST, incluyendo la formación de comités, capacitación y la inducción de los empleados. Revisaremos la matriz de riesgos y las normativas correspondientes, y al final de esta fase, validaremos y certificaremos que el diseño del SG-SST cumple con los requisitos mínimos establecidos por la normativa vigente. Implementaremos los procesos necesarios para asegurar que tu SG-SST funcione de manera efectiva durante todo el año, manteniendo su continuidad y efectividad.' },
+          { text: 'En la fase de diseño, garantizamos que su empresa cumpla con todos los requisitos de SST, incluyendo la formación de comités, capacitación y la inducción de los empleados. Revisaremos la matriz de riesgos y las normativas correspondientes, y al final de esta fase, validaremos y certificaremos que el diseño del SG-SST cumple con los requisitos mínimos establecidos por la normativa vigente. Implementaremos los procesos necesarios para asegurar que su SG-SST funcione de manera efectiva durante todo el año, manteniendo su continuidad y efectividad.' },
           { boxed: true, text: 'Licencia SG-SST No S2017060095482 de 2017 y S2018060230500 de 2018, por medio de las cuales la secretaría de Salud del Departamento de Antioquia concede licencia para ofertar servicios de seguridad y salud en el trabajo a Nivel nacional a persona jurídica.' },
         ],
       },
@@ -283,28 +283,28 @@ export const servicesData = [
         sections: [
           {
             heading: 'Administración asistida',
-            text: 'En nuestra empresa, ofrecemos un servicio integral de administración asistida diseñado para optimizar el funcionamiento y la eficiencia de tu organización. Este servicio se centra en apoyar y mejorar las operaciones administrativas de tu empresa mediante una gestión experta y personalizada. Características Clave del Servicio:',
+            text: 'En nuestra empresa, ofrecemos un servicio integral de administración asistida diseñado para optimizar el funcionamiento y la eficiencia de su organización. Este servicio se centra en apoyar y mejorar las operaciones administrativas de su empresa mediante una gestión experta y personalizada. Características Clave del Servicio:',
             bullets: [
-              { label: 'Gestión Administrativa Personalizada:', text: 'Nos encargamos de las tareas administrativas diarias, adaptándonos a las necesidades específicas de tu empresa para asegurar un funcionamiento fluido y eficiente.' },
+              { label: 'Gestión Administrativa Personalizada:', text: 'Nos encargamos de las tareas administrativas diarias, adaptándonos a las necesidades específicas de su empresa para asegurar un funcionamiento fluido y eficiente.' },
               { label: 'Optimización de Procesos:', text: 'Evaluamos y mejoramos los procesos administrativos existentes, implementando prácticas y herramientas que aumentan la eficiencia y reducen costos operativos.' },
-              { label: 'Soporte en la Toma de Decisiones:', text: 'Proporcionamos análisis y recomendaciones basadas en datos para apoyar la toma de decisiones estratégicas y operativas, ayudándote a alcanzar tus objetivos empresariales.' },
-              { label: 'Coordinación de Recursos:', text: 'Gestionamos los recursos humanos y materiales necesarios para las operaciones administrativas, asegurando que tu equipo y tus recursos estén alineados y optimizados.' },
+              { label: 'Soporte en la Toma de Decisiones:', text: 'Proporcionamos análisis y recomendaciones basadas en datos para apoyar la toma de decisiones estratégicas y operativas, ayudándole a alcanzar sus objetivos empresariales.' },
+              { label: 'Coordinación de Recursos:', text: 'Gestionamos los recursos humanos y materiales necesarios para las operaciones administrativas, asegurando que su equipo y sus recursos estén alineados y optimizados.' },
               { label: 'Cumplimiento Normativo:', text: 'Aseguramos que todas las prácticas y procesos administrativos cumplan con las normativas y regulaciones vigentes, reduciendo riesgos y evitando sanciones.' },
-              { label: 'Gestión de Documentación y Registros:', text: 'Manejamos la documentación y los registros importantes de tu empresa de manera organizada y segura, garantizando un acceso eficiente y el cumplimiento de los requisitos legales.' },
-              { label: 'Capacitación y Desarrollo:', text: 'Ofrecemos formación y apoyo continuo a tu equipo en áreas clave de administración para mejorar sus habilidades y capacidades, fomentando un entorno de trabajo más productivo.' },
+              { label: 'Gestión de Documentación y Registros:', text: 'Manejamos la documentación y los registros importantes de su empresa de manera organizada y segura, garantizando un acceso eficiente y el cumplimiento de los requisitos legales.' },
+              { label: 'Capacitación y Desarrollo:', text: 'Ofrecemos formación y apoyo continuo a su equipo en áreas clave de administración para mejorar sus habilidades y capacidades, fomentando un entorno de trabajo más productivo.' },
               { label: 'Informe y Retroalimentación:', text: 'Proporcionamos informes periódicos sobre el desempeño administrativo, junto con retroalimentación y recomendaciones para la mejora continua.' },
             ],
           },
           {
             heading: 'Beneficios del Servicio:',
             bullets: [
-              { label: 'Eficiencia Operativa:', text: '' },
-              { label: 'Reducción de Costos:', text: '' },
-              { label: 'Mejora en la Toma de Decisiones:', text: '' },
-              { label: 'Cumplimiento Asegurado:', text: '' },
+              { label: 'Eficiencia Operativa:', text: 'Procesos administrativos más ágiles y organizados en el día a día.' },
+              { label: 'Reducción de Costos:', text: 'Optimización de recursos que disminuye gastos operativos innecesarios.' },
+              { label: 'Mejora en la Toma de Decisiones:', text: 'Información y análisis oportunos que respaldan decisiones estratégicas.' },
+              { label: 'Cumplimiento Asegurado:', text: 'Prácticas administrativas alineadas con la normativa vigente.' },
             ],
           },
-          { text: 'Con nuestro servicio de administración asistida, tu empresa puede beneficiarse de una gestión administrativa experta y eficiente, permitiéndote centrarte en lo que realmente importa: hacer crecer tu negocio.' },
+          { text: 'Con nuestro servicio de administración asistida, su empresa puede beneficiarse de una gestión administrativa experta y eficiente, permitiéndole centrarse en lo que realmente importa: hacer crecer su negocio.' },
         ],
       },
       {
@@ -314,8 +314,8 @@ export const servicesData = [
             heading: 'Consultoría y gestión RRHH',
             text: 'En nuestra empresa, ofrecemos un servicio integral de Recursos Humanos (RRHH) diseñado para optimizar la gestión del personal y fomentar un entorno laboral eficiente y positivo. Nuestro objetivo es apoyar a las empresas en todas las áreas relacionadas con el manejo de su capital humano, asegurando el alineamiento con los objetivos organizacionales y el cumplimiento de las normativas vigentes.',
             bullets: [
-              { label: 'Reclutamiento y Selección:', text: 'Gestionamos todo el proceso de reclutamiento, desde la publicación de vacantes hasta la selección de candidatos adecuados. Utilizamos técnicas avanzadas para asegurar que atraigas y elijas a los mejores talentos para tu empresa.' },
-              { label: 'Capacitación y Desarrollo:', text: 'Diseñamos e implementamos programas de formación y desarrollo para mejorar las habilidades y competencias de tus empleados. Esto incluye formación inicial, capacitación continua y programas de liderazgo.' },
+              { label: 'Reclutamiento y Selección:', text: 'Gestionamos todo el proceso de reclutamiento, desde la publicación de vacantes hasta la selección de candidatos adecuados. Utilizamos técnicas avanzadas para asegurar que atraiga y elija a los mejores talentos para su empresa.' },
+              { label: 'Capacitación y Desarrollo:', text: 'Diseñamos e implementamos programas de formación y desarrollo para mejorar las habilidades y competencias de sus empleados. Esto incluye formación inicial, capacitación continua y programas de liderazgo.' },
               { label: 'Gestión del Desempeño:', text: 'Implementamos sistemas para la evaluación y gestión del desempeño, proporcionando herramientas y procesos para medir y mejorar la productividad y el compromiso de los empleados.' },
               { label: 'Compensación y Beneficios:', text: 'Desarrollamos y gestionamos estructuras de compensación competitivas, así como paquetes de beneficios que atraigan y retengan talento, asegurando que cumplan con las expectativas y normativas laborales.' },
               { label: 'Bienestar y Clima Laboral:', text: 'Promovemos el bienestar de los empleados mediante programas de salud, seguridad y bienestar, y trabajamos para mantener un clima laboral positivo y productivo.' },
@@ -334,67 +334,165 @@ export const servicesData = [
   {
     slug: 'manuales-convivencia',
     title: 'Manuales de Convivencia Escolar',
-    description: 'Diseñamos y actualizamos los manuales de convivencia de instituciones educativas conforme a la Ley 1620 de 2013 y sus decretos reglamentarios, promoviendo ambientes escolares seguros y respetuosos.',
+    description: 'Creamos y actualizamos manuales de convivencia claros, inclusivos y conformes a la normativa educativa vigente en Colombia.',
     hero: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=1400&h=600&fit=crop&auto=format',
     tabs: [
-      { label: 'Marco legal', content: 'El manual de convivencia debe cumplir con la Ley 1620/2013, el Decreto 1965/2013 y las directrices del Ministerio de Educación Nacional vigentes.', bullets: ['Ley 1620 de 2013 – Sistema Nacional de Convivencia', 'Decreto 1965 de 2013 – Comités de convivencia', 'Resolución 3922 – Contenidos mínimos', 'Jurisprudencia de la Corte Constitucional aplicable'] },
-      { label: 'Contenido', content: 'Redactamos todos los capítulos obligatorios y complementarios del manual con lenguaje claro, inclusivo y adaptado a la comunidad educativa.', bullets: ['Derechos y deberes de la comunidad escolar', 'Protocolos de atención a situaciones de acoso', 'Rutas de atención y comités de convivencia', 'Estrategias de prevención y formación ciudadana'] },
-      { label: 'Participación', content: 'Facilitamos procesos participativos con toda la comunidad educativa para construir un manual legítimo y apropiado.', bullets: ['Talleres con estudiantes y padres', 'Socialización con docentes y directivos', 'Aprobación por consejo directivo', 'Divulgación y apropiación institucional'] },
+      {
+        label: 'Manuales de Convivencia',
+        sections: [
+          { text: 'El Manual de Convivencia es un documento esencial que establece las normas, derechos y deberes de todos los miembros de la comunidad educativa. Lidessa se especializa en la creación y actualización de manuales de convivencia que cumplen con las normativas educativas vigentes en Colombia, garantizando un ambiente escolar armonioso y respetuoso. Nuestro enfoque es asegurar que el manual sea claro, inclusivo y adaptado a las necesidades específicas de cada institución, promoviendo una cultura de paz y convivencia dentro del entorno escolar.' },
+          {
+            heading: 'Puntos a destacar',
+            bullets: [
+              { label: 'Cumplimiento normativo:', text: 'alineado con la Ley 1620 de 2013 y sus decretos reglamentarios.' },
+              { label: 'Derechos y deberes claros:', text: 'define las responsabilidades de estudiantes, docentes, padres y directivos.' },
+              { label: 'Rutas de atención:', text: 'establece protocolos y comités para la gestión de situaciones de convivencia.' },
+              { label: 'Construcción participativa:', text: 'se elabora con la comunidad educativa para garantizar su legitimidad y apropiación.' },
+            ],
+          },
+          {
+            heading: 'Nuestro acompañamiento incluye',
+            text: 'Trabajamos de la mano con directivos, docentes, estudiantes y padres de familia durante todo el proceso, desde el diagnóstico inicial hasta la socialización y aprobación final del documento por el consejo directivo.',
+            bullets: [
+              { label: 'Diagnóstico institucional:', text: 'revisión del manual vigente y de las situaciones de convivencia más frecuentes.' },
+              { label: 'Redacción y actualización:', text: 'ajuste de capítulos obligatorios y complementarios con lenguaje claro e inclusivo.' },
+              { label: 'Validación con la comunidad:', text: 'talleres de socialización con estudiantes, docentes y padres de familia.' },
+              { label: 'Aprobación institucional:', text: 'acompañamiento hasta la aprobación por el consejo directivo y su divulgación.' },
+            ],
+          },
+        ],
+      },
     ],
-    presencial: ['Talleres participativos con la comunidad', 'Jornadas de socialización institucional', 'Capacitación al comité de convivencia', 'Entrega física del manual actualizado'],
-    virtual: ['Revisión y actualización del documento en línea', 'Consultoría normativa por videollamada', 'Formatos editables para gestión futura', 'Acompañamiento en implementación digital'],
   },
   {
     slug: 'proyecto-educativo',
-    title: 'Proyecto Educativo Institucional (PEI)',
-    description: 'Acompañamos a instituciones educativas en la construcción, actualización y resignificación de su Proyecto Educativo Institucional, articulando la misión, visión, modelo pedagógico y planes de mejoramiento.',
+    title: 'Diseño de PEI',
+    description: 'Diseñamos e implementamos el Proyecto Educativo Institucional, alineado con la misión, visión y directrices del Ministerio de Educación Nacional.',
     hero: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=1400&h=600&fit=crop&auto=format',
     tabs: [
-      { label: 'Fundamentos', content: 'El PEI es el documento rector que define la identidad y el horizonte institucional de cada colegio, conforme al Decreto 1860 de 1994.', bullets: ['Misión, visión y principios institucionales', 'Modelo pedagógico y enfoque curricular', 'Perfil del estudiante y del docente', 'Metas de calidad y mejoramiento continuo'] },
-      { label: 'Diagnóstico', content: 'Realizamos un diagnóstico participativo del estado actual del PEI y su coherencia con la práctica cotidiana de la institución.', bullets: ['Análisis de resultados Pruebas Saber', 'Evaluación del clima institucional', 'Revisión de coherencia PEI-prácticas', 'Identificación de brechas de mejoramiento'] },
-      { label: 'Construcción', content: 'Facilitamos procesos de construcción colectiva del PEI con toda la comunidad educativa bajo metodologías participativas.', bullets: ['Mesas de trabajo por estamentos', 'Síntesis y articulación de propuestas', 'Redacción técnica y pedagógica', 'Validación y aprobación institucional'] },
+      {
+        label: 'Diseño de PEI',
+        title: 'Diseño de PEI',
+        intro: 'El Proyecto Educativo Institucional (PEI) es el documento que define la identidad de la institución educativa, su misión, visión, objetivos y estrategias pedagógicas. En Lidessa, nos encargamos del diseño y la implementación del PEI, asegurando que esté alineado con los principios y objetivos de la institución, así como con las directrices del Ministerio de Educación Nacional. Nuestro servicio incluye la formulación de planes estratégicos que guían el desarrollo integral de la comunidad educativa, fomentando una educación de calidad.',
+        checklist: [
+          'Definimos con claridad la misión, visión y principios que orientan a la institución.',
+          'Alineamos el documento con el Decreto 1860 de 1994 y las directrices vigentes del Ministerio de Educación Nacional.',
+          'Articulamos el modelo pedagógico y el enfoque curricular con las prácticas cotidianas del aula.',
+          'Formulamos planes de mejoramiento con metas medibles para el desarrollo integral de la comunidad educativa.',
+          'Acompañamos el proceso de construcción colectiva con directivos, docentes, padres y estudiantes hasta su aprobación.',
+        ],
+        structure: {
+          title: 'Nuestro proceso de acompañamiento',
+          steps: [
+            'Diagnóstico del PEI vigente y su coherencia institucional',
+            'Construcción colectiva con la comunidad educativa',
+            'Redacción técnica y pedagógica del documento',
+            'Validación y aprobación por el consejo directivo',
+            'Socialización y seguimiento al plan de mejoramiento',
+          ],
+        },
+      },
     ],
-    presencial: ['Jornadas pedagógicas institucionales', 'Talleres con docentes y directivos', 'Mesas de trabajo con padres y estudiantes', 'Socialización ante el consejo directivo'],
-    virtual: ['Revisión del documento base en línea', 'Asesoría normativa por videoconferencia', 'Entrega de documento editable y formatos', 'Seguimiento al plan de mejoramiento'],
   },
   {
     slug: 'mallas-curriculares',
     title: 'Diseño de Mallas Curriculares',
-    description: 'Construimos mallas curriculares coherentes, articuladas y actualizadas, alineadas con los Estándares Básicos de Competencias, los DBA y los lineamientos del Ministerio de Educación Nacional.',
+    description: 'Elaboramos y revisamos mallas curriculares que organizan los contenidos educativos de forma secuencial y coherente, garantizando el desarrollo progresivo de competencias en los estudiantes.',
     hero: 'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=1400&h=600&fit=crop&auto=format',
     tabs: [
-      { label: 'Diseño', content: 'Diseñamos mallas curriculares por asignatura y grado, articulando los referentes normativos con las particularidades del contexto institucional.', bullets: ['Articulación con EBC y DBA del MEN', 'Secuenciación y progresión por ciclos', 'Definición de competencias y desempeños', 'Integración de proyectos transversales'] },
-      { label: 'Evaluación', content: 'Definimos sistemas de evaluación coherentes con el modelo pedagógico y los desempeños establecidos en la malla.', bullets: ['Criterios de evaluación por período', 'Instrumentos de valoración del aprendizaje', 'Coherencia con el SIEE institucional', 'Indicadores de logro observables'] },
-      { label: 'Actualización', content: 'Revisamos y actualizamos mallas existentes para garantizar su vigencia normativa y pertinencia pedagógica.', bullets: ['Diagnóstico de la malla actual', 'Identificación de vacíos y redundancias', 'Actualización a referentes vigentes', 'Socialización con docentes por área'] },
+      {
+        label: 'Mallas Curriculares',
+        sections: [
+          { text: 'Las Mallas Curriculares son la estructura que organiza los contenidos educativos de manera secuencial y coherente, garantizando el desarrollo progresivo de competencias en los estudiantes. Lidessa ofrece la elaboración y revisión de mallas curriculares adaptadas a las necesidades específicas de cada institución, asegurando que estén en consonancia con los estándares de calidad educativa establecidos por el gobierno. Nuestro objetivo es facilitar el aprendizaje significativo y preparar a los estudiantes para los retos del siglo XXI.' },
+          {
+            heading: 'Puntos a destacar',
+            bullets: [
+              { label: 'Análisis de procesos:', text: 'revisión de los procesos curriculares actuales de la institución.' },
+              { label: 'Viabilidad de recursos:', text: 'evaluación de los recursos disponibles para la implementación.' },
+              { label: 'Viabilidad del sector:', text: 'análisis del contexto y las necesidades propias del sector educativo.' },
+              { label: 'Diseño de estructura curricular:', text: 'organización secuencial y coherente de los contenidos por asignatura y grado.' },
+              { label: 'Acompañamiento en registro y radicación:', text: 'apoyo en los trámites formales ante las autoridades educativas.' },
+            ],
+          },
+          {
+            heading: 'Nuestro acompañamiento incluye',
+            text: 'Trabajamos de la mano con directivos y docentes durante todo el proceso, desde el diagnóstico de las mallas existentes hasta su articulación con los referentes normativos vigentes.',
+            bullets: [
+              { label: 'Diagnóstico curricular:', text: 'revisión de las mallas actuales por asignatura y grado.' },
+              { label: 'Articulación normativa:', text: 'alineación con los Estándares Básicos de Competencias y los DBA del MEN.' },
+              { label: 'Secuenciación por ciclos:', text: 'progresión coherente de competencias y desempeños entre grados.' },
+              { label: 'Socialización institucional:', text: 'validación de la malla con docentes y directivos por área.' },
+            ],
+          },
+        ],
+      },
     ],
-    presencial: ['Jornadas de diseño curricular con docentes', 'Talleres por áreas del conocimiento', 'Revisión y validación colectiva', 'Entrega de mallas en formato institucional'],
-    virtual: ['Asesoría curricular en línea', 'Revisión de mallas en documento compartido', 'Capacitación en herramientas de planeación', 'Seguimiento a implementación curricular'],
   },
   {
     slug: 'evaluacion-docente',
     title: 'Evaluación Docente',
-    description: 'Diseñamos e implementamos sistemas de evaluación del desempeño docente que fortalecen la práctica pedagógica, reconocen las fortalezas del equipo y orientan el desarrollo profesional.',
+    description: 'Ofrecemos un servicio integral de evaluación de docentes, basado en criterios objetivos y alineado con las normativas del Ministerio de Educación Nacional.',
     hero: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1400&h=600&fit=crop&auto=format',
     tabs: [
-      { label: 'Sistema', content: 'Construimos sistemas de evaluación docente integrales, coherentes con el PEI y el modelo pedagógico, que van más allá del cumplimiento normativo.', bullets: ['Dimensiones de evaluación contextualizadas', 'Instrumentos de observación de aula', 'Autoevaluación y coevaluación docente', 'Portafolio de evidencias pedagógicas'] },
-      { label: 'Proceso', content: 'Acompañamos el proceso completo de evaluación: diseño, socialización, aplicación, análisis y retroalimentación.', bullets: ['Socialización con docentes y directivos', 'Aplicación de instrumentos validados', 'Análisis de resultados por categorías', 'Retroalimentación constructiva individual'] },
-      { label: 'Desarrollo', content: 'Los resultados de la evaluación se convierten en la base de los planes de desarrollo profesional docente.', bullets: ['Planes de mejoramiento individuales', 'Programas de formación diferenciada', 'Comunidades de aprendizaje docente', 'Seguimiento al desarrollo profesional'] },
+      {
+        label: 'Evaluación Docente',
+        sections: [
+          { text: 'La Evaluación de Docentes es un proceso fundamental para asegurar la calidad educativa dentro de una institución. Lidessa proporciona un servicio integral de evaluación de docentes, basado en criterios objetivos y alineado con las normativas del Ministerio de Educación Nacional. Nuestro enfoque es identificar fortalezas y áreas de mejora, ofreciendo recomendaciones para el desarrollo profesional continuo de los educadores y garantizando así una enseñanza efectiva y de alta calidad.' },
+          {
+            heading: 'Puntos a destacar',
+            bullets: [
+              { label: 'Criterios objetivos:', text: 'instrumentos de evaluación alineados con el modelo pedagógico institucional.' },
+              { label: 'Cumplimiento normativo:', text: 'conforme a las directrices del Ministerio de Educación Nacional.' },
+              { label: 'Identificación de fortalezas:', text: 'reconoce el buen desempeño y las áreas de mejora de cada docente.' },
+              { label: 'Desarrollo profesional:', text: 'recomendaciones concretas para la formación continua de los educadores.' },
+            ],
+          },
+          {
+            heading: 'Nuestro acompañamiento incluye',
+            text: 'Acompañamos el proceso completo de evaluación: diseño, socialización, aplicación, análisis y retroalimentación, hasta la construcción de planes de desarrollo profesional docente.',
+            bullets: [
+              { label: 'Diseño del sistema:', text: 'instrumentos de observación de aula, autoevaluación y coevaluación docente.' },
+              { label: 'Aplicación y análisis:', text: 'socialización con docentes y directivos, y análisis de resultados por categorías.' },
+              { label: 'Retroalimentación:', text: 'devolución constructiva e individual a cada docente evaluado.' },
+              { label: 'Planes de desarrollo:', text: 'programas de formación diferenciada y seguimiento al desarrollo profesional.' },
+            ],
+          },
+        ],
+      },
     ],
-    presencial: ['Jornadas de aplicación de instrumentos', 'Observaciones de aula acompañadas', 'Sesiones de retroalimentación individual', 'Talleres de reflexión pedagógica'],
-    virtual: ['Evaluaciones en plataforma digital', 'Análisis de datos con reportes automáticos', 'Retroalimentación por videoconferencia', 'Seguimiento al plan de desarrollo'],
   },
   {
     slug: 'evaluacion-institucional',
     title: 'Evaluación Institucional',
-    description: 'Facilitamos procesos de autoevaluación y evaluación institucional que permiten a los colegios identificar sus fortalezas, oportunidades de mejora y construir planes de acción efectivos.',
+    description: 'Ofrecemos un servicio de evaluación institucional exhaustivo que acompaña a las instituciones educativas en su proceso de mejora continua y cumplimiento normativo.',
     hero: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=1400&h=600&fit=crop&auto=format',
     tabs: [
-      { label: 'Autoevaluación', content: 'Acompañamos la autoevaluación institucional anual bajo la guía del MEN, evaluando las cuatro áreas de gestión: directiva, académica, administrativa y de comunidad.', bullets: ['Evaluación de gestión directiva', 'Evaluación de gestión académica', 'Evaluación de gestión administrativa', 'Evaluación de gestión de comunidad'] },
-      { label: 'Análisis', content: 'Procesamos los resultados de la autoevaluación para generar diagnósticos precisos y priorizados.', bullets: ['Consolidación de resultados por área', 'Análisis de tendencias históricas', 'Priorización de oportunidades de mejora', 'Informe ejecutivo para directivos'] },
-      { label: 'Plan de Mejoramiento', content: 'Diseñamos el Plan de Mejoramiento Institucional (PMI) con base en los resultados de la evaluación.', bullets: ['Definición de metas e indicadores', 'Asignación de responsables y recursos', 'Cronograma de actividades', 'Mecanismos de seguimiento y control'] },
+      {
+        label: 'Evaluación Institucional',
+        sections: [
+          { text: 'La Evaluación Institucional es un proceso de diagnóstico y análisis que permite a las instituciones educativas medir su desempeño y efectividad en la consecución de sus objetivos. Lidessa ofrece un servicio de evaluación institucional exhaustivo, que incluye la recolección y análisis de datos, la identificación de áreas críticas y la propuesta de planes de mejora. Nuestro objetivo es acompañar a las instituciones en su proceso de mejora continua, asegurando la excelencia en la educación y el cumplimiento de las normativas educativas nacionales.' },
+          {
+            heading: 'Puntos a destacar',
+            bullets: [
+              { label: 'Diagnóstico integral:', text: 'evalúa las cuatro áreas de gestión: directiva, académica, administrativa y de comunidad.' },
+              { label: 'Análisis de datos:', text: 'recolección y análisis riguroso de la información institucional.' },
+              { label: 'Identificación de áreas críticas:', text: 'prioriza las oportunidades de mejora más relevantes.' },
+              { label: 'Cumplimiento normativo:', text: 'conforme a las directrices educativas nacionales vigentes.' },
+            ],
+          },
+          {
+            heading: 'Nuestro acompañamiento incluye',
+            text: 'Acompañamos la autoevaluación institucional anual bajo la guía del MEN y la convertimos en un Plan de Mejoramiento Institucional con metas claras y seguimiento continuo.',
+            bullets: [
+              { label: 'Autoevaluación anual:', text: 'evaluación de las cuatro áreas de gestión bajo los lineamientos del MEN.' },
+              { label: 'Análisis de resultados:', text: 'consolidación por área, tendencias históricas e informe ejecutivo para directivos.' },
+              { label: 'Plan de Mejoramiento (PMI):', text: 'definición de metas, indicadores, responsables y cronograma.' },
+              { label: 'Seguimiento y control:', text: 'mecanismos para verificar el avance de los compromisos definidos.' },
+            ],
+          },
+        ],
+      },
     ],
-    presencial: ['Jornadas de autoevaluación con la comunidad', 'Talleres de análisis con directivos', 'Construcción participativa del PMI', 'Socialización de resultados'],
-    virtual: ['Aplicación de instrumentos en plataforma', 'Análisis de datos y generación de reportes', 'Asesoría en formulación del PMI', 'Seguimiento virtual a indicadores'],
   },
   {
     slug: 'formacion-continua',

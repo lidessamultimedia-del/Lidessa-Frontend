@@ -7,7 +7,7 @@ import { useScrollReveal } from '@/shared/hooks/useScrollReveal'
 const categoryMeta = [
   {
     image: '/assets/GestionEmpresas.png',
-    summary: 'Ofrecemos soluciones integrales para optimizar la administración y operación de tu empresa, enfocándonos en el desarrollo estratégico, eficiencia operativa y cumplimiento normativo para impulsar el crecimiento sostenible y el éxito empresarial.',
+    summary: 'Ofrecemos soluciones integrales para optimizar la administración y operación de su empresa, enfocándonos en el desarrollo estratégico, eficiencia operativa y cumplimiento normativo para impulsar el crecimiento sostenible y el éxito empresarial.',
   },
   {
     image: '/assets/gestionIE.png',
@@ -15,7 +15,7 @@ const categoryMeta = [
   },
   {
     image: '/assets/formacion.png',
-    summary: 'Proveemos capacitación especializada en diversas áreas empresariales, incluyendo Sistemas de Gestión de Seguridad y Salud en el Trabajo (SG-SST), Bases de Datos, Gestión de Proyectos (PMIRS), Mallas Curriculares, y más. Nuestro servicio está diseñado para asegurar que tanto empleados como directivos estén plenamente capacitados en normativas, procedimientos y buenas prácticas, garantizando un entorno laboral eficiente y seguro en todo tipo de empresas, incluyendo propiedades horizontales e instituciones educativas.',
+    summary: 'Proveemos capacitación especializada en diversas áreas empresariales, incluyendo Sistemas de Gestión de Seguridad y Salud en el Trabajo (SG-SST), Bases de Datos, Plan de Manejo Integral de Residuos Sólidos (PMIRS), Mallas Curriculares, y más. Nuestro servicio está diseñado para asegurar que tanto empleados como directivos estén plenamente capacitados en normativas, procedimientos y buenas prácticas, garantizando un entorno laboral eficiente y seguro en todo tipo de empresas, incluyendo propiedades horizontales e instituciones educativas.',
   },
   {
     image: '/assets/ph1.png',
@@ -51,11 +51,11 @@ export default function ServicesOverview() {
       >
         <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(0,81,135,0.93) 0%, rgba(61,49,21,0.88) 40%, rgba(20,20,20,0.85) 100%)' }} />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 text-center">
-          <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#84b6f4' }}>Lo que hacemos</p>
-          <h1 className="text-4xl sm:text-5xl font-black text-white mb-5" style={{ fontFamily: 'var(--font-display)' }}>
+          <p className="text-xs font-bold uppercase tracking-widest mb-3 reveal" style={{ color: '#84b6f4' }}>Lo que hacemos</p>
+          <h1 className="text-4xl sm:text-5xl font-black text-white mb-5 reveal stagger-1" style={{ fontFamily: 'var(--font-display)' }}>
             Nuestros Servicios
           </h1>
-          <p className="text-base max-w-2xl mx-auto leading-relaxed" style={{ color: '#c4dafa' }}>
+          <p className="text-base max-w-2xl mx-auto leading-relaxed reveal stagger-2" style={{ color: '#c4dafa' }}>
             Un portafolio integral para acompañar a su organización en cada etapa de su cumplimiento normativo.
           </p>
         </div>
@@ -111,7 +111,7 @@ export default function ServicesOverview() {
       {/* CTA */}
       <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6">
         <div
-          className="rounded-2xl p-8 text-center relative overflow-hidden"
+          className="rounded-2xl p-8 text-center relative overflow-hidden reveal-scale"
           style={{ background: 'linear-gradient(135deg, #005187 0%, #141414 100%)' }}
         >
           <h2 className="text-2xl font-black text-white mb-3" style={{ fontFamily: 'var(--font-display)' }}>
@@ -171,8 +171,15 @@ function CategoryCard({ category, align, isOpen, onToggle, className = '' }) {
 
           <div style={{ maxHeight: isOpen ? '400px' : '0', overflow: 'hidden', transition: 'max-height 0.3s ease' }}>
             <ul className="pt-3 mt-3 space-y-1.5" style={{ borderTop: '1px solid var(--border)' }}>
-              {category.items.map(service => (
-                <li key={service.slug}>
+              {category.items.map((service, i) => (
+                <li
+                  key={service.slug}
+                  style={{
+                    opacity: isOpen ? 1 : 0,
+                    transform: isOpen ? 'translateX(0)' : 'translateX(-10px)',
+                    transition: `opacity 0.35s ease ${i * 0.06}s, transform 0.35s ease ${i * 0.06}s`,
+                  }}
+                >
                   <Link
                     to={`/servicios/${service.slug}`}
                     className="text-sm inline-flex items-center gap-1.5"

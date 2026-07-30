@@ -42,22 +42,60 @@ export default function ServicesOverview() {
     <div ref={pageRef}>
       {/* Hero */}
       <section
-        className="py-20 relative"
-        style={{
-          backgroundImage: 'url(/assets/nuestrosServicios.jpeg)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
+        className="relative min-h-[70vh] flex items-center overflow-hidden py-20"
+        style={{ background: 'linear-gradient(135deg, #10294d 0%, #071426 55%, #0c0c0c 100%)' }}
       >
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(0,81,135,0.93) 0%, rgba(61,49,21,0.88) 40%, rgba(20,20,20,0.85) 100%)' }} />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 text-center">
-          <p className="text-xs font-bold uppercase tracking-widest mb-3 reveal" style={{ color: '#84b6f4' }}>Lo que hacemos</p>
-          <h1 className="text-4xl sm:text-5xl font-black text-white mb-5 reveal stagger-1" style={{ fontFamily: 'var(--font-display)' }}>
-            Nuestros Servicios
-          </h1>
-          <p className="text-base max-w-2xl mx-auto leading-relaxed reveal stagger-2" style={{ color: '#c4dafa' }}>
-            Un portafolio integral para acompañar a su organización en cada etapa de su cumplimiento normativo.
-          </p>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 w-full grid lg:grid-cols-2 gap-14 items-center">
+          <div className="text-center lg:text-left">
+            <p className="text-xs font-bold uppercase tracking-widest mb-3 reveal" style={{ color: '#84b6f4' }}>Lo que hacemos</p>
+            <h1 className="text-4xl sm:text-5xl font-black text-white mb-5 reveal stagger-1" style={{ fontFamily: 'var(--font-display)' }}>
+              Nuestros Servicios
+            </h1>
+            <p className="text-base max-w-2xl mx-auto lg:mx-0 leading-relaxed reveal stagger-2" style={{ color: '#c4dafa' }}>
+              Un portafolio integral para acompañar a su organización en cada etapa de su cumplimiento normativo.
+            </p>
+          </div>
+
+          <div className="flex justify-center reveal-scale">
+            <div style={{ position: 'relative', width: 'min(400px, 85vw)', height: 'min(400px, 85vw)' }}>
+              {/* Glow ring */}
+              <div
+                className="pointer-events-none"
+                style={{
+                  position: 'absolute',
+                  inset: '-6px',
+                  borderRadius: '50%',
+                  border: '3px solid #e8c766',
+                  boxShadow: '0 0 90px 18px rgba(232,199,102,0.5), inset 0 0 45px rgba(232,199,102,0.2)',
+                }}
+              />
+              {/* Pedestal glow */}
+              <div
+                className="pointer-events-none"
+                style={{
+                  position: 'absolute',
+                  bottom: '-4%',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: '65%',
+                  height: '13%',
+                  borderRadius: '50%',
+                  background: 'radial-gradient(ellipse at center, rgba(232,199,102,0.45), transparent 70%)',
+                  filter: 'blur(6px)',
+                }}
+              />
+              <div style={{ position: 'relative', width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden', boxShadow: '0 25px 60px rgba(0,0,0,0.4)' }}>
+                <img
+                  src="/assets/nuestrosServicios.jpeg"
+                  alt="Nuestros Servicios"
+                  className="w-full h-full object-cover"
+                  style={{ transition: 'transform 0.4s ease' }}
+                  onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.08)'}
+                  onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

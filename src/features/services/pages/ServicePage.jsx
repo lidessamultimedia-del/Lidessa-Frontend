@@ -54,7 +54,7 @@ export default function ServicePage() {
           backgroundPosition: 'center',
         }}
       >
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(20,20,20,0.93) 0%, rgba(20,20,20,0.7) 100%)' }} />
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(16,41,77,0.9) 0%, rgba(7,20,38,0.75) 100%)' }} />
         <div className="relative max-w-3xl mx-auto px-4 sm:px-6 text-center">
           <img src="/assets/logolidessa.png" alt="Lidessa" className="mx-auto mb-5 reveal" style={{ width: 80, height: 80, objectFit: 'contain' }} />
           <p className="text-xs font-bold uppercase tracking-widest mb-3 reveal" style={{ color: '#e8c766' }}>Servicio</p>

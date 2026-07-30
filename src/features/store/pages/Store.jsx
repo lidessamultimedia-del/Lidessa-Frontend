@@ -13,28 +13,66 @@ export default function Store() {
     <div ref={pageRef}>
       {/* Hero */}
       <section
-        className="py-20 relative"
-        style={{
-          backgroundImage: 'url(/assets/nuestrosServicios.jpeg)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
+        className="relative min-h-[80vh] flex items-center overflow-hidden py-20"
+        style={{ background: 'linear-gradient(135deg, #10294d 0%, #071426 55%, #0c0c0c 100%)' }}
       >
-        <div className="absolute inset-0" style={{ background: 'linear-gradient(to right, rgba(20,20,20,0.95) 50%, rgba(20,20,20,0.6))' }} />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
-          <img src="/assets/v2.png" alt="V2 Suministros" className="mb-4 reveal-scale" style={{ height: 96, width: 'auto' }} />
-          <span className="text-xs font-bold uppercase tracking-widest px-2 py-1 rounded reveal" style={{ backgroundColor: 'rgba(201,162,39,0.2)', color: '#e8c766' }}>
-            V2 Suministros
-          </span>
-          <h1 className="text-4xl sm:text-5xl font-black text-white mt-3 mb-4 reveal stagger-1" style={{ fontFamily: 'var(--font-display)' }}>
-            ¡Bienvenidos a V2 Suministros!
-          </h1>
-          <p className="text-base max-w-2xl mb-3 leading-relaxed reveal stagger-2" style={{ color: '#cbb98a' }}>
-            En Lidessa nos enorgullece acompañar a las empresas en el cumplimiento de la normativa de seguridad y salud en el trabajo, con información actualizada y asesoría permanente sobre los estándares que aplican a su actividad.
-          </p>
-          <p className="text-base max-w-2xl mb-6 leading-relaxed reveal stagger-3" style={{ color: '#cbb98a' }}>
-            V2 Suministros es nuestro espacio especializado en seguridad y salud en el trabajo, enfocado en orientarle sobre los equipos de protección personal y elementos que exige la normativa vigente para cada nivel de riesgo.
-          </p>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 w-full grid lg:grid-cols-2 gap-14 items-center">
+          <div>
+            <img src="/assets/v2.png" alt="V2 Suministros" className="mb-4 reveal-scale" style={{ height: 96, width: 'auto' }} />
+            <span className="text-xs font-bold uppercase tracking-widest px-2 py-1 rounded reveal" style={{ backgroundColor: 'rgba(201,162,39,0.2)', color: '#e8c766' }}>
+              V2 Suministros
+            </span>
+            <h1 className="text-4xl sm:text-5xl font-black text-white mt-3 mb-4 reveal stagger-1" style={{ fontFamily: 'var(--font-display)' }}>
+              ¡Bienvenidos a V2 Suministros!
+            </h1>
+            <p className="text-base max-w-2xl mb-3 leading-relaxed reveal stagger-2" style={{ color: '#cbb98a' }}>
+              En Lidessa nos enorgullece acompañar a las empresas en el cumplimiento de la normativa de seguridad y salud en el trabajo, con información actualizada y asesoría permanente sobre los estándares que aplican a su actividad.
+            </p>
+            <p className="text-base max-w-2xl mb-6 leading-relaxed reveal stagger-3" style={{ color: '#cbb98a' }}>
+              V2 Suministros es nuestro espacio especializado en seguridad y salud en el trabajo, enfocado en orientarle sobre los equipos de protección personal y elementos que exige la normativa vigente para cada nivel de riesgo.
+            </p>
+          </div>
+
+          <div className="flex justify-center reveal-scale">
+            <div style={{ position: 'relative', width: 'min(400px, 85vw)', height: 'min(400px, 85vw)' }}>
+              {/* Glow ring */}
+              <div
+                className="pointer-events-none"
+                style={{
+                  position: 'absolute',
+                  inset: '-6px',
+                  borderRadius: '50%',
+                  border: '3px solid #e8c766',
+                  boxShadow: '0 0 90px 18px rgba(232,199,102,0.5), inset 0 0 45px rgba(232,199,102,0.2)',
+                }}
+              />
+              {/* Pedestal glow */}
+              <div
+                className="pointer-events-none"
+                style={{
+                  position: 'absolute',
+                  bottom: '-4%',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: '65%',
+                  height: '13%',
+                  borderRadius: '50%',
+                  background: 'radial-gradient(ellipse at center, rgba(232,199,102,0.45), transparent 70%)',
+                  filter: 'blur(6px)',
+                }}
+              />
+              <div style={{ position: 'relative', width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden', boxShadow: '0 25px 60px rgba(0,0,0,0.4)' }}>
+                <img
+                  src="/assets/insumos.png"
+                  alt="V2 Suministros"
+                  className="w-full h-full object-cover"
+                  style={{ transition: 'transform 0.4s ease' }}
+                  onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.08)'}
+                  onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -106,7 +144,7 @@ export default function Store() {
               <line x1="12" y1="9" x2="12" y2="13" />
               <line x1="12" y1="17" x2="12.01" y2="17" />
             </svg>
-            ¿Qué pasa si no cumples con la norma 0705?
+            ¿Qué pasa si no cumple con la norma 0705?
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e8c766" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
               <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" />
               <line x1="12" y1="9" x2="12" y2="13" />

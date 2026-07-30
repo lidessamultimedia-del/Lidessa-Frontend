@@ -49,7 +49,7 @@ export default function Blog() {
                 </svg>
               </div>
               <p className="text-sm sm:text-base leading-relaxed">
-                <span style={{ color: 'rgba(255,255,255,0.88)' }}>Gracias por confiar en nosotros para mantenerte informado. </span>
+                <span style={{ color: 'rgba(255,255,255,0.88)' }}>Gracias por confiar en nosotros para mantenerlo informado.</span>
                 <span style={{ color: GOLD, fontWeight: 700 }}>¡Vamos a converger en la verdad y el conocimiento!</span>
               </p>
             </div>

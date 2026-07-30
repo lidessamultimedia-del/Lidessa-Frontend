@@ -44,15 +44,30 @@ function ProtectedRoute({ children }) {
 export default function AppRoutes() {
   const [theme, setTheme] = useState(() => {
     const stored = localStorage.getItem('lidessa_theme')
-    if (stored === 'light' || stored === 'dark') return stored
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+    if (stored === 'light' || stored === 'dark' || stored === 'system') return stored
+    return 'system'
   })
 
   useEffect(() => {
     const root = document.documentElement
-    if (theme === 'dark') root.classList.add('dark')
-    else root.classList.remove('dark')
+    const media = window.matchMedia('(prefers-color-scheme: dark)')
+
+    const applyTheme = () => {
+      const isDark = theme === 'system' ? media.matches : theme === 'dark'
+      root.classList.toggle('dark', isDark)
+    }
+
+    applyTheme()
     localStorage.setItem('lidessa_theme', theme)
+
+    if (theme === 'system') {
+      if (media.addEventListener) media.addEventListener('change', applyTheme)
+      else media.addListener(applyTheme) // Safari < 14 fallback
+      return () => {
+        if (media.removeEventListener) media.removeEventListener('change', applyTheme)
+        else media.removeListener(applyTheme)
+      }
+    }
   }, [theme])
 
   return (

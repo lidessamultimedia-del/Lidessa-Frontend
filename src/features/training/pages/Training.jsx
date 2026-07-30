@@ -13,24 +13,63 @@ export default function Training() {
     <div ref={pageRef}>
       {/* Hero */}
       <section
-        className="py-20 relative overflow-hidden"
-        style={{
-          backgroundImage: 'linear-gradient(rgba(20,20,20,0.88), rgba(20,20,20,0.88)), url(/assets/ceet_1.jpg)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
+        className="relative min-h-[80vh] flex items-center overflow-hidden py-20"
+        style={{ background: 'linear-gradient(135deg, #10294d 0%, #071426 55%, #0c0c0c 100%)' }}
       >
-        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 text-center">
-          <img src="/assets/ceet.png" alt="CEET" className="w-32 h-32 object-contain mx-auto mb-4 reveal-scale" />
-          <h1 className="text-4xl sm:text-5xl font-black mb-2 reveal" style={{ fontFamily: 'var(--font-display)', color: '#e8c766' }}>
-            ¡Bienvenidos a CEET!
-          </h1>
-          <p className="text-lg sm:text-xl font-bold mb-6 reveal stagger-1" style={{ fontFamily: 'var(--font-display)', color: '#e8c766' }}>
-            Centro Especializado en Educación para el Trabajo
-          </p>
-          <p className="text-base mb-8 reveal stagger-2" style={{ color: '#cbb98a' }}>
-            Nos especializamos en ofrecer cursos y capacitaciones que aseguran el cumplimiento de normativas en Seguridad y Salud en el Trabajo (SST), Plan de Manejo Integral de Residuos Sólidos (PMIRS) y otros temas esenciales para Empresas, Instituciones Educativas, Propiedades Horizontales y más. Nuestra misión es ayudarle a mantenerse al día con las regulaciones, asegurando un entorno seguro y sostenible. ¡Juntos construimos un futuro más responsable!
-          </p>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 w-full grid lg:grid-cols-2 gap-14 items-center">
+          <div className="text-center lg:text-left">
+            <img src="/assets/ceet.png" alt="CEET" className="w-32 h-32 object-contain mx-auto lg:mx-0 mb-4 reveal-scale" />
+            <h1 className="text-4xl sm:text-5xl font-black mb-2 reveal" style={{ fontFamily: 'var(--font-display)', color: '#e8c766' }}>
+              ¡Bienvenidos a CEET!
+            </h1>
+            <p className="text-lg sm:text-xl font-bold mb-6 reveal stagger-1" style={{ fontFamily: 'var(--font-display)', color: '#e8c766' }}>
+              Centro Especializado en Educación para el Trabajo
+            </p>
+            <p className="text-base mb-8 reveal stagger-2" style={{ color: '#cbb98a' }}>
+              Nos especializamos en ofrecer cursos y capacitaciones que aseguran el cumplimiento de normativas en Seguridad y Salud en el Trabajo (SST), Plan de Manejo Integral de Residuos Sólidos (PMIRS) y otros temas esenciales para Empresas, Instituciones Educativas, Propiedades Horizontales y más. Nuestra misión es ayudarle a mantenerse al día con las regulaciones, asegurando un entorno seguro y sostenible. ¡Juntos construimos un futuro más responsable!
+            </p>
+          </div>
+
+          <div className="flex justify-center reveal-scale">
+            <div style={{ position: 'relative', width: 'min(400px, 85vw)', height: 'min(400px, 85vw)' }}>
+              {/* Glow ring */}
+              <div
+                className="pointer-events-none"
+                style={{
+                  position: 'absolute',
+                  inset: '-6px',
+                  borderRadius: '50%',
+                  border: '3px solid #e8c766',
+                  boxShadow: '0 0 90px 18px rgba(232,199,102,0.5), inset 0 0 45px rgba(232,199,102,0.2)',
+                }}
+              />
+              {/* Pedestal glow */}
+              <div
+                className="pointer-events-none"
+                style={{
+                  position: 'absolute',
+                  bottom: '-4%',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: '65%',
+                  height: '13%',
+                  borderRadius: '50%',
+                  background: 'radial-gradient(ellipse at center, rgba(232,199,102,0.45), transparent 70%)',
+                  filter: 'blur(6px)',
+                }}
+              />
+              <div style={{ position: 'relative', width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden', boxShadow: '0 25px 60px rgba(0,0,0,0.4)' }}>
+                <img
+                  src="/assets/ceet_1.jpg"
+                  alt="CEET"
+                  className="w-full h-full object-cover"
+                  style={{ transition: 'transform 0.4s ease' }}
+                  onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.08)'}
+                  onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

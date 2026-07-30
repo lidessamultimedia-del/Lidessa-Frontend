@@ -52,8 +52,6 @@ export const servicesData = [
         ],
       },
     ],
-    presencial: ['Diagnóstico in-situ de procesos actuales', 'Talleres de sensibilización al equipo', 'Auditorías internas acompañadas', 'Revisión física de documentación y registros'],
-    virtual: ['Consultoría por videoconferencia', 'Revisión de manuales y procedimientos en línea', 'Capacitación e-learning certificada', 'Seguimiento remoto de indicadores del sistema'],
   },
   {
     slug: 'desarrollo-empresarial',
@@ -232,8 +230,6 @@ export const servicesData = [
         ],
       },
     ],
-    presencial: ['Talleres estratégicos con directivos', 'Sesiones de coaching organizacional', 'Facilitación de reuniones de planeación', 'Visitas de seguimiento y mentoring'],
-    virtual: ['Consultoría estratégica en línea', 'Gestión de tableros digitales', 'Reuniones de seguimiento por videollamada', 'Informes de avance automatizados'],
   },
   {
     slug: 'consultoria-gerencial',
@@ -328,8 +324,6 @@ export const servicesData = [
         ],
       },
     ],
-    presencial: ['Sesiones de trabajo con la alta dirección', 'Talleres de cultura organizacional', 'Assessment de competencias gerenciales', 'Reuniones de consultoría estratégica'],
-    virtual: ['Mentoría gerencial en línea', 'Revisión de informes de gestión', 'Acompañamiento en decisiones críticas', 'Capacitación virtual para directivos'],
   },
   {
     slug: 'manuales-convivencia',
@@ -500,10 +494,22 @@ export const servicesData = [
     description: 'Ofrecemos programas de formación continua para profesionales y equipos de trabajo, orientados a actualizar competencias, fortalecer habilidades y mantenerse al día con las normativas del sector.',
     hero: '/assets/Formación_Continua.png',
     tabs: [
-      { label: 'Nuestro enfoque', content: 'En Lidessa creemos que la capacitación continua es clave para el éxito y la adaptación de las empresas en un entorno en constante cambio. La Formación Continua está orientada a proporcionar a los empleados y directivos de las empresas conocimientos actualizados y habilidades prácticas en temas relacionados con el Sistema de Gestión de Seguridad y Salud en el Trabajo (SG-SST) y otras áreas relevantes. Nuestros cursos, que se pueden realizar de manera presencial o virtual, están diseñados para mantener a los participantes al día con las últimas normativas y mejores prácticas, contribuyendo a la mejora continua de la organización.', bullets: ['Capacitación actualizada', 'Modalidades flexibles', 'Expertos en la materia', 'Certificación'] },
+      {
+        label: 'Nuestro enfoque',
+        sections: [
+          { text: 'En Lidessa creemos que la capacitación continua es clave para el éxito y la adaptación de las empresas en un entorno en constante cambio. La Formación Continua está orientada a proporcionar a los empleados y directivos de las empresas conocimientos actualizados y habilidades prácticas en temas relacionados con el Sistema de Gestión de Seguridad y Salud en el Trabajo (SG-SST) y otras áreas relevantes. Nuestros cursos, que se pueden realizar de manera presencial o virtual, están diseñados para mantener a los participantes al día con las últimas normativas y mejores prácticas, contribuyendo a la mejora continua de la organización.' },
+          {
+            heading: 'Puntos a destacar',
+            bullets: [
+              { text: 'Capacitación actualizada' },
+              { text: 'Modalidades flexibles' },
+              { text: 'Expertos en la materia' },
+              { text: 'Certificación' },
+            ],
+          },
+        ],
+      },
     ],
-    presencial: ['Clases magistrales y talleres en sede', 'Dinámicas grupales y trabajo en equipo', 'Simulaciones y ejercicios prácticos', 'Evaluaciones presenciales certificadas'],
-    virtual: ['Clases en vivo por Zoom / Teams', 'Módulos e-learning autodirigidos', 'Foros de discusión temáticos', 'Evaluaciones y certificación en línea'],
   },
   {
     slug: 'formacion-medida',
@@ -511,10 +517,22 @@ export const servicesData = [
     description: 'Diseñamos programas de capacitación corporativa completamente personalizados, adaptados a los objetivos estratégicos, la cultura organizacional y las necesidades específicas de su equipo.',
     hero: '/assets/Formación_Medida.png',
     tabs: [
-      { label: 'Beneficios', content: 'La Formación a la Medida de Lidessa está diseñada para ofrecer soluciones de capacitación personalizadas que se ajusten a las necesidades específicas de cada empresa. Este servicio permite desarrollar programas de formación adaptados a los desafíos particulares y objetivos estratégicos de la organización, garantizando que la capacitación sea relevante y directamente aplicable a su contexto.', bullets: ['Diseño personalizado: programas de formación desarrollados con base en un análisis de las necesidades específicas de la empresa.', 'Flexibilidad: capacitación en horarios y formatos que se adaptan a la dinámica laboral de la organización.', 'Relevancia: contenidos y metodologías ajustados a los retos y objetivos particulares de la empresa.', 'Soporte continuo: asesoramiento y seguimiento durante y después de la formación para asegurar la implementación efectiva de los conocimientos adquiridos.'] },
+      {
+        label: 'Beneficios',
+        sections: [
+          { text: 'La Formación a la Medida de Lidessa está diseñada para ofrecer soluciones de capacitación personalizadas que se ajusten a las necesidades específicas de cada empresa. Este servicio permite desarrollar programas de formación adaptados a los desafíos particulares y objetivos estratégicos de la organización, garantizando que la capacitación sea relevante y directamente aplicable a su contexto.' },
+          {
+            heading: 'Puntos a destacar',
+            bullets: [
+              { label: 'Diseño personalizado:', text: 'programas de formación desarrollados con base en un análisis de las necesidades específicas de la empresa.' },
+              { label: 'Flexibilidad:', text: 'capacitación en horarios y formatos que se adaptan a la dinámica laboral de la organización.' },
+              { label: 'Relevancia:', text: 'contenidos y metodologías ajustados a los retos y objetivos particulares de la empresa.' },
+              { label: 'Soporte continuo:', text: 'asesoramiento y seguimiento durante y después de la formación para asegurar la implementación efectiva de los conocimientos adquiridos.' },
+            ],
+          },
+        ],
+      },
     ],
-    presencial: ['Talleres in-company en sus instalaciones', 'Convivencias y retiros formativos', 'Dinámicas de team building', 'Evaluación de competencias en contexto real'],
-    virtual: ['Programa virtual sincrónico y asincrónico', 'Plataforma LMS personalizada', 'Materiales digitales de alto impacto', 'Seguimiento individual de avance'],
   },
   {
     slug: 'programas-instituciones',
@@ -522,10 +540,23 @@ export const servicesData = [
     description: 'Diseñamos e implementamos programas formativos integrales dirigidos a directivos docentes, docentes y personal administrativo de instituciones educativas públicas y privadas.',
     hero: '/assets/educativa.png',
     tabs: [
-      { label: 'Instituciones educativas', content: 'En Lidessa ofrecemos servicios para el correcto funcionamiento de instituciones educativas, instituciones de educación superior, instituciones de formación y desarrollo humano e instituciones de educación formal integral. Incluimos programas de contenidos académicos de pregrado y postgrado, y asesoramos a su institución con diseño y contenido para plataformas virtuales, tales como videos, infografías, flyers y evaluaciones, entre otros.', bullets: ['Instituciones de educación superior', 'Instituciones de formación y desarrollo humano', 'Instituciones de educación formal integral', 'Contenidos académicos de pregrado y postgrado', 'Diseño de videos, infografías, flyers y evaluaciones para plataformas virtuales'] },
+      {
+        label: 'Instituciones educativas',
+        sections: [
+          { text: 'En Lidessa ofrecemos servicios para el correcto funcionamiento de instituciones educativas, instituciones de educación superior, instituciones de formación y desarrollo humano e instituciones de educación formal integral. Incluimos programas de contenidos académicos de pregrado y postgrado, y asesoramos a su institución con diseño y contenido para plataformas virtuales, tales como videos, infografías, flyers y evaluaciones, entre otros.' },
+          {
+            heading: 'Puntos a destacar',
+            bullets: [
+              { text: 'Instituciones de educación superior' },
+              { text: 'Instituciones de formación y desarrollo humano' },
+              { text: 'Instituciones de educación formal integral' },
+              { text: 'Contenidos académicos de pregrado y postgrado' },
+              { text: 'Diseño de videos, infografías, flyers y evaluaciones para plataformas virtuales' },
+            ],
+          },
+        ],
+      },
     ],
-    presencial: ['Jornadas pedagógicas institucionales', 'Talleres por ciclos y niveles educativos', 'Formación de formadores internos', 'Acompañamiento en aula'],
-    virtual: ['Diplomados virtuales para docentes', 'Webinars temáticos mensuales', 'Repositorio de recursos pedagógicos', 'Comunidades de aprendizaje en línea'],
   },
   {
     slug: 'seguridad-salud',
@@ -624,15 +655,180 @@ export const servicesData = [
   {
     slug: 'manejo-residuos',
     title: 'Plan de Manejo de Residuos',
-    description: 'Elaboramos planes de gestión integral de residuos sólidos y peligrosos conforme a la normativa ambiental vigente (Decreto 1076/2015), promoviendo prácticas sostenibles y responsables.',
-    hero: 'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=1400&h=600&fit=crop&auto=format',
+    description: 'Diseñamos estrategias de crecimiento y transformación organizacional que fortalecen las capacidades internas de su empresa, optimizan recursos y potencian la competitividad en el mercado.',
+    hero: '/assets/plan_de_manejo_residuales.png',
     tabs: [
-      { label: 'Diagnóstico', content: 'Realizamos un diagnóstico de la generación, clasificación y disposición actual de residuos en su organización.', bullets: ['Caracterización de residuos generados', 'Análisis de puntos críticos', 'Evaluación de infraestructura actual', 'Revisión de obligaciones legales aplicables'] },
-      { label: 'Plan PGIRS', content: 'Diseñamos el Plan de Gestión Integral de Residuos Sólidos (PGIRS) adaptado a las necesidades y obligaciones de su organización.', bullets: ['Separación en la fuente y código de colores', 'Rutas internas de recolección', 'Gestión de residuos peligrosos (RESPEL)', 'Alianzas con gestores autorizados'] },
-      { label: 'Capacitación', content: 'Formamos a todo el personal en prácticas de manejo adecuado de residuos y cultura ambiental organizacional.', bullets: ['Talleres de sensibilización ambiental', 'Protocolos de separación por área', 'Registro y control de indicadores', 'Reporte a autoridades ambientales'] },
+      {
+        label: 'RIT',
+        title: 'Reglamento Interno de Trabajo',
+        intro: 'Las empresas que tienen más de 5 trabajadores de carácter permanente si son comerciales, o más de diez (10) si son industriales, o más de veinte (20) si son agrícolas, ganaderas o forestales, necesitan un reglamento de trabajo, sin embargo, es recomendable que todas las empresas los tengan ya que esta es la carta de navegación para regular las relaciones laborales, además de otros aspectos importantes a considerar:',
+        checklist: [
+          'Con la cultura actual y dinámica social y laboral, la tutela se ha convertido en un mecanismo de reclamación, los RIT bien implementados pueden prevenir tutelas por reintegro en casos de despido ilegal de sus trabajadores, así como el pago de todos los salarios y derechos dejados de percibir por ese trabajador desde que se despidió de forma ilegal, sumado a indemnización que contempla la Ley Laboral.',
+          'En el contexto de una relación laboral y los mismos niveles de informalidad que se manejan las mismas relaciones con los colaboradores, en el caso de dificultades o problema con un trabajador, el empleador se puede limitar a realizar una terminación de contrato, en muchos casos aunque exista una relación de peso que justifique un despido, al no contar con un reglamento Interno que imponga una sanción y un adecuado proceso de descargos, este despido aunque justificado, en la realidad se vuelve ilegal, lo que resulta en los riesgos de reintegro o indemnización.',
+          'Es importante tener en cuenta que el Ministerio de Trabajo puede imponer sanciones de hasta 5.000 Smlmv para las empresas que no cuenten con este documento. La sanción es graduable dependiendo de la gravedad de la falta, la reincidencia de la compañía y el tamaño de la misma.',
+        ],
+        structure: {
+          title: 'Estructura del Servicio',
+          image: '/assets/Descripcion_Estructura.png',
+          steps: [
+            'Diagnóstico de la compañía',
+            'Adecuación al marco legal',
+            'Reunión con gerencia, colaboradores y líderes de equipo',
+            'Proceso de aprobación',
+            'Publicación y optimización',
+          ],
+        },
+      },
+      {
+        label: 'Vinculación',
+        sections: [
+          { heading: 'Vinculación', text: 'El proceso de vinculación inicia con un análisis detallado de los perfiles que la empresa requiere, seguido de una búsqueda exhaustiva en nuestro amplio banco de talentos. Luego, llevamos a cabo un proceso de selección riguroso, que incluye entrevistas, evaluaciones psicotécnicas y verificaciones de referencias, asegurando que los candidatos propuestos cumplan con los estándares exigidos.' },
+          { heading: 'De su interés', text: 'En Colombia, la vinculación de empleados está regida por el Código Sustantivo del Trabajo y otras normativas laborales, como la Ley 789 de 2002 y la Ley 1562 de 2012. Estas leyes exigen que las empresas contraten de manera formal, cumpliendo con las obligaciones de seguridad social, riesgos laborales y garantizando condiciones dignas de trabajo. Las empresas que no cumplen con estas normativas pueden enfrentar sanciones como multas por parte del Ministerio del Trabajo, demandas laborales, y el riesgo de ser incluidas en listas negras que dificultan la contratación futura de personal. La falta de afiliación a la seguridad social o a riesgos laborales, por ejemplo, puede generar multas que varían entre 1 y 5.000 salarios mínimos mensuales legales vigentes, dependiendo de la gravedad del incumplimiento.' },
+          { heading: '¿Cómo le ayuda Lidessa?', text: 'Lidessa ofrece un servicio de vinculación integral que asegura que las empresas cumplan con todas las normativas laborales vigentes. Al gestionar el proceso de reclutamiento y selección de manera eficiente, Lidessa garantiza que los empleados contratados estén debidamente afiliados a los sistemas de seguridad social y riesgos laborales, reduciendo así el riesgo de sanciones. Además, la empresa ofrece asesoría continua para mantener la conformidad con las leyes laborales.' },
+        ],
+      },
+      {
+        label: 'Diseño de Estructura Interna',
+        sections: [
+          { heading: 'Diseño de Estructura Interna', text: 'El buen funcionamiento de una organización depende en gran medida de su capacidad de clarificar y medir las acciones y funciones de sus colaboradores en relación a sus procesos. La estructura empresarial es la forma en que se organiza internamente una empresa. No hay una única estructura organizativa válida, sino diferentes tipos en función de los objetivos de la compañía. Se entiende por estructura empresarial la organización que se dota a una empresa para funcionar. El diseño organizacional implica conocer bien las cadenas de mando, puestos de trabajo, jerarquías y dependencias, así como los diversos departamentos en los que se ordena la compañía. Los responsables de diseñar la estructura organizativa cuentan en primer lugar con el organigrama de la empresa, pero no sólo eso.' },
+          {
+            heading: 'La creación de la estructura organizacional de una empresa consta de dos pasos:',
+            bullets: [
+              { text: 'Analizar tareas, subtareas y definir metas de la organización.' },
+              { text: 'Llevar un control de la evaluación de objetivos.' },
+            ],
+          },
+          {
+            heading: 'Toda estructura organizacional cuenta con algunos componentes fundamentales que las distinguen de otras:',
+            bullets: [
+              { label: 'Cadena de Mando:', text: 'Es la base de todo modelo organizacional. Se trata de una línea de autoridad que fluye desde la más alta dirección hasta los puestos más bajos. Esta cadena define a quién hay que dirigirse según el tema que se trate.' },
+              { label: 'Nivel de centralización:', text: 'Que la organización esté centralizada o descentralizada contribuirá directamente en la velocidad del proceso de toma de decisiones. También tendrá un impacto en la percepción más o menos democrática de la forma de actuar.' },
+              { label: 'Margen de control:', text: 'Es un elemento muy influido por el tamaño de la compañía y el nivel de centralización. Cuantos más empleados controle un mando directivo, mayor será su margen de control.' },
+              { label: 'Grado de especialización:', text: 'Esta clave de la estructura organizacional aborda la división del trabajo. Dentro de una organización, las tareas se distribuyen en distintos niveles. Si los empleados cuentan con una especialización alta, estos serán expertos en su campo y serán más productivos.' },
+            ],
+          },
+          {
+            heading: 'Diseño estructural',
+            text: 'El diseño estructural se ocupa de la investigación metódica de la estabilidad, resistencia y rigidez de la estructura. El objetivo básico es crear una estructura que sea capaz de resistir todas las cargas aplicadas sin fallar durante su vida prevista. Algunos componentes básicos son:',
+            bullets: [
+              { text: 'Manuales de funciones.' },
+              { text: 'Llevar un control de la evaluación de objetivos.' },
+              { text: 'Herramientas de evaluación y desempeño.' },
+              { text: 'Estructuración funcional y de líneas de mando.' },
+              { text: 'Establecimiento de indicadores de gestión y operativos.' },
+              { text: 'Análisis del contexto interno y externo de la empresa.' },
+            ],
+          },
+        ],
+      },
+      {
+        label: 'Manual de Funciones',
+        sections: [
+          { heading: 'Manual de Funciones', text: 'El Manual de Funciones es una herramienta clave para definir claramente las responsabilidades, funciones y procesos dentro de una empresa. Lidessa ofrece la creación y actualización de manuales de funciones que alinean las operaciones con los objetivos estratégicos de la organización. Este servicio incluye la elaboración de un documento exhaustivo que detalla las funciones de cada puesto dentro de la organización, así como las competencias necesarias, los flujos de trabajo y los indicadores de desempeño. Este manual es fundamental para mejorar la eficiencia operativa, facilitar la formación del personal y asegurar la claridad en los roles y responsabilidades.' },
+          {
+            heading: 'Lidessa le ofrece:',
+            bullets: [
+              { label: 'Diagnóstico organizacional:', text: 'Análisis de la estructura actual de la empresa para identificar áreas de mejora.' },
+              { label: 'Definición de roles:', text: 'Clarificación de funciones, responsabilidades y expectativas para cada puesto de trabajo.' },
+              { label: 'Optimización de procesos:', text: 'Mejora en la asignación de tareas y en la coordinación interdepartamental.' },
+              { label: 'Herramienta de gestión:', text: 'Un manual que se convierte en un referente para la gestión del talento y el desarrollo organizacional.' },
+            ],
+          },
+          {
+            heading: 'Recuerde:',
+            boxed: true,
+            text: 'El Manual de Funciones es un documento fundamental para el cumplimiento de varias normativas laborales en Colombia, incluyendo el Código Sustantivo del Trabajo y el Decreto 1072 de 2015. Este manual ayuda a formalizar y clarificar las responsabilidades de los empleados, facilitando la gestión de recursos humanos y asegurando que se cumplan los estándares de eficiencia y transparencia en las operaciones empresariales. La ausencia de un manual de funciones o la falta de claridad en los roles y responsabilidades puede llevar a conflictos laborales, sanciones por parte de entidades de inspección laboral, y demandas por incumplimientos contractuales. Las sanciones pueden incluir multas y, en casos extremos, la suspensión temporal de actividades hasta que se subsanen las deficiencias en la organización.',
+          },
+        ],
+      },
+      {
+        label: 'PMIRS',
+        sections: [
+          {
+            heading: 'Plan de Manejo Integral de Residuos Sólidos',
+            text: 'Los PMIRS o Planes de Manejo Integral de Residuos Sólidos, son planes estratégicos que buscan gestionar adecuadamente los residuos sólidos generados por la empresa, minimizando los riesgos para la salud de los trabajadores y el impacto ambiental. Estos programas incluyen la identificación, segregación, almacenamiento, transporte y disposición final de los residuos, asegurando que se cumplan con las normativas legales y se promueva un ambiente de trabajo seguro y saludable, reduciendo posibles accidentes, enfermedades ocupacionales, y contribuyendo a la sostenibilidad. Para el acompañamiento del Plan de Manejo Integral de Residuos Sólidos se desarrollan las siguientes actividades:',
+            bullets: [
+              { text: 'Identificar por medio de un diagnóstico inicial, cuál es el estado actual de los procedimientos encargados de la gestión integral de los residuos sólidos en la entidad, evaluando cada una de sus etapas. (Generación, movimiento interno de residuos, almacenamiento, transporte y disposición final).' },
+              { text: 'Desarrollar estrategias de formación y educación para incentivar a la adecuada separación en la fuente de los residuos generados en la entidad, con el propósito de optimizar los residuos aprovechables, y así disminuir el volumen de residuos depositados en el centro de acopio. (campañas de sensibilización y educación ambiental).' },
+              { text: 'Adoptar un plan de acción que incluya prevención, separación, almacenamiento, segregación, recolección, tratamiento y disposición final.' },
+            ],
+          },
+        ],
+      },
+      {
+        label: 'RP',
+        title: 'Riesgo Psicosocial',
+        sections: [
+          {
+            boxed: true,
+            text: 'Licencia SG-SST No S2017060095482 de 2017 y S2018060230500 de 2018, por medio de las cuales la secretaría de Salud del Departamento de Antioquia concede licencia para ofertar servicios de seguridad y salud en el trabajo a Nivel nacional a persona jurídica.',
+          },
+          {
+            text: 'El Ministerio de la Protección Social (ahora Ministerio de Trabajo) y la Universidad Javeriana desarrollaron los únicos formatos autorizados que cumplen con los criterios técnicos establecidos por la Resolución 2764 del 2022, para el uso en territorio colombiano. Hasta la fecha los cuestionarios de la batería de medición de riesgo psicosocial deben aplicarse utilizando lapicero y papel, de manera presencial. Bajo ninguna circunstancia puede realizarse la medición del riesgo psicosocial utilizando medios virtuales como páginas web, cuestionarios magnéticos ni otros métodos.',
+          },
+          {
+            text: 'Nuestra empresa se especializa en la identificación, evaluación y prevención de riesgos psicosociales en el trabajo. Entendemos que los factores psicosociales pueden afectar negativamente la salud mental y física de los trabajadores, así como la productividad y el bienestar de las organizaciones. Nuestros servicios abarcan la evaluación de los siguientes factores de riesgo psicosocial:',
+            bullets: [
+              { label: 'Factores intralaborales:', text: 'demanda de trabajo, control y apoyo social en el trabajo, claridad de rol y expectativas, entre otros.' },
+              { label: 'Factores extralaborales:', text: 'apoyo social fuera del trabajo, equilibrio entre la vida laboral y personal, entre otros.' },
+              { label: 'Estrés:', text: 'identificamos las fuentes de estrés laboral y sus efectos en la salud y el bienestar.' },
+            ],
+          },
+          {
+            heading: 'Nuestros servicios incluyen:',
+            bullets: [
+              { text: 'Evaluación de los factores de riesgo psicosocial mediante baterías de instrumentos validados.' },
+              { text: 'Análisis de los resultados y recomendaciones para la implementación de medidas de prevención y control.' },
+              { text: 'Diseño y ejecución de programas de intervención para la promoción de la salud mental y el bienestar en el trabajo.' },
+            ],
+          },
+          {
+            heading: 'Importante',
+            boxed: true,
+            text: 'La multa que se le asignará, debido a que el Decreto 472 del 17 de marzo de 2015 estableció sanciones que inician desde los 50 salarios mínimos legales vigentes. Adicionalmente recuerde que la Resolución 1111 de 2017 establece los Estándares Mínimo de obligatorio cumplimiento en Seguridad y Salud en el Trabajo, con los cuales la empresa vela por el bienestar físico y mental del empleado. Recuerde que la única persona autorizada en Colombia para realizar la evaluación y generar diagnósticos para la prevención y el control de enfermedades generadas por los riesgos psicosociales, es un Psicólogo graduado como Especialista en Seguridad y Salud en el Trabajo.',
+          },
+        ],
+      },
+      {
+        label: 'TD',
+        title: 'Tratamiento de Bases de datos',
+        sections: [
+          { text: 'La gestión de bases de datos en Colombia está regulada principalmente por la Ley 1581 de 2012 (Ley de Protección de Datos Personales) y su Decreto 1081 de 2015. Estas normativas imponen a las empresas la responsabilidad de garantizar la seguridad, confidencialidad y correcto uso de los datos personales que manejan. Para cumplir con estas obligaciones, es fundamental implementar medidas técnicas y organizativas que protejan adecuadamente la información sensible, evitando su uso indebido y asegurando la privacidad de los titulares de los datos.' },
+          { text: 'En Lidessa ofrecemos un servicio especializado en el diseño e implementación del marco legal para el tratamiento de datos personales, asegurando el cumplimiento de todas las normativas vigentes. Nuestro enfoque integral abarca desde la creación de políticas de tratamiento de datos hasta la gestión del riesgo asociado a los procesos de manejo de datos personales. Entendemos que cada empresa tiene necesidades específicas, por lo que diseñamos manuales personalizados que incluyen guías, instructivos y herramientas para el adecuado tratamiento de datos personales, conforme a la ley.' },
+          { text: 'Además, proporcionamos una caracterización detallada de los datos organizacionales, identificando los tipos de datos tratados y estableciendo mecanismos claros para su manejo seguro. También ofrecemos soporte en la definición de un Oficial de Protección de Datos Personales (OPD) y la conformación de un comité interno, integrado por diferentes dependencias de la organización, que toma decisiones estratégicas en relación con el tratamiento de datos. Asimismo, nos encargamos de realizar el registro ante la Superintendencia de Industria y Comercio (SIC) cuando es requerido.' },
+          { text: 'Con Lidessa, las empresas no solo aseguran el cumplimiento normativo, sino que también protegen su reputación corporativa, evitando sanciones costosas y garantizando que los derechos de los titulares de los datos sean respetados.' },
+          {
+            heading: 'Le ofrecemos:',
+            bullets: [
+              { label: 'Diseño personalizado:', text: 'Creación de bases de datos estructuradas según las necesidades y procesos específicos de la empresa, incluyendo manuales de tratamiento de datos y políticas alineadas con la normativa vigente.' },
+              { label: 'Mantenimiento continuo:', text: 'Actualización y optimización de las bases de datos para asegurar su eficiencia y cumplimiento a largo plazo, adaptándose a los cambios regulatorios y tecnológicos.' },
+              { label: 'Integración de sistemas:', text: 'Conexión de la base de datos con otros sistemas de la empresa para un flujo de información eficiente y seguro, asegurando que todos los procesos estén alineados y sean consistentes en el manejo de datos.' },
+              { label: 'Capacitación normativa:', text: 'Formación especializada para el personal, enfocada en las leyes de protección de datos personales, para garantizar que todos en la organización comprendan y apliquen correctamente las normativas.' },
+              { label: 'Gestión del riesgo:', text: 'Evaluación y mitigación de riesgos asociados al tratamiento de datos personales, asegurando que la empresa esté preparada para manejar cualquier eventualidad de manera efectiva.' },
+              { label: 'Registro ante la SIC:', text: 'Asesoría y gestión del registro de bases de datos ante la Superintendencia de Industria y Comercio, cumpliendo con los requisitos legales.' },
+            ],
+          },
+        ],
+      },
+      {
+        label: 'Planes de emergencia',
+        title: 'Planes de emergencia',
+        sections: [
+          { text: 'Un Plan de Emergencia es un conjunto de procedimientos y directrices diseñados para manejar situaciones imprevistas o crisis de manera efectiva. Este plan tiene como objetivo minimizar el impacto de emergencias, garantizar la seguridad de las personas y proteger los activos de la organización. Un plan de emergencia bien elaborado permite una respuesta organizada y eficiente ante eventos como incendios, desastres naturales, accidentes graves, fallos de infraestructura o cualquier otra situación de emergencia que pueda afectar a una organización o comunidad.' },
+          {
+            heading: 'Le ofrecemos:',
+            bullets: [
+              { label: 'Identificación de Riesgos:', text: 'Evaluación y análisis de los riesgos potenciales que podrían afectar a la organización o comunidad. Clasificación de riesgos según su probabilidad y severidad.' },
+              { label: 'Procedimientos de Evacuación:', text: 'Diseño de rutas de evacuación claras y señalizadas. Establecimiento de puntos de reunión seguros para todos los ocupantes.' },
+              { label: 'Roles y Responsabilidades:', text: 'Definición de roles y responsabilidades para el personal clave durante una emergencia. Designación de un equipo de respuesta a emergencias, que incluye líderes y coordinadores.' },
+              { label: 'Procedimientos de Primeros Auxilios:', text: 'Instrucciones para proporcionar primeros auxilios básicos y manejo de lesiones. Ubicación de kits de primeros auxilios y equipos de emergencia.' },
+              { label: 'Plan de Recuperación:', text: 'Estrategias para la recuperación y restauración de operaciones normales después de la emergencia. Procedimientos para evaluar los daños y gestionar la reconstrucción.' },
+              { label: 'Capacitación y Simulacros:', text: 'Programación de capacitaciones regulares para el personal en procedimientos de emergencia. Realización de simulacros para practicar y evaluar la efectividad del plan.' },
+            ],
+          },
+        ],
+      },
     ],
-    presencial: ['Caracterización in-situ de residuos', 'Implementación de puntos de acopio', 'Capacitación al personal operativo', 'Acompañamiento en jornadas ambientales'],
-    virtual: ['Asesoría normativa ambiental en línea', 'Formatos y registros editables', 'Capacitación virtual al personal', 'Reporte digital de indicadores ambientales'],
   },
   {
     slug: 'datos-personales',
@@ -640,12 +836,52 @@ export const servicesData = [
     description: 'Implementamos políticas y procedimientos de protección de datos personales conforme a la Ley 1581 de 2012 y sus decretos reglamentarios, para propiedades horizontales, conjuntos residenciales y empresas.',
     hero: 'https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=1400&h=600&fit=crop&auto=format',
     tabs: [
-      { label: 'Marco legal', content: 'La Ley Estatutaria 1581 de 2012 y el Decreto 1377 de 2013 regulan el tratamiento de datos personales en Colombia. Todas las organizaciones deben cumplirlas.', bullets: ['Ley 1581/2012 – Habeas Data', 'Decreto 1377/2013 – Reglamentación', 'Circulares de la SIC vigentes', 'Sanciones por incumplimiento: hasta 2.000 SMMLV'] },
-      { label: 'Implementación', content: 'Desarrollamos el sistema de gestión de datos personales completo: políticas, avisos, registros y procedimientos.', bullets: ['Política de tratamiento de datos personales', 'Aviso de privacidad para grupos de interés', 'Registro Nacional de Bases de Datos (RNBD)', 'Procedimientos de atención de derechos ARCO'] },
-      { label: 'Capacitación', content: 'Formamos al equipo administrativo en sus obligaciones frente al manejo de datos personales.', bullets: ['Inducción al personal sobre protección de datos', 'Protocolos de recolección y almacenamiento', 'Manejo de incidentes de seguridad de datos', 'Actualizaciones normativas periódicas'] },
+      {
+        label: 'Marco legal',
+        sections: [
+          { text: 'La Ley Estatutaria 1581 de 2012 y el Decreto 1377 de 2013 regulan el tratamiento de datos personales en Colombia. Todas las organizaciones deben cumplirlas.' },
+          {
+            heading: 'Puntos a destacar',
+            bullets: [
+              { text: 'Ley 1581/2012 – Habeas Data' },
+              { text: 'Decreto 1377/2013 – Reglamentación' },
+              { text: 'Circulares de la SIC vigentes' },
+              { text: 'Sanciones por incumplimiento: hasta 2.000 SMMLV' },
+            ],
+          },
+        ],
+      },
+      {
+        label: 'Implementación',
+        sections: [
+          { text: 'Desarrollamos el sistema de gestión de datos personales completo: políticas, avisos, registros y procedimientos.' },
+          {
+            heading: 'Puntos a destacar',
+            bullets: [
+              { text: 'Política de tratamiento de datos personales' },
+              { text: 'Aviso de privacidad para grupos de interés' },
+              { text: 'Registro Nacional de Bases de Datos (RNBD)' },
+              { text: 'Procedimientos de atención de derechos ARCO' },
+            ],
+          },
+        ],
+      },
+      {
+        label: 'Capacitación',
+        sections: [
+          { text: 'Formamos al equipo administrativo en sus obligaciones frente al manejo de datos personales.' },
+          {
+            heading: 'Puntos a destacar',
+            bullets: [
+              { text: 'Inducción al personal sobre protección de datos' },
+              { text: 'Protocolos de recolección y almacenamiento' },
+              { text: 'Manejo de incidentes de seguridad de datos' },
+              { text: 'Actualizaciones normativas periódicas' },
+            ],
+          },
+        ],
+      },
     ],
-    presencial: ['Diagnóstico inicial de flujos de datos', 'Talleres de formación al equipo', 'Implementación de registros físicos', 'Auditoría de cumplimiento'],
-    virtual: ['Asesoría legal en línea', 'Entrega de documentos editables', 'Registro RNBD en plataforma SIC', 'Capacitación virtual al personal administrativo'],
   },
   {
     slug: 'planes-emergencia',
@@ -653,12 +889,52 @@ export const servicesData = [
     description: 'Diseñamos planes de emergencia, evacuación y contingencia para propiedades horizontales, conjuntos residenciales y empresas, cumpliendo la Resolución 0256 de 2014 y la NTC 1700.',
     hero: 'https://images.unsplash.com/photo-1611348586804-61bf6c080437?w=1400&h=600&fit=crop&auto=format',
     tabs: [
-      { label: 'Análisis de riesgo', content: 'Realizamos el análisis de amenazas, vulnerabilidades y riesgos específicos de su instalación para fundamentar el plan.', bullets: ['Identificación de amenazas internas y externas', 'Análisis de vulnerabilidad estructural', 'Evaluación de sistemas de detección y control', 'Mapa de riesgos de la instalación'] },
-      { label: 'Plan de emergencias', content: 'Diseñamos el plan de emergencias y evacuación con procedimientos claros, responsables definidos y recursos necesarios.', bullets: ['Organización de la respuesta a emergencias', 'Rutas de evacuación y puntos de encuentro', 'Procedimientos por tipo de emergencia', 'Inventario de recursos y equipos'] },
-      { label: 'Simulacros', content: 'Planificamos y ejecutamos simulacros de evacuación para verificar la efectividad del plan y entrenar a los ocupantes.', bullets: ['Planificación del simulacro', 'Ejecución y medición de tiempos', 'Evaluación y retroalimentación', 'Actualización del plan según resultados'] },
+      {
+        label: 'Análisis de riesgo',
+        sections: [
+          { text: 'Realizamos el análisis de amenazas, vulnerabilidades y riesgos específicos de su instalación para fundamentar el plan.' },
+          {
+            heading: 'Puntos a destacar',
+            bullets: [
+              { text: 'Identificación de amenazas internas y externas' },
+              { text: 'Análisis de vulnerabilidad estructural' },
+              { text: 'Evaluación de sistemas de detección y control' },
+              { text: 'Mapa de riesgos de la instalación' },
+            ],
+          },
+        ],
+      },
+      {
+        label: 'Plan de emergencias',
+        sections: [
+          { text: 'Diseñamos el plan de emergencias y evacuación con procedimientos claros, responsables definidos y recursos necesarios.' },
+          {
+            heading: 'Puntos a destacar',
+            bullets: [
+              { text: 'Organización de la respuesta a emergencias' },
+              { text: 'Rutas de evacuación y puntos de encuentro' },
+              { text: 'Procedimientos por tipo de emergencia' },
+              { text: 'Inventario de recursos y equipos' },
+            ],
+          },
+        ],
+      },
+      {
+        label: 'Simulacros',
+        sections: [
+          { text: 'Planificamos y ejecutamos simulacros de evacuación para verificar la efectividad del plan y entrenar a los ocupantes.' },
+          {
+            heading: 'Puntos a destacar',
+            bullets: [
+              { text: 'Planificación del simulacro' },
+              { text: 'Ejecución y medición de tiempos' },
+              { text: 'Evaluación y retroalimentación' },
+              { text: 'Actualización del plan según resultados' },
+            ],
+          },
+        ],
+      },
     ],
-    presencial: ['Inspección y análisis de la instalación', 'Señalización de rutas de evacuación', 'Ejecución de simulacros presenciales', 'Capacitación de la brigada de emergencias'],
-    virtual: ['Asesoría en diseño del plan', 'Entrega del plan en formato editable', 'Capacitación virtual a la brigada', 'Seguimiento remoto a indicadores'],
   },
   {
     slug: 'supervision-interventoria',
@@ -727,7 +1003,5 @@ export const servicesData = [
         ],
       },
     ],
-    presencial: ['Visitas periódicas de supervisión e interventoría en obra', 'Comités de obra y reuniones técnicas', 'Mediciones y levantamiento de cantidades', 'Verificación de entregables y actas de recibo parcial y final'],
-    virtual: ['Reportes de avance e informes digitales', 'Gestión documental del contrato en línea', 'Reuniones virtuales de seguimiento', 'Consolidación de indicadores y control de cronograma con software'],
   },
 ]

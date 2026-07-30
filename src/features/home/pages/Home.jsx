@@ -65,7 +65,7 @@ export default function Home() {
       {/* ── Hero ── */}
       <section
         className="relative min-h-[90vh] flex items-center overflow-hidden"
-        style={{ background: 'linear-gradient(135deg, #005187 0%, #3d3115 40%, #141414 100%)' }}
+        style={{ background: 'linear-gradient(135deg, #10294d 0%, #071426 55%, #0c0c0c 100%)' }}
       >
         {/* Animated orbs */}
         <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none' }}>
@@ -129,13 +129,39 @@ export default function Home() {
 
           <div className="flex justify-center reveal-scale">
             <div style={{ position: 'relative', width: 'min(440px, 85vw)', height: 'min(440px, 85vw)', transform: 'translateY(-32px)' }}>
+              {/* Glow ring */}
+              <div
+                className="pointer-events-none"
+                style={{
+                  position: 'absolute',
+                  inset: '-6px',
+                  borderRadius: '50%',
+                  border: '3px solid #e8c766',
+                  boxShadow: '0 0 90px 18px rgba(232,199,102,0.5), inset 0 0 45px rgba(232,199,102,0.2)',
+                }}
+              />
+              {/* Pedestal glow */}
+              <div
+                className="pointer-events-none"
+                style={{
+                  position: 'absolute',
+                  bottom: '-4%',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: '65%',
+                  height: '13%',
+                  borderRadius: '50%',
+                  background: 'radial-gradient(ellipse at center, rgba(232,199,102,0.45), transparent 70%)',
+                  filter: 'blur(6px)',
+                }}
+              />
               <div
                 style={{
+                  position: 'relative',
                   width: '100%',
                   height: '100%',
                   borderRadius: '50%',
                   overflow: 'hidden',
-                  border: '6px solid rgba(255,255,255,0.15)',
                   boxShadow: '0 25px 60px rgba(0,0,0,0.4)',
                 }}
               >
@@ -170,7 +196,7 @@ export default function Home() {
       <LogoRevealSection />
 
       {/* ── Attributes + counters ── */}
-      <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6">
+      <section className="pt-6 pb-20 max-w-7xl mx-auto px-4 sm:px-6">
         <div className="text-center mb-12 reveal">
           <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#4d82bc' }}>Por qué elegirnos</p>
           <h2 className="text-4xl font-black" style={{ fontFamily: 'var(--font-display)' }}>

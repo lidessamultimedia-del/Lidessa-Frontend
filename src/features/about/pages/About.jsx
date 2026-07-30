@@ -182,7 +182,7 @@ const acronym = [
 
 const differentials = [
   { label: 'Enfoque Personalizado', text: 'Trabajamos estrechamente con usted para entender sus necesidades y ofrecer soluciones a medida.' },
-  { label: 'Equipo Multidisciplinario', text: 'Contamos con expertos en diversas áreas para brindarte un servicio integral.' },
+  { label: 'Equipo Multidisciplinario', text: 'Contamos con expertos en diversas áreas para brindarle un servicio integral.' },
   { label: 'Experiencia Comprobada', text: 'Más de 15 años de experiencia respaldan nuestra calidad y excelencia.' },
   { label: 'Reducción de Costos', text: 'Nuestras soluciones eficientes pueden ayudarle a ahorrar recursos.' },
   { label: 'Compromiso con la Excelencia', text: 'Nuestra misión es superar sus expectativas y garantizar su satisfacción.' },
@@ -268,25 +268,64 @@ export default function About() {
 
       {/* Hero */}
       <section
-        className="py-28 relative overflow-hidden"
-        style={{
-          backgroundImage: 'linear-gradient(135deg, rgba(0,81,135,0.88) 0%, rgba(61,49,21,0.85) 50%, rgba(20,20,20,0.92) 100%), url(/assets/nosotros-hero.png)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
+        className="relative min-h-[80vh] flex items-center overflow-hidden py-20"
+        style={{ background: 'linear-gradient(135deg, #10294d 0%, #071426 55%, #0c0c0c 100%)' }}
       >
         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
           <div style={{ position: 'absolute', top: '20%', right: '10%', width: 350, height: 350, borderRadius: '50%', background: 'radial-gradient(circle, rgba(77,130,188,0.2) 0%, transparent 70%)', animation: 'orb1 12s ease-in-out infinite' }} />
         </div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6" style={{ animation: 'fadeUp 0.7s ease forwards' }}>
-          <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#84b6f4', fontFamily: 'var(--font-display)' }}>Conózcanos</p>
-          <h1 className="font-black text-white mb-5" style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(2.2rem, 5vw, 3.4rem)' }}>
-            Más que consultoría,<br />
-            <span style={{ color: '#84b6f4' }}>resultados que transforman</span>
-          </h1>
-          <p className="text-lg max-w-xl" style={{ color: '#c4dafa', fontFamily: 'var(--font-display)' }}>
-            15 años ayudando a empresas e instituciones colombianas a cumplir la norma y alcanzar la excelencia organizacional.
-          </p>
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 w-full grid lg:grid-cols-2 gap-14 items-center">
+          <div style={{ animation: 'fadeUp 0.7s ease forwards' }}>
+            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#84b6f4', fontFamily: 'var(--font-display)' }}>Conózcanos</p>
+            <h1 className="font-black text-white mb-5" style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(2.2rem, 5vw, 3.4rem)' }}>
+              Más que consultoría,<br />
+              <span style={{ color: '#84b6f4' }}>resultados que transforman</span>
+            </h1>
+            <p className="text-lg max-w-xl" style={{ color: '#c4dafa', fontFamily: 'var(--font-display)' }}>
+              15 años ayudando a empresas e instituciones colombianas a cumplir la norma y alcanzar la excelencia organizacional.
+            </p>
+          </div>
+
+          <div className="flex justify-center reveal-scale">
+            <div style={{ position: 'relative', width: 'min(400px, 85vw)', height: 'min(400px, 85vw)' }}>
+              {/* Glow ring */}
+              <div
+                className="pointer-events-none"
+                style={{
+                  position: 'absolute',
+                  inset: '-6px',
+                  borderRadius: '50%',
+                  border: '3px solid #e8c766',
+                  boxShadow: '0 0 90px 18px rgba(232,199,102,0.5), inset 0 0 45px rgba(232,199,102,0.2)',
+                }}
+              />
+              {/* Pedestal glow */}
+              <div
+                className="pointer-events-none"
+                style={{
+                  position: 'absolute',
+                  bottom: '-4%',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: '65%',
+                  height: '13%',
+                  borderRadius: '50%',
+                  background: 'radial-gradient(ellipse at center, rgba(232,199,102,0.45), transparent 70%)',
+                  filter: 'blur(6px)',
+                }}
+              />
+              <div style={{ position: 'relative', width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden', boxShadow: '0 25px 60px rgba(0,0,0,0.4)' }}>
+                <img
+                  src="/assets/nosotros-hero.png"
+                  alt="Lidessa"
+                  className="w-full h-full object-cover"
+                  style={{ transition: 'transform 0.4s ease' }}
+                  onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.08)'}
+                  onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                />
+              </div>
+            </div>
+          </div>
         </div>
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 50, overflow: 'hidden' }}>
           <svg viewBox="0 0 1440 50" preserveAspectRatio="none" style={{ width: '100%', height: '100%' }}>
@@ -647,7 +686,7 @@ export default function About() {
       <section className="py-16 max-w-3xl mx-auto px-4 sm:px-6">
         <div className="text-center rounded-2xl p-8 reveal" style={{ border: '1px solid #d4af37', backgroundColor: 'var(--card)' }}>
           <h3 className="text-2xl font-black mb-2" style={{ fontFamily: 'var(--font-display)' }}>
-            ¿Tienes alguna duda o sugerencia?
+            ¿Tiene alguna duda o sugerencia?
           </h3>
           <p className="text-sm font-semibold mb-6" style={{ color: '#b8860b' }}>
             Contáctenos, o envíenos su comentario aquí

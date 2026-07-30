@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useIsDarkTheme } from '@/shared/hooks/useIsDarkTheme'
+import { useElementReveal } from '@/shared/hooks/useScrollReveal'
 
 const LIGHT_SRC = '/assets/lidessa.mp4'
 const DARK_SRC = '/assets/modooscuro-logo.mp4'
@@ -9,6 +10,7 @@ export default function LogoRevealSection() {
   const videoRef = useRef(null)
   const hasPlayedRef = useRef(false)
   const isDark = useIsDarkTheme()
+  const revealRef = useElementReveal()
 
   useEffect(() => {
     const section = sectionRef.current
@@ -52,16 +54,20 @@ export default function LogoRevealSection() {
   return (
     <section
       ref={sectionRef}
-      className="py-16 flex items-center justify-center"
+      className="py-3 flex items-center justify-center"
       style={{ backgroundColor: 'var(--background)' }}
     >
-      <div style={{ backgroundColor: 'var(--background)' }}>
+      <div
+        ref={revealRef}
+        className="reveal"
+        style={{ backgroundColor: 'var(--background)', transitionDuration: '1.1s' }}
+      >
         <video
           ref={videoRef}
           muted
           playsInline
           preload="auto"
-          style={{ width: 'min(380px, 65vw)', mixBlendMode: isDark ? 'screen' : 'multiply', display: 'block' }}
+          style={{ width: 'min(220px, 40vw)', mixBlendMode: isDark ? 'screen' : 'multiply', display: 'block' }}
         />
       </div>
     </section>

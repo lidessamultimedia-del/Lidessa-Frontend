@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { megaMenu } from '@/shared/data/megaMenu'
 import { MessageCircle } from '@/shared/components/Icons'
+import { useIsDarkTheme } from '@/shared/hooks/useIsDarkTheme'
 
 export default function Header({ theme, setTheme }) {
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -39,7 +40,7 @@ export default function Header({ theme, setTheme }) {
     { label: 'Inicio', href: '/' },
     { label: 'Nosotros', href: '/nosotros' },
     { label: 'Converge', href: '/blog' },
-    { label: 'V2suministros', href: '/tienda' },
+    { label: 'V2 Suministros', href: '/tienda' },
     { label: 'CEET', href: '/formacion' },
   ]
 
@@ -68,7 +69,7 @@ export default function Header({ theme, setTheme }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname, scrolled])
 
-  const isDark = theme === 'dark'
+  const isDark = useIsDarkTheme()
 
   return (
       <header
@@ -86,7 +87,9 @@ export default function Header({ theme, setTheme }) {
           <div
             style={{
               borderRadius: 9999,
-              backgroundColor: `color-mix(in srgb, var(--card) ${scrolled ? 90 : 78}%, transparent)`,
+              background: isDark
+                ? `linear-gradient(135deg, color-mix(in srgb, rgba(12,12,12,${scrolled ? 0.92 : 0.8}) 45%, #e8c766 55%) 0%, color-mix(in srgb, rgba(7,20,38,${scrolled ? 0.92 : 0.8}) 55%, color-mix(in srgb, #4d82bc 50%, #e8c766 50%) 45%) 45%, color-mix(in srgb, rgba(16,41,77,${scrolled ? 0.92 : 0.8}) 55%, #4d82bc 45%) 100%)`
+                : `linear-gradient(135deg, color-mix(in srgb, var(--card) ${scrolled ? 90 : 82}%, #b8860b 10%) 0%, color-mix(in srgb, var(--card) ${scrolled ? 94 : 88}%, transparent) 50%, color-mix(in srgb, var(--card) ${scrolled ? 90 : 82}%, #4d82bc 10%) 100%)`,
               backdropFilter: 'blur(18px)',
               WebkitBackdropFilter: 'blur(18px)',
               border: '1px solid color-mix(in srgb, var(--border) 70%, transparent)',
@@ -299,69 +302,101 @@ export default function Header({ theme, setTheme }) {
 
           {/* Right side */}
           <div className="flex items-center gap-2 ml-auto">
-            {/* Theme toggle — sun / moon switch */}
-            <button
-              onClick={() => setTheme(isDark ? 'light' : 'dark')}
-              aria-label="Cambiar tema"
-              title="Cambiar tema"
-              className="hidden sm:block relative shrink-0"
+            {/* Theme control — claro / automático / oscuro */}
+            <div
+              role="radiogroup"
+              aria-label="Tema"
+              className="hidden sm:flex relative items-center shrink-0"
               style={{
-                width: 56,
-                height: 28,
                 borderRadius: 9999,
+                padding: 3,
+                gap: 2,
+                backgroundColor: 'color-mix(in srgb, var(--foreground) 6%, transparent)',
                 border: '1px solid var(--border)',
-                background: isDark
-                  ? 'linear-gradient(135deg, #0f1b3d 0%, #1b2a4a 100%)'
-                  : 'linear-gradient(135deg, #bfe0ff 0%, #eaf6ff 100%)',
-                transition: 'background 0.4s ease',
-                overflow: 'hidden',
               }}
             >
-              {/* stars (dark mode) */}
-              <span style={{ position: 'absolute', top: 6, left: 9, width: 2, height: 2, borderRadius: '50%', backgroundColor: 'white', opacity: isDark ? 0.85 : 0, transition: 'opacity 0.4s ease' }} />
-              <span style={{ position: 'absolute', top: 16, left: 18, width: 2, height: 2, borderRadius: '50%', backgroundColor: 'white', opacity: isDark ? 0.6 : 0, transition: 'opacity 0.4s ease' }} />
-              <span style={{ position: 'absolute', top: 9, left: 26, width: 1.5, height: 1.5, borderRadius: '50%', backgroundColor: 'white', opacity: isDark ? 0.7 : 0, transition: 'opacity 0.4s ease' }} />
-
-              {/* sliding thumb */}
+              {/* sliding highlight */}
               <span
+                aria-hidden
                 style={{
                   position: 'absolute',
                   top: 3,
-                  left: isDark ? 31 : 3,
-                  width: 22,
-                  height: 22,
-                  borderRadius: '50%',
-                  backgroundColor: isDark ? '#e8eef7' : '#ffd35c',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 2px 6px rgba(0,0,0,0.3)',
-                  transition: 'left 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.35s ease',
+                  bottom: 3,
+                  left: theme === 'light' ? 3 : theme === 'system' ? 31 : 59,
+                  width: 26,
+                  borderRadius: 9999,
+                  background:
+                    theme === 'dark'
+                      ? 'linear-gradient(135deg, #10294d 0%, #071426 100%)'
+                      : theme === 'system'
+                        ? 'linear-gradient(135deg, #4d82bc 0%, #b8860b 100%)'
+                        : 'linear-gradient(135deg, #ffd35c 0%, #f7b733 100%)',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.22)',
+                  transition: 'left 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s ease',
                 }}
+              />
+
+              {/* Claro */}
+              <button
+                type="button"
+                role="radio"
+                aria-checked={theme === 'light'}
+                aria-label="Tema claro"
+                title="Tema claro"
+                onClick={() => setTheme('light')}
+                className="relative z-10 flex items-center justify-center"
+                style={{ width: 26, height: 22, borderRadius: 9999 }}
               >
-                {isDark ? (
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="#3d4d6b">
-                    <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5Z" />
-                  </svg>
-                ) : (
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#b8860b" strokeWidth="2" strokeLinecap="round">
-                    <circle cx="12" cy="12" r="4" fill="#b8860b" stroke="none" />
-                    <line x1="12" y1="1.5" x2="12" y2="3.5" />
-                    <line x1="12" y1="20.5" x2="12" y2="22.5" />
-                    <line x1="1.5" y1="12" x2="3.5" y2="12" />
-                    <line x1="20.5" y1="12" x2="22.5" y2="12" />
-                    <line x1="4.6" y1="4.6" x2="6" y2="6" />
-                    <line x1="18" y1="18" x2="19.4" y2="19.4" />
-                    <line x1="4.6" y1="19.4" x2="6" y2="18" />
-                    <line x1="18" y1="6" x2="19.4" y2="4.6" />
-                  </svg>
-                )}
-              </span>
-            </button>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={theme === 'light' ? '#fff' : 'var(--muted-foreground)'} strokeWidth="2" strokeLinecap="round" style={{ transition: 'stroke 0.3s ease' }}>
+                  <circle cx="12" cy="12" r="4.2" fill={theme === 'light' ? '#fff' : 'none'} stroke={theme === 'light' ? '#fff' : 'var(--muted-foreground)'} />
+                  <line x1="12" y1="1.5" x2="12" y2="3.5" />
+                  <line x1="12" y1="20.5" x2="12" y2="22.5" />
+                  <line x1="1.5" y1="12" x2="3.5" y2="12" />
+                  <line x1="20.5" y1="12" x2="22.5" y2="12" />
+                  <line x1="4.6" y1="4.6" x2="6" y2="6" />
+                  <line x1="18" y1="18" x2="19.4" y2="19.4" />
+                  <line x1="4.6" y1="19.4" x2="6" y2="18" />
+                  <line x1="18" y1="6" x2="19.4" y2="4.6" />
+                </svg>
+              </button>
+
+              {/* Automático (sigue el sistema) */}
+              <button
+                type="button"
+                role="radio"
+                aria-checked={theme === 'system'}
+                aria-label="Tema automático (según el sistema)"
+                title="Automático (según el sistema)"
+                onClick={() => setTheme('system')}
+                className="relative z-10 flex items-center justify-center"
+                style={{ width: 26, height: 22, borderRadius: 9999 }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" style={{ transition: 'opacity 0.3s ease' }}>
+                  <circle cx="12" cy="12" r="9" fill="none" stroke={theme === 'system' ? '#fff' : 'var(--muted-foreground)'} strokeWidth="2" />
+                  <path d="M12 3a9 9 0 0 0 0 18Z" fill={theme === 'system' ? '#fff' : 'var(--muted-foreground)'} />
+                </svg>
+              </button>
+
+              {/* Oscuro */}
+              <button
+                type="button"
+                role="radio"
+                aria-checked={theme === 'dark'}
+                aria-label="Tema oscuro"
+                title="Tema oscuro"
+                onClick={() => setTheme('dark')}
+                className="relative z-10 flex items-center justify-center"
+                style={{ width: 26, height: 22, borderRadius: 9999 }}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill={theme === 'dark' ? '#fff' : 'var(--muted-foreground)'} style={{ transition: 'fill 0.3s ease' }}>
+                  <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5Z" />
+                </svg>
+              </button>
+            </div>
 
             <Link
               to="/login"
-              className="hidden md:flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-bold text-white btn-shimmer"
+              className="hidden md:flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-bold text-white btn-nav-login"
             >
               Iniciar sesión
               <svg className="icon-nudge" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -463,7 +498,7 @@ export default function Header({ theme, setTheme }) {
 
             <div className="flex gap-2 pt-3 pb-1">
               <Link to="/login" onClick={() => setMobileOpen(false)}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-bold rounded-lg text-white btn-shimmer">
+                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-bold rounded-lg text-white btn-nav-login">
                 Iniciar sesión
                 <svg className="icon-nudge" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />

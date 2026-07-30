@@ -4,10 +4,13 @@ import { useAuth } from '@/features/auth/context/AuthContext'
 import { useToast } from '@/shared/context/ToastContext'
 import { useBlog } from '@/features/blog/context/BlogContext'
 import { usePQRSF } from '@/features/pqrsf/context/PQRSFContext'
+import { useLMS } from '@/features/lms/context/LMSContext'
 import BlogPostFormModal from '@/features/blog/components/BlogPostFormModal'
+import CourseFormModal from '@/features/lms/components/CourseFormModal'
+import DirectoryUserFormModal from '@/features/lms/components/DirectoryUserFormModal'
 import { courses } from '@/features/training/data/courses'
 import AnimatedCounter from '@/shared/components/AnimatedCounter'
-import { BarChart2, Building, FileText, GraduationCap, Users, Clipboard, Sliders, Bell, User, AlertTriangle, Edit2, Plus, Send } from '@/shared/components/Icons'
+import { BarChart2, Building, FileText, GraduationCap, Users, Clipboard, Sliders, Bell, User, AlertTriangle, Edit2, Plus, Send, BookOpen, Trash, Search } from '@/shared/components/Icons'
 
 const mockUsers = [
   { id: '1', name: 'María García', email: 'cliente@lidessa.co', role: 'client', company: 'Construcciones García S.A.S.', joined: '2025-05-12' },
@@ -36,12 +39,17 @@ export default function AdminDashboard() {
   const navigate = useNavigate()
   const { posts: blogPosts, addPost, updatePost, deletePost } = useBlog()
   const { tickets: pqrsfTickets, updateTicket: updatePQRSF } = usePQRSF()
+  const lms = useLMS()
   const [section, setSection] = useState('dashboard')
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [bellOpen, setBellOpen] = useState(false)
   const [services, setServices] = useState(mockServices)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [blogModal, setBlogModal] = useState(null)
+  const [lmsCourseModal, setLmsCourseModal] = useState(null)
+  const [directoryModal, setDirectoryModal] = useState(null)
+  const [lmsCoursesSearch, setLmsCoursesSearch] = useState('')
+  const [directorySearch, setDirectorySearch] = useState('')
   const [settings, setSettings] = useState({
     phone: '+57 300 123 4567',
     email: 'info@lidessa.co',
@@ -65,10 +73,38 @@ export default function AdminDashboard() {
     if (deleteConfirm.type === 'blog') {
       deletePost(deleteConfirm.id)
       toast('success', 'Publicación eliminada', deleteConfirm.label)
+    } else if (deleteConfirm.type === 'lmsCourse') {
+      lms.deleteCourse(deleteConfirm.id)
+      toast('success', 'Curso eliminado', deleteConfirm.label)
+    } else if (deleteConfirm.type === 'directory') {
+      lms.deleteDirectoryUser(deleteConfirm.id)
+      toast('success', 'Usuario eliminado', deleteConfirm.label)
     } else {
       toast('success', 'Elemento eliminado', 'El registro fue eliminado correctamente.')
     }
     setDeleteConfirm(null)
+  }
+
+  function handleSaveLmsCourse(form) {
+    if (lmsCourseModal.mode === 'edit') {
+      lms.updateCourse(lmsCourseModal.course.id, form)
+      toast('success', 'Curso actualizado', form.name)
+    } else {
+      lms.addCourse(form)
+      toast('success', 'Curso creado', form.name)
+    }
+    setLmsCourseModal(null)
+  }
+
+  function handleSaveDirectoryUser(form) {
+    if (directoryModal.mode === 'edit') {
+      lms.updateDirectoryUser(directoryModal.user.id, form)
+      toast('success', 'Usuario actualizado', form.name)
+    } else {
+      lms.addDirectoryUser(form)
+      toast('success', `${form.role === 'profesor' ? 'Profesor' : 'Estudiante'} creado`, form.name)
+    }
+    setDirectoryModal(null)
   }
 
   function handleSaveBlogPost(form) {
@@ -91,9 +127,13 @@ export default function AdminDashboard() {
     { id: 'dashboard', label: 'Dashboard', icon: BarChart2 },
     { id: 'services', label: 'Servicios', icon: Building },
     { id: 'blog', label: 'Blog / Noticias', icon: FileText },
-    { id: 'courses', label: 'Cursos', icon: GraduationCap },
+    { id: 'courses', label: 'Catálogo web', icon: GraduationCap },
     { id: 'users', label: 'Clientes', icon: Users },
     { id: 'pqrsf', label: 'PQRSF', icon: Clipboard },
+    { id: 'lms-divider', divider: true, label: 'LMS' },
+    { id: 'lms-courses', label: 'Cursos (LMS)', icon: BookOpen },
+    { id: 'teachers', label: 'Profesores', icon: User },
+    { id: 'students', label: 'Estudiantes', icon: Users },
     { id: 'settings', label: 'Configuración', icon: Sliders },
   ]
 
@@ -130,7 +170,13 @@ export default function AdminDashboard() {
             </p>
           )}
           <div className="space-y-1">
-            {navItems.map(item => (
+            {navItems.map(item => item.divider ? (
+              sidebarOpen && (
+                <p key={item.id} className="text-[10px] font-bold px-3 pt-4 pb-1" style={{ color: 'rgba(232,199,102,0.5)', letterSpacing: '0.12em' }}>
+                  {item.label}
+                </p>
+              )
+            ) : (
               <button key={item.id}
                 onClick={() => setSection(item.id)}
                 style={{
@@ -551,6 +597,136 @@ export default function AdminDashboard() {
             </div>
           )}
 
+          {/* ── LMS: CURSOS ── */}
+          {section === 'lms-courses' && (
+            <div style={{ animation: 'fadeUp 0.4s ease' }}>
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-black" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Cursos del LMS</h2>
+                <button onClick={() => setLmsCourseModal({ mode: 'new' })}
+                  className="px-4 py-2 rounded-lg text-sm font-bold text-white flex items-center gap-1.5"
+                  style={{ backgroundColor: '#005187' }}>
+                  <Plus size={14} /> Nuevo curso
+                </button>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg mb-4" style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', width: 260 }}>
+                <Search size={14} style={{ color: 'var(--muted-foreground)' }} />
+                <input value={lmsCoursesSearch} onChange={e => setLmsCoursesSearch(e.target.value)} placeholder="Buscar curso…"
+                  className="text-sm outline-none bg-transparent flex-1" style={{ color: 'var(--foreground)' }} />
+              </div>
+              <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr 1fr 1fr auto', gap: '0 16px', padding: '10px 16px', backgroundColor: 'var(--muted)' }}>
+                  {['Nombre', 'Profesor', 'Estudiantes', 'Estado', ''].map(h => (
+                    <span key={h} className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--muted-foreground)' }}>{h}</span>
+                  ))}
+                </div>
+                {lms.courses.filter(c => c.name.toLowerCase().includes(lmsCoursesSearch.toLowerCase())).map((c, i) => (
+                  <div key={c.id} style={{
+                    display: 'grid', gridTemplateColumns: '2fr 1.2fr 1fr 1fr auto',
+                    gap: '0 16px', padding: '12px 16px', alignItems: 'center',
+                    borderTop: '1px solid var(--border)', backgroundColor: 'var(--card)',
+                  }}>
+                    <div>
+                      <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{c.name}</p>
+                      <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{lms.lessonsByCourse(c.id).length} lecciones · {lms.assignmentsByCourse(c.id).length} tareas</p>
+                    </div>
+                    <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>{lms.teacherName(c.teacherId)}</p>
+                    <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>{c.studentIds.length}</p>
+                    <span className="text-xs px-2 py-0.5 rounded-full font-semibold w-fit"
+                      style={{ backgroundColor: c.published ? 'rgba(22,163,74,0.12)' : 'rgba(217,119,6,0.12)', color: c.published ? '#16a34a' : '#d97706' }}>
+                      {c.published ? '✓ Publicado' : '⏳ Borrador'}
+                    </span>
+                    <div className="flex gap-2 shrink-0">
+                      <button onClick={() => setLmsCourseModal({ mode: 'edit', course: c })}
+                        className="text-xs px-3 py-1.5 rounded-lg font-medium"
+                        style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: '#005187', border: '1px solid rgba(0,81,135,0.2)' }}>
+                        Editar
+                      </button>
+                      <button onClick={() => setDeleteConfirm({ type: 'lmsCourse', id: c.id, label: c.name })}
+                        className="text-xs px-3 py-1.5 rounded-lg font-medium"
+                        style={{ border: '1px solid rgba(220,38,38,0.3)', color: '#dc2626' }}>
+                        Eliminar
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {lms.courses.filter(c => c.name.toLowerCase().includes(lmsCoursesSearch.toLowerCase())).length === 0 && (
+                  <p className="text-sm px-4 py-6 text-center" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)' }}>
+                    {lms.courses.length === 0 ? 'No hay cursos LMS todavía.' : 'Sin resultados para esa búsqueda.'}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ── LMS: PROFESORES / ESTUDIANTES ── */}
+          {(section === 'teachers' || section === 'students') && (() => {
+            const role = section === 'teachers' ? 'profesor' : 'estudiante'
+            const roleLabel = section === 'teachers' ? 'profesor' : 'estudiante'
+            const rows = lms.directory.filter(u => u.role === role)
+              .filter(u => u.name.toLowerCase().includes(directorySearch.toLowerCase()) || u.email.toLowerCase().includes(directorySearch.toLowerCase()))
+            return (
+              <div style={{ animation: 'fadeUp 0.4s ease' }}>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-xl font-black" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
+                    {section === 'teachers' ? 'Profesores' : 'Estudiantes'}
+                  </h2>
+                  <button onClick={() => setDirectoryModal({ mode: 'new', role })}
+                    className="px-4 py-2 rounded-lg text-sm font-bold text-white flex items-center gap-1.5"
+                    style={{ backgroundColor: '#005187' }}>
+                    <Plus size={14} /> Nuevo {roleLabel}
+                  </button>
+                </div>
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg mb-4" style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', width: 260 }}>
+                  <Search size={14} style={{ color: 'var(--muted-foreground)' }} />
+                  <input value={directorySearch} onChange={e => setDirectorySearch(e.target.value)} placeholder={`Buscar ${roleLabel}…`}
+                    className="text-sm outline-none bg-transparent flex-1" style={{ color: 'var(--foreground)' }} />
+                </div>
+                <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto', gap: '0 16px', padding: '10px 16px', backgroundColor: 'var(--muted)' }}>
+                    {['Nombre', 'Ingreso', 'Estado', ''].map(h => (
+                      <span key={h} className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--muted-foreground)' }}>{h}</span>
+                    ))}
+                  </div>
+                  {rows.map(u => (
+                    <div key={u.id} style={{
+                      display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto',
+                      gap: '0 16px', padding: '12px 16px', alignItems: 'center',
+                      borderTop: '1px solid var(--border)', backgroundColor: 'var(--card)',
+                    }}>
+                      <div>
+                        <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{u.name}</p>
+                        <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{u.email}</p>
+                      </div>
+                      <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>{u.joined}</p>
+                      <button onClick={() => lms.toggleDirectoryUserActive(u.id)}
+                        className="text-xs px-2 py-1 rounded-full font-semibold w-fit"
+                        style={{ backgroundColor: u.active ? 'rgba(22,163,74,0.12)' : 'var(--muted)', color: u.active ? '#16a34a' : 'var(--muted-foreground)' }}>
+                        {u.active ? 'Activo' : 'Inactivo'}
+                      </button>
+                      <div className="flex gap-2 shrink-0">
+                        <button onClick={() => setDirectoryModal({ mode: 'edit', role, user: u })}
+                          className="text-xs px-3 py-1.5 rounded-lg font-medium"
+                          style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: '#005187', border: '1px solid rgba(0,81,135,0.2)' }}>
+                          Editar
+                        </button>
+                        <button onClick={() => setDeleteConfirm({ type: 'directory', id: u.id, label: u.name })}
+                          className="text-xs px-3 py-1.5 rounded-lg font-medium"
+                          style={{ border: '1px solid rgba(220,38,38,0.3)', color: '#dc2626' }}>
+                          <Trash size={13} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  {rows.length === 0 && (
+                    <p className="text-sm px-4 py-6 text-center" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)' }}>
+                      {directorySearch ? 'Sin resultados para esa búsqueda.' : 'Sin registros todavía.'}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )
+          })()}
+
           {/* ── SETTINGS ── */}
           {section === 'settings' && (
             <div style={{ animation: 'fadeUp 0.4s ease', maxWidth: 560 }}>
@@ -621,6 +797,25 @@ export default function AdminDashboard() {
           post={blogModal.mode === 'edit' ? blogModal.post : null}
           onSave={handleSaveBlogPost}
           onClose={() => setBlogModal(null)}
+        />
+      )}
+
+      {lmsCourseModal && (
+        <CourseFormModal
+          course={lmsCourseModal.mode === 'edit' ? lmsCourseModal.course : null}
+          teachers={lms.directory.filter(u => u.role === 'profesor')}
+          showTeacherSelect
+          onSave={handleSaveLmsCourse}
+          onClose={() => setLmsCourseModal(null)}
+        />
+      )}
+
+      {directoryModal && (
+        <DirectoryUserFormModal
+          user={directoryModal.mode === 'edit' ? directoryModal.user : null}
+          role={directoryModal.role}
+          onSave={handleSaveDirectoryUser}
+          onClose={() => setDirectoryModal(null)}
         />
       )}
     </div>

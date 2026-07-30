@@ -3,8 +3,10 @@ import { Link, useLocation } from 'react-router-dom'
 import { megaMenu } from '@/shared/data/megaMenu'
 import { MessageCircle } from '@/shared/components/Icons'
 import { useIsDarkTheme } from '@/shared/hooks/useIsDarkTheme'
+import { useAuth, ROLE_HOME } from '@/features/auth/context/AuthContext'
 
 export default function Header({ theme, setTheme }) {
+  const { user, logout } = useAuth()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [megaOpen, setMegaOpen] = useState(false)
   const [mobileServicesOpen, setMobileServicesOpen] = useState(false)
@@ -394,17 +396,35 @@ export default function Header({ theme, setTheme }) {
               </button>
             </div>
 
-            <Link
-              to="/login"
-              className="hidden md:flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-bold text-white btn-nav-login"
-            >
-              Iniciar sesión
-              <svg className="icon-nudge" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
-                <polyline points="10 17 15 12 10 7" />
-                <line x1="15" y1="12" x2="3" y2="12" />
-              </svg>
-            </Link>
+            {user ? (
+              <div className="hidden md:flex items-center gap-2">
+                <Link
+                  to={ROLE_HOME[user.role] ?? '/'}
+                  className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-bold text-white btn-nav-login"
+                >
+                  Mi panel
+                </Link>
+                <button
+                  onClick={logout}
+                  className="px-3 py-1.5 rounded-lg text-sm font-semibold"
+                  style={{ color: 'var(--muted-foreground)' }}
+                >
+                  Salir
+                </button>
+              </div>
+            ) : (
+              <Link
+                to="/login"
+                className="hidden md:flex items-center gap-1.5 px-4 py-1.5 rounded-lg text-sm font-bold text-white btn-nav-login"
+              >
+                Iniciar sesión
+                <svg className="icon-nudge" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                  <polyline points="10 17 15 12 10 7" />
+                  <line x1="15" y1="12" x2="3" y2="12" />
+                </svg>
+              </Link>
+            )}
 
             {/* Hamburger */}
             <button
@@ -497,15 +517,29 @@ export default function Header({ theme, setTheme }) {
             </div>
 
             <div className="flex gap-2 pt-3 pb-1">
-              <Link to="/login" onClick={() => setMobileOpen(false)}
-                className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-bold rounded-lg text-white btn-nav-login">
-                Iniciar sesión
-                <svg className="icon-nudge" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
-                  <polyline points="10 17 15 12 10 7" />
-                  <line x1="15" y1="12" x2="3" y2="12" />
-                </svg>
-              </Link>
+              {user ? (
+                <>
+                  <Link to={ROLE_HOME[user.role] ?? '/'} onClick={() => setMobileOpen(false)}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-bold rounded-lg text-white btn-nav-login">
+                    Mi panel
+                  </Link>
+                  <button onClick={() => { logout(); setMobileOpen(false) }}
+                    className="px-4 py-2.5 text-sm font-semibold rounded-lg"
+                    style={{ color: 'var(--muted-foreground)', border: '1px solid var(--border)' }}>
+                    Salir
+                  </button>
+                </>
+              ) : (
+                <Link to="/login" onClick={() => setMobileOpen(false)}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-bold rounded-lg text-white btn-nav-login">
+                  Iniciar sesión
+                  <svg className="icon-nudge" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                    <polyline points="10 17 15 12 10 7" />
+                    <line x1="15" y1="12" x2="3" y2="12" />
+                  </svg>
+                </Link>
+              )}
             </div>
           </div>
         </div>

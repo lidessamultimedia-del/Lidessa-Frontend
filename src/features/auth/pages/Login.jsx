@@ -1,26 +1,41 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
+import { useAuth, ROLE_HOME } from '../context/AuthContext'
 import { useToast } from '@/shared/context/ToastContext'
+import FormField, { errorInputStyle } from '@/shared/components/FormField'
+
+const EMAIL_RE = /^\S+@\S+\.\S+$/
 
 export default function Login() {
   const [form, setForm] = useState({ email: '', password: '' })
+  const [fieldErrors, setFieldErrors] = useState({})
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const { login } = useAuth()
   const { toast } = useToast()
   const navigate = useNavigate()
 
+  function validate() {
+    const errors = {}
+    if (!form.email) errors.email = 'El correo es obligatorio.'
+    else if (!EMAIL_RE.test(form.email)) errors.email = 'Ingrese un correo válido.'
+    if (!form.password) errors.password = 'La contraseña es obligatoria.'
+    return errors
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+    const errors = validate()
+    setFieldErrors(errors)
+    if (Object.keys(errors).length > 0) return
     setLoading(true)
     try {
       await login(form.email, form.password)
       const stored = localStorage.getItem('lidessa_user')
       const user = stored ? JSON.parse(stored) : null
       toast('success', `¡Bienvenido${user?.name ? ', ' + user.name.split(' ')[0] : ''}!`, 'Has iniciado sesión correctamente.')
-      navigate('/admin')
+      navigate(ROLE_HOME[user?.role] ?? '/')
     } catch {
       setError('Correo o contraseña incorrectos. Intente de nuevo.')
       toast('error', 'Credenciales incorrectas', 'Verifique su correo y contraseña.')
@@ -82,11 +97,13 @@ export default function Login() {
             Ingrese sus credenciales para acceder a su cuenta.
           </p>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-4" noValidate>
             <Field label="Correo electrónico" type="email" placeholder="correo@empresa.com"
-              value={form.email} onChange={v => setForm(f => ({ ...f, email: v }))} />
+              value={form.email} error={fieldErrors.email}
+              onChange={v => { setForm(f => ({ ...f, email: v })); setFieldErrors(f => ({ ...f, email: null })) }} />
             <Field label="Contraseña" type="password" placeholder=""
-              value={form.password} onChange={v => setForm(f => ({ ...f, password: v }))} />
+              value={form.password} error={fieldErrors.password}
+              onChange={v => { setForm(f => ({ ...f, password: v })); setFieldErrors(f => ({ ...f, password: null })) }} />
             <div className="text-right">
               <button type="button" className="text-xs font-medium" style={{ color: 'var(--accent)' }}>
                 ¿Olvidó su contraseña?
@@ -97,9 +114,11 @@ export default function Login() {
                 {error}
               </p>
             )}
-            <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
-              Demo: <code>admin@lidessa.co</code> / <code>admin123</code>
-            </p>
+            <div className="text-xs space-y-0.5" style={{ color: 'var(--muted-foreground)' }}>
+              <p>Demo admin: <code>admin@lidessa.co</code> / <code>admin123</code></p>
+              <p>Demo profesor: <code>profesor@lidessa.co</code> / <code>profesor123</code></p>
+              <p>Demo estudiante: <code>estudiante@lidessa.co</code> / <code>estudiante123</code></p>
+            </div>
             <button
               type="submit"
               disabled={loading}
@@ -118,21 +137,19 @@ export default function Login() {
   )
 }
 
-function Field({ label, type, placeholder, value, onChange }) {
+function Field({ label, type, placeholder, value, error, onChange }) {
   return (
-    <div>
-      <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--foreground)' }}>{label}</label>
+    <FormField label={label} error={error}>
       <input
         type={type}
         placeholder={placeholder}
         value={value}
-        required
         onChange={e => onChange(e.target.value)}
         className="w-full px-4 py-2.5 rounded-lg text-sm outline-none transition-all"
-        style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
-        onFocus={e => e.target.style.borderColor = 'var(--accent)'}
-        onBlur={e => e.target.style.borderColor = 'var(--border)'}
+        style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)', ...errorInputStyle(!!error) }}
+        onFocus={e => { if (!error) e.target.style.borderColor = 'var(--accent)' }}
+        onBlur={e => { if (!error) e.target.style.borderColor = 'var(--border)' }}
       />
-    </div>
+    </FormField>
   )
 }

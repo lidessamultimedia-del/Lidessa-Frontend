@@ -12,7 +12,31 @@ const MOCK_USERS = [
     phone: '+57 300 123 4567',
     unreadNotifications: 5,
   },
+  {
+    id: 't1',
+    name: 'Carlos Rodríguez',
+    email: 'profesor@lidessa.co',
+    password: 'profesor123',
+    role: 'profesor',
+    phone: '+57 301 555 0102',
+    unreadNotifications: 3,
+  },
+  {
+    id: 's1',
+    name: 'Juan Pérez',
+    email: 'estudiante@lidessa.co',
+    password: 'estudiante123',
+    role: 'estudiante',
+    phone: '+57 302 555 0199',
+    unreadNotifications: 2,
+  },
 ]
+
+export const ROLE_HOME = {
+  admin: '/admin',
+  profesor: '/profesor',
+  estudiante: '/estudiante',
+}
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)

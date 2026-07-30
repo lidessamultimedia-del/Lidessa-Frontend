@@ -11,6 +11,8 @@ import Training from '@/features/training/pages/Training'
 import ServicesOverview from '@/features/services/pages/ServicesOverview'
 import ServicePage from '@/features/services/pages/ServicePage'
 import AdminDashboard from '@/features/admin-dashboard/pages/AdminDashboard'
+import TeacherDashboard from '@/features/lms/pages/TeacherDashboard'
+import StudentDashboard from '@/features/lms/pages/StudentDashboard'
 import Login from '@/features/auth/pages/Login'
 import { useAuth } from '@/features/auth/context/AuthContext'
 
@@ -35,9 +37,9 @@ function PublicLayout({ theme, setTheme }) {
   )
 }
 
-function ProtectedRoute({ children }) {
+function ProtectedRoute({ roles, children }) {
   const { user } = useAuth()
-  if (!user || user.role !== 'admin') return <Navigate to="/" replace />
+  if (!user || !roles.includes(user.role)) return <Navigate to="/" replace />
   return <>{children}</>
 }
 
@@ -74,8 +76,18 @@ export default function AppRoutes() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/admin" element={
-        <ProtectedRoute>
+        <ProtectedRoute roles={['admin']}>
           <AdminDashboard />
+        </ProtectedRoute>
+      } />
+      <Route path="/profesor" element={
+        <ProtectedRoute roles={['profesor']}>
+          <TeacherDashboard />
+        </ProtectedRoute>
+      } />
+      <Route path="/estudiante" element={
+        <ProtectedRoute roles={['estudiante']}>
+          <StudentDashboard />
         </ProtectedRoute>
       } />
       <Route path="/*" element={<PublicLayout theme={theme} setTheme={setTheme} />} />

@@ -5,6 +5,7 @@ import { AuthProvider } from '@/features/auth/context/AuthContext'
 import { ToastProvider } from '@/shared/context/ToastContext'
 import { BlogProvider } from '@/features/blog/context/BlogContext'
 import { PQRSFProvider } from '@/features/pqrsf/context/PQRSFContext'
+import { LMSProvider } from '@/features/lms/context/LMSContext'
 import AppRoutes from './routes'
 
 export default function App() {
@@ -15,8 +16,10 @@ export default function App() {
         <AuthProvider>
           <BlogProvider>
             <PQRSFProvider>
-              <AppRoutes />
-              <ToastContainer />
+              <LMSProvider>
+                <AppRoutes />
+                <ToastContainer />
+              </LMSProvider>
             </PQRSFProvider>
           </BlogProvider>
         </AuthProvider>

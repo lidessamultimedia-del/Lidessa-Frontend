@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { servicesData } from '../data/servicesData'
+import { useServicesData } from '../context/ServicesDataContext'
 import { Clipboard, MessageCircle, Check } from '@/shared/components/Icons'
 import { useScrollReveal } from '@/shared/hooks/useScrollReveal'
 
@@ -9,8 +9,9 @@ export default function ServicePage() {
   const [activeTab, setActiveTab] = useState(0)
   const pageRef = useScrollReveal('reveal')
   useScrollReveal('reveal-scale')
+  const { services } = useServicesData()
 
-  const service = servicesData.find(s => s.slug === slug)
+  const service = services.find(s => s.slug === slug && s.active !== false)
 
   if (!service) {
     return (
@@ -61,13 +62,14 @@ export default function ServicePage() {
           <h1 className="text-4xl sm:text-5xl font-black text-white mb-5 reveal stagger-1" style={{ fontFamily: 'var(--font-display)' }}>
             {service.title}
           </h1>
-          <p className="text-base max-w-2xl mx-auto leading-relaxed reveal stagger-2" style={{ color: '#cbb98a' }}>
+          <p className="text-base max-w-2xl mx-auto leading-relaxed reveal stagger-2 break-words" style={{ color: '#cbb98a' }}>
             {service.description}
           </p>
         </div>
       </section>
 
       {/* Tabs */}
+      {service.tabs.length > 0 && (
       <section className="py-14 max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex gap-2 flex-wrap justify-center mb-8" style={{ borderBottom: '2px solid var(--border)', paddingBottom: '2px' }}>
           {service.tabs.map((tab, i) => (
@@ -190,7 +192,7 @@ export default function ServicePage() {
                     )}
                     {section.text && (
                       <p
-                        className="leading-relaxed"
+                        className="leading-relaxed break-words"
                         style={isLead
                           ? { fontSize: '1.0625rem', color: 'var(--foreground)' }
                           : { fontSize: '0.875rem', color: 'var(--muted-foreground)', marginBottom: section.bullets ? 14 : 0 }}
@@ -214,8 +216,8 @@ export default function ServicePage() {
                             >
                               <Check size={13} strokeWidth="3" />
                             </span>
-                            <p className="text-sm leading-relaxed" style={{ color: 'var(--foreground)' }}>
-                              <strong>{b.label}</strong> {b.text}
+                            <p className="text-sm leading-relaxed break-words min-w-0" style={{ color: 'var(--foreground)' }}>
+                              {b.label && <strong>{b.label}</strong>} {b.text}
                             </p>
                           </div>
                         ))}
@@ -248,6 +250,7 @@ export default function ServicePage() {
         </div>
         )}
       </section>
+      )}
 
       {/* CTA */}
       <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6">

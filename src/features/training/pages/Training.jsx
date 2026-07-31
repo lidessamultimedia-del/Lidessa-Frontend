@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { courses } from '../data/courses'
+import { useCourses } from '../context/CoursesContext'
 import CourseModal from '../components/CourseModal'
 import { useScrollReveal } from '@/shared/hooks/useScrollReveal'
 
 export default function Training() {
+  const { courses } = useCourses()
   const [selectedCourse, setSelectedCourse] = useState(null)
   const pageRef = useScrollReveal('reveal')
   useScrollReveal('reveal-scale')

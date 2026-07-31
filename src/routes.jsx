@@ -78,7 +78,7 @@ export default function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/admin" element={
         <ProtectedRoute roles={['admin']}>
-          <AdminDashboard />
+          <AdminDashboard theme={theme} setTheme={setTheme} />
         </ProtectedRoute>
       } />
       <Route path="/profesor" element={

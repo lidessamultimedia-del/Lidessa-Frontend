@@ -1,7 +1,6 @@
 export const blogPosts = [
   {
     id: 1,
-    category: 'Noticias de actualidad',
     title: 'Nuevas disposiciones del Ministerio de Trabajo para el SG-SST en 2025',
     excerpt: 'El Ministerio del Trabajo expidió nuevas directrices que modifican los estándares mínimos del SG-SST para empresas con menos de 50 trabajadores.',
     date: '10 julio 2025',
@@ -13,7 +12,6 @@ export const blogPosts = [
   },
   {
     id: 2,
-    category: 'Consultas normativas',
     title: '¿Qué establece la ISO 45001 frente a las responsabilidades del empleador?',
     excerpt: 'Análisis detallado de los requisitos de la norma ISO 45001:2018 respecto a las obligaciones del empleador en la gestión de riesgos laborales.',
     date: '3 julio 2025',
@@ -25,7 +23,6 @@ export const blogPosts = [
   },
   {
     id: 3,
-    category: 'Publicaciones recientes',
     title: 'Entrevista: La transformación digital en la gestión educativa institucional',
     excerpt: 'Conversamos con la rectora del Colegio Bilingüe La Colina sobre cómo implementaron el PEI digital y los resultados en las evaluaciones docentes.',
     date: '28 junio 2025',
@@ -37,7 +34,6 @@ export const blogPosts = [
   },
   {
     id: 4,
-    category: 'Noticias de actualidad',
     title: 'Decreto 1072: actualización de la tabla de enfermedades laborales',
     excerpt: 'El gobierno nacional actualizó la tabla de enfermedades laborales incluida en el Decreto 1477. Conozca los cambios y cómo afectan su empresa.',
     date: '20 junio 2025',
@@ -49,7 +45,6 @@ export const blogPosts = [
   },
   {
     id: 5,
-    category: 'Consultas normativas',
     title: 'Manual de convivencia escolar: requisitos para la resolución 3922',
     excerpt: 'Guía práctica sobre los contenidos mínimos que debe incluir el manual de convivencia según la normativa vigente del MEN.',
     date: '15 junio 2025',
@@ -61,7 +56,6 @@ export const blogPosts = [
   },
   {
     id: 6,
-    category: 'Publicaciones recientes',
     title: 'Cómo implementar un sistema de gestión de calidad sin paralizar la operación',
     excerpt: 'Metodología progresiva para integrar la ISO 9001 en empresas en funcionamiento sin afectar la continuidad del negocio.',
     date: '8 junio 2025',

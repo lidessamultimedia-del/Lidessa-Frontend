@@ -15,7 +15,7 @@ import AnimatedCounter from '@/shared/components/AnimatedCounter'
 import FormField, { errorInputStyle } from '@/shared/components/FormField'
 import {
   BarChart2, GraduationCap, ClipboardCheck, Plus, Users, FileText,
-  BookOpen, Search,
+  BookOpen, Search, Edit2, Trash,
 } from '@/shared/components/Icons'
 
 const navItems = [
@@ -306,9 +306,9 @@ export default function TeacherDashboard() {
                       className="flex-1 py-1.5 rounded-lg text-xs font-bold text-white" style={{ backgroundColor: '#005187' }}>
                       Ver Detalle
                     </button>
-                    <button onClick={() => setCourseModal({ mode: 'edit', course: c })}
-                      className="px-3 py-1.5 rounded-lg text-xs font-bold" style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>
-                      Editar
+                    <button onClick={() => setCourseModal({ mode: 'edit', course: c })} title="Editar"
+                      className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>
+                      <Edit2 size={13} />
                     </button>
                   </div>
                   <div className="flex gap-2">
@@ -617,8 +617,8 @@ function TopicBlock({ topic, index, weekly, lms, plain, items, onEdit, onDelete,
         </h4>
         {!plain && (
           <div className="flex gap-2">
-            <button onClick={onEdit} className="text-xs px-2 py-1 rounded font-medium" style={{ color: 'var(--muted-foreground)' }}>Editar</button>
-            <button onClick={onDelete} className="text-xs px-2 py-1 rounded font-medium" style={{ color: '#dc2626' }}>Eliminar</button>
+            <button onClick={onEdit} title="Editar" className="p-1 rounded flex items-center justify-center" style={{ color: 'var(--muted-foreground)' }}><Edit2 size={13} /></button>
+            <button onClick={onDelete} title="Eliminar" className="p-1 rounded flex items-center justify-center" style={{ color: '#dc2626' }}><Trash size={13} /></button>
           </div>
         )}
       </div>
@@ -638,13 +638,13 @@ function TopicBlock({ topic, index, weekly, lms, plain, items, onEdit, onDelete,
                 </p>
               )}
             </div>
-            <button onClick={() => kind === 'lesson' ? onEditLesson(item) : onEditAssignment(item)}
-              className="text-xs px-3 py-1.5 rounded-lg font-medium shrink-0" style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>
-              Editar
+            <button onClick={() => kind === 'lesson' ? onEditLesson(item) : onEditAssignment(item)} title="Editar"
+              className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>
+              <Edit2 size={13} />
             </button>
-            <button onClick={() => kind === 'lesson' ? onDeleteLesson(item) : onDeleteAssignment(item)}
-              className="text-xs px-3 py-1.5 rounded-lg font-medium shrink-0" style={{ border: '1px solid rgba(220,38,38,0.3)', color: '#dc2626' }}>
-              Eliminar
+            <button onClick={() => kind === 'lesson' ? onDeleteLesson(item) : onDeleteAssignment(item)} title="Eliminar"
+              className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ border: '1px solid rgba(220,38,38,0.3)', color: '#dc2626' }}>
+              <Trash size={13} />
             </button>
           </div>
         ))}

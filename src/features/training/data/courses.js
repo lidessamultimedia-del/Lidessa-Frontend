@@ -7,7 +7,6 @@ export const courses = [
     modality: 'Virtual',
     image: '/assets/Auditoria.png',
     category: 'Gestión',
-    price: 'Consultar valor',
     intro: '¿Le gustaría convertirse en un auditor interno experto? Este curso le brinda las competencias necesarias para evaluar y mejorar sistemas de gestión HSEQ. Descubra cómo aplicar las Normas ISO y realizar auditorías que impulsen el crecimiento sostenible de su organización. A lo largo del curso, descubrirá cómo interpretar y aplicar las Normas ISO más relevantes para asegurar el cumplimiento normativo y la eficiencia operativa. Aprenderá a leer y analizar normas técnicas colombianas y sectoriales, y se sumergirá en las reglas que todo auditor interno debe dominar para realizar evaluaciones efectivas y confiables. Todo esto mientras fortalece sus habilidades para identificar áreas de mejora y proponer soluciones estratégicas.',
     objectives: [
       'Dominar los fundamentos de las Normas ISO (9001, 14001, 45001).',
@@ -32,7 +31,6 @@ export const courses = [
     modality: 'Virtual',
     image: '/assets/sst.png',
     category: 'Normativa',
-    price: 'Consultar valor',
     intro: '¿Le interesa optimizar la seguridad y salud de su equipo de trabajo? Este curso está diseñado para brindarle las herramientas necesarias para realizar procesos efectivos de inducción y reinducción en el marco del SG-SST. Con un enfoque práctico y basado en normativas vigentes, aprenderá a identificar peligros, gestionar riesgos y fomentar una cultura de prevención en su organización. También desarrollará competencias clave para promover el bienestar físico y mental de los trabajadores, alineando las políticas y responsabilidades del SG-SST con las mejores prácticas internacionales.',
     objectives: [
       'Entender los fundamentos del SG-SST y sus principios fundamentales.',
@@ -59,7 +57,6 @@ export const courses = [
     modality: 'Virtual',
     image: '/assets/fundadores.jpg',
     category: 'Habilidades blandas',
-    price: 'Consultar valor',
     intro: 'Este curso le brinda las competencias necesarias para liderar procesos educativos innovadores y efectivos. Con una sólida base en pedagogía, andragogía y educación disruptiva, será capaz de diseñar programas formativos adaptados a las necesidades de los adultos, empleando metodologías modernas y herramientas tecnológicas avanzadas.',
     objectives: [
       'Comprender las diferencias y aplicaciones de pedagogía, andragogía y pedagogía para adultos.',

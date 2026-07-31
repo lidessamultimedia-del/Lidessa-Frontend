@@ -129,6 +129,9 @@ export default function Login() {
           </form>
 
           <p className="text-sm text-center mt-8" style={{ color: 'var(--muted-foreground)' }}>
+            ¿Quiere tomar un curso? <Link to="/registro" style={{ color: 'var(--primary)', fontWeight: 600 }}>Cree su cuenta</Link>
+          </p>
+          <p className="text-sm text-center mt-2" style={{ color: 'var(--muted-foreground)' }}>
             <Link to="/" style={{ color: 'var(--primary)', fontWeight: 600 }}>← Volver al inicio</Link>
           </p>
         </div>

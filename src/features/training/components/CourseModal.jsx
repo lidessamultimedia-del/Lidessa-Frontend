@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { Check } from '@/shared/components/Icons'
 
 export default function CourseModal({ course, onClose }) {
@@ -42,18 +43,13 @@ export default function CourseModal({ course, onClose }) {
 
         {/* Content */}
         <div className="p-5">
-          <div className="flex items-start justify-between gap-3 mb-4">
-            <div>
-              <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: 'var(--secondary)', color: 'var(--primary)' }}>
-                {course.category}
-              </span>
-              <h2 className="text-xl font-black mt-2 leading-snug" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
-                {course.name}
-              </h2>
-            </div>
-            <p className="text-lg font-black shrink-0" style={{ color: '#b8860b', fontFamily: 'var(--font-display)' }}>
-              {course.price}
-            </p>
+          <div className="mb-4">
+            <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: 'var(--secondary)', color: 'var(--primary)' }}>
+              {course.category}
+            </span>
+            <h2 className="text-xl font-black mt-2 leading-snug" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
+              {course.name}
+            </h2>
           </div>
 
           <p className="text-sm leading-relaxed mb-5" style={{ color: 'var(--muted-foreground)' }}>
@@ -114,14 +110,21 @@ export default function CourseModal({ course, onClose }) {
             </div>
           )}
 
+          <Link
+            to={`/registro?curso=${encodeURIComponent(course.name)}`}
+            className="block w-full text-center py-3 rounded-lg text-sm font-bold text-white transition-opacity hover:opacity-90"
+            style={{ background: 'linear-gradient(135deg, #005187 0%, #4d82bc 55%, #b8860b 100%)' }}
+          >
+            Crear cuenta e inscribirme
+          </Link>
           <a
             href={`https://wa.me/573009876543?text=${encodeURIComponent(`Hola, quiero inscribirme en el curso "${course.name}"`)}`}
             target="_blank"
             rel="noreferrer"
-            className="block w-full text-center py-3 rounded-lg text-sm font-bold text-white transition-opacity hover:opacity-90"
-            style={{ background: 'linear-gradient(135deg, #005187 0%, #4d82bc 55%, #b8860b 100%)' }}
+            className="block w-full text-center py-2.5 mt-2 rounded-lg text-sm font-medium transition-colors"
+            style={{ border: '1px solid var(--border)', color: 'var(--muted-foreground)' }}
           >
-            Inscribirse
+            O consultar por WhatsApp
           </a>
         </div>
       </div>

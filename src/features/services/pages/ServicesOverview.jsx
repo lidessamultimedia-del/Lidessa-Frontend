@@ -30,14 +30,15 @@ export default function ServicesOverview() {
   const pageRef = useScrollReveal('reveal')
   useScrollReveal('reveal-scale')
   const [openCategory, setOpenCategory] = useState(null)
-  const { services, categories: categoryNames } = useServicesData()
+  const { services, categories: categoryList } = useServicesData()
 
-  const categories = categoryNames.map((label, i) => ({
-    label,
+  const categories = categoryList.map((c, i) => ({
+    label: c.name,
+    active: c.active,
     image: categoryMeta[i]?.image ?? '/assets/GestionEmpresas.png',
-    summary: categoryMeta[i]?.summary ?? `Servicios de la categoría ${label}.`,
-    items: services.filter(s => s.category === label && s.active !== false),
-  })).filter(cat => cat.items.length > 0)
+    summary: categoryMeta[i]?.summary ?? `Servicios de la categoría ${c.name}.`,
+    items: services.filter(s => s.category === c.name && s.active !== false),
+  })).filter(cat => cat.active !== false && cat.items.length > 0)
 
   return (
     <div ref={pageRef}>

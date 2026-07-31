@@ -115,11 +115,6 @@ export default function Blog() {
                   onClick={() => setSelectedPost(post)}>
                   <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
                   <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.85), rgba(0,0,0,0.15) 55%, transparent)' }} />
-                  <div className="absolute top-3 right-3">
-                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: GOLD, color: '#141414' }}>
-                      {post.category}
-                    </span>
-                  </div>
                   <div className="absolute bottom-0 left-0 right-0 p-5">
                     <span className="text-xs" style={{ color: '#cbd5e1' }}>{post.date}</span>
                     <h3 className="font-bold text-lg mt-1 leading-snug text-white" style={{ fontFamily: 'var(--font-display)' }}>
@@ -132,11 +127,7 @@ export default function Blog() {
                 <div className="flip-card-back rounded-2xl overflow-hidden p-5 flex flex-col cursor-pointer"
                   style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}
                   onClick={() => setSelectedPost(post)}>
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
-                      style={{ backgroundColor: 'rgba(232,199,102,0.15)', color: '#c9a227' }}>
-                      {post.category}
-                    </span>
+                  <div className="flex items-center justify-end mb-2">
                     <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{post.date}</span>
                   </div>
                   <h3 className="font-bold text-base mb-2 leading-snug" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>

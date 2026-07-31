@@ -19,6 +19,12 @@ export const SERVICE_CATEGORIES = [
   'Supervisión e interventoría',
 ]
 
+// Antes las categorías eran solo strings (sin estado). Si en localStorage
+// queda ese formato viejo, se migran a objetos { name, active } al vuelo.
+function normalizeCategories(list) {
+  return list.map(c => typeof c === 'string' ? { name: c, active: true } : c)
+}
+
 function slugify(text) {
   return text
     .toLowerCase()
@@ -60,11 +66,11 @@ export function ServicesDataProvider({ children }) {
   const [categories, setCategories] = useState(() => {
     try {
       const stored = localStorage.getItem(CATEGORIES_KEY)
-      if (stored) return JSON.parse(stored)
+      if (stored) return normalizeCategories(JSON.parse(stored))
     } catch {
       // ignore malformed data
     }
-    return SERVICE_CATEGORIES
+    return normalizeCategories(SERVICE_CATEGORIES)
   })
 
   useEffect(() => {
@@ -78,11 +84,25 @@ export function ServicesDataProvider({ children }) {
   function addCategory(name) {
     const clean = name.trim()
     if (!clean) return
-    setCategories(prev => prev.some(c => c.toLowerCase() === clean.toLowerCase()) ? prev : [...prev, clean])
+    setCategories(prev => prev.some(c => c.name.toLowerCase() === clean.toLowerCase()) ? prev : [...prev, { name: clean, active: true }])
+  }
+
+  function updateCategory(oldName, newName) {
+    const clean = newName.trim()
+    if (!clean || clean === oldName) return
+    setCategories(prev => {
+      if (prev.some(c => c.name.toLowerCase() === clean.toLowerCase() && c.name !== oldName)) return prev
+      return prev.map(c => c.name === oldName ? { ...c, name: clean } : c)
+    })
+    setServices(prev => prev.map(s => s.category === oldName ? { ...s, category: clean } : s))
+  }
+
+  function toggleCategoryActive(name) {
+    setCategories(prev => prev.map(c => c.name === name ? { ...c, active: c.active === false ? true : false } : c))
   }
 
   function deleteCategory(name) {
-    setCategories(prev => prev.filter(c => c !== name))
+    setCategories(prev => prev.filter(c => c.name !== name))
   }
 
   function addService(data) {
@@ -113,7 +133,7 @@ export function ServicesDataProvider({ children }) {
   }
 
   return (
-    <ServicesDataContext.Provider value={{ services, addService, updateService, deleteService, toggleServiceActive, categories, addCategory, deleteCategory }}>
+    <ServicesDataContext.Provider value={{ services, addService, updateService, deleteService, toggleServiceActive, categories, addCategory, updateCategory, toggleCategoryActive, deleteCategory }}>
       {children}
     </ServicesDataContext.Provider>
   )

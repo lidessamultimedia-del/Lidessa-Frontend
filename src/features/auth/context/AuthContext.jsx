@@ -1,8 +1,9 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 
 const AuthContext = createContext(null)
+const USERS_KEY = 'lidessa_users'
 
-const MOCK_USERS = [
+const BASE_USERS = [
   {
     id: '1',
     name: 'Admin Lidessa',
@@ -39,6 +40,15 @@ export const ROLE_HOME = {
 }
 
 export function AuthProvider({ children }) {
+  const [users, setUsers] = useState(() => {
+    try {
+      const stored = localStorage.getItem(USERS_KEY)
+      if (stored) return JSON.parse(stored)
+    } catch {
+      // ignore malformed data
+    }
+    return BASE_USERS
+  })
   const [user, setUser] = useState(null)
   const [initialized, setInitialized] = useState(false)
 
@@ -48,13 +58,34 @@ export function AuthProvider({ children }) {
     setInitialized(true)
   }, [])
 
+  useEffect(() => {
+    localStorage.setItem(USERS_KEY, JSON.stringify(users))
+  }, [users])
+
   async function login(email, password) {
     await new Promise(r => setTimeout(r, 900))
-    const found = MOCK_USERS.find(u => u.email === email && u.password === password)
+    const found = users.find(u => u.email === email && u.password === password)
     if (!found) throw new Error('Credenciales incorrectas')
     const { password: _pw, ...safe } = found
     setUser(safe)
     localStorage.setItem('lidessa_user', JSON.stringify(safe))
+  }
+
+  async function register({ name, email, password, phone }) {
+    await new Promise(r => setTimeout(r, 700))
+    if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
+      throw new Error('Ya existe una cuenta registrada con ese correo.')
+    }
+    const newUser = {
+      id: `s${Date.now()}`,
+      name, email, password, role: 'estudiante', phone: phone ?? '',
+      unreadNotifications: 0,
+    }
+    setUsers(prev => [...prev, newUser])
+    const { password: _pw, ...safe } = newUser
+    setUser(safe)
+    localStorage.setItem('lidessa_user', JSON.stringify(safe))
+    return safe
   }
 
   function logout() {
@@ -70,7 +101,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, initialized, login, logout, updateProfile }}>
+    <AuthContext.Provider value={{ user, initialized, login, register, logout, updateProfile }}>
       {children}
     </AuthContext.Provider>
   )

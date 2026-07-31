@@ -33,10 +33,7 @@ export default function BlogModal({ post, onClose }) {
           </button>
         </div>
         <div className="p-6">
-          <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: 'var(--secondary)', color: 'var(--primary)' }}>
-            {post.category}
-          </span>
-          <h2 className="text-2xl font-black mt-3 mb-2 leading-snug" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
+          <h2 className="text-2xl font-black mb-2 leading-snug" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
             {post.title}
           </h2>
           <div className="flex items-center gap-3 mb-5">

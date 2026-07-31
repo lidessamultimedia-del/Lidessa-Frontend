@@ -1,8 +1,15 @@
 import { useState } from 'react'
 import { errorInputStyle } from '@/shared/components/FormField'
+import { Plus } from '@/shared/components/Icons'
 
 const CATEGORIES = ['Liderazgo', 'Formación', 'SST', 'Auditoría', 'Gestión']
 const COLORS = ['#005187', '#7c3aed', '#d97706', '#16a34a', '#dc2626', '#0891b2']
+
+// La imagen se guarda como base64 directo en el navegador (localStorage), que
+// tiene un límite total de unos 5-10 MB compartido entre todo el sitio — por
+// eso se limita el tamaño de cada foto individual.
+const MAX_IMAGE_MB = 1.5
+const MAX_IMAGE_BYTES = MAX_IMAGE_MB * 1024 * 1024
 
 export default function CourseFormModal({ course, teachers, showTeacherSelect = false, onSave, onClose }) {
   const [errors, setErrors] = useState({})
@@ -15,6 +22,7 @@ export default function CourseFormModal({ course, teachers, showTeacherSelect = 
     format: course?.format ?? 'topics',
     capacity: course?.capacity ?? 100,
     color: course?.color ?? COLORS[0],
+    image: course?.image ?? '',
     requiresPassword: course?.requiresPassword ?? false,
     password: course?.password ?? '',
     selfEnrollment: course?.selfEnrollment ?? true,
@@ -102,6 +110,40 @@ export default function CourseFormModal({ course, teachers, showTeacherSelect = 
                     style={{ backgroundColor: c, border: form.color === c ? '3px solid var(--foreground)' : '1px solid var(--border)' }} />
                 ))}
               </div>
+            </Field>
+            <Field label="Imagen de portada (opcional)" error={errors.image}>
+              <div className="flex items-center gap-2">
+                {form.image ? (
+                  <img src={form.image} alt="" className="w-11 h-11 object-cover rounded-lg shrink-0" style={{ border: '1px solid var(--border)' }} />
+                ) : (
+                  <div className="w-11 h-11 rounded-lg shrink-0" style={{ backgroundColor: form.color }} />
+                )}
+                <label
+                  className="flex-1 cursor-pointer text-xs px-3 py-2.5 rounded-lg text-center font-semibold transition-colors"
+                  style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: '#005187', border: '1px solid rgba(0,81,135,0.2)' }}
+                >
+                  {form.image ? 'Cambiar' : 'Elegir foto…'}
+                  <input type="file" accept="image/*" className="hidden" onChange={e => {
+                    const file = e.target.files?.[0]
+                    e.target.value = ''
+                    if (!file) return
+                    if (file.size > MAX_IMAGE_BYTES) {
+                      setErrors(er => ({ ...er, image: `La imagen pesa ${(file.size / 1024 / 1024).toFixed(1)} MB. Use una de máximo ${MAX_IMAGE_MB} MB.` }))
+                      return
+                    }
+                    const reader = new FileReader()
+                    reader.onload = () => { setForm(f => ({ ...f, image: reader.result })); setErrors(er => ({ ...er, image: null })) }
+                    reader.readAsDataURL(file)
+                  }} />
+                </label>
+                {form.image && (
+                  <button type="button" onClick={() => setForm(f => ({ ...f, image: '' }))}
+                    className="shrink-0 p-2.5 rounded-lg" style={{ color: 'var(--muted-foreground)' }} title="Quitar imagen">
+                    <Plus size={14} style={{ transform: 'rotate(45deg)' }} />
+                  </button>
+                )}
+              </div>
+              <p className="text-xs mt-1" style={{ color: 'var(--muted-foreground)' }}>Si no sube una imagen, se usa el color de portada como fondo.</p>
             </Field>
             {showTeacherSelect && (
               <Field label="Profesor asignado" error={errors.teacherId}>

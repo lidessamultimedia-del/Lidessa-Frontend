@@ -14,6 +14,7 @@ import AdminDashboard from '@/features/admin-dashboard/pages/AdminDashboard'
 import TeacherDashboard from '@/features/lms/pages/TeacherDashboard'
 import StudentDashboard from '@/features/lms/pages/StudentDashboard'
 import Login from '@/features/auth/pages/Login'
+import Register from '@/features/auth/pages/Register'
 import { useAuth } from '@/features/auth/context/AuthContext'
 
 function PublicLayout({ theme, setTheme }) {
@@ -76,6 +77,7 @@ export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      <Route path="/registro" element={<Register />} />
       <Route path="/admin" element={
         <ProtectedRoute roles={['admin']}>
           <AdminDashboard theme={theme} setTheme={setTheme} />

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useAuth } from '@/features/auth/context/AuthContext'
 import { useLMS } from '@/features/lms/context/LMSContext'
 import { useToast } from '@/shared/context/ToastContext'
@@ -6,7 +6,7 @@ import DashboardShell from '@/features/lms/components/DashboardShell'
 import AnimatedCounter from '@/shared/components/AnimatedCounter'
 import { downloadCsv } from '@/features/lms/utils/csv'
 import {
-  BarChart2, GraduationCap, ClipboardCheck, Check, Lock, BookOpen, FileText, Upload, Users, Download,
+  BarChart2, GraduationCap, ClipboardCheck, Check, Lock, BookOpen, FileText, Upload, Users, Download, MoreVertical,
 } from '@/shared/components/Icons'
 
 const navItems = [
@@ -14,6 +14,25 @@ const navItems = [
   { id: 'courses', label: 'Mis Cursos', icon: GraduationCap },
   { id: 'grades', label: 'Mis Calificaciones', icon: ClipboardCheck },
 ]
+
+// Tarjetas de "Mis cursos" al estilo Moodle: en vez de una foto de portada
+// (que no tenemos por curso), se genera un patrón geométrico sobre el color
+// del curso — variando el patrón según la posición para que la grilla no se
+// vea repetitiva.
+const COURSE_CARD_PATTERNS = [
+  { backgroundImage: 'repeating-linear-gradient(45deg, rgba(255,255,255,0.16) 0 2px, transparent 2px 16px), repeating-linear-gradient(-45deg, rgba(255,255,255,0.16) 0 2px, transparent 2px 16px)' },
+  { backgroundImage: 'radial-gradient(rgba(255,255,255,0.28) 2px, transparent 2.5px)', backgroundSize: '18px 18px' },
+  { backgroundImage: 'repeating-linear-gradient(0deg, rgba(255,255,255,0.14) 0 1px, transparent 1px 18px), repeating-linear-gradient(90deg, rgba(255,255,255,0.14) 0 1px, transparent 1px 18px)' },
+  { backgroundImage: 'repeating-conic-gradient(rgba(255,255,255,0.18) 0% 25%, transparent 0% 50%)', backgroundSize: '26px 26px' },
+  { backgroundImage: 'radial-gradient(circle at 25% 30%, rgba(255,255,255,0.3) 0, transparent 45%), radial-gradient(circle at 75% 70%, rgba(255,255,255,0.24) 0, transparent 45%)' },
+]
+
+function courseCardStyle(course, i) {
+  if (course.image) {
+    return { backgroundImage: `url(${course.image})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+  }
+  return { backgroundColor: course.color ?? '#005187', ...COURSE_CARD_PATTERNS[i % COURSE_CARD_PATTERNS.length] }
+}
 
 function formatDate(iso) {
   if (!iso) return '—'
@@ -38,6 +57,15 @@ export default function StudentDashboard() {
   const [selectedCourseId, setSelectedCourseId] = useState(null)
   const [courseTab, setCourseTab] = useState('general')
   const [submitAssignmentId, setSubmitAssignmentId] = useState(null)
+  const [openCourseMenuId, setOpenCourseMenuId] = useState(null)
+
+  useEffect(() => {
+    function handleClick(e) {
+      if (!e.target.closest('[data-course-menu]')) setOpenCourseMenuId(null)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
 
   const myCourses = lms.coursesByStudent(studentId)
   const selectedCourse = selectedCourseId ? lms.courses.find(c => c.id === selectedCourseId) : null
@@ -179,29 +207,48 @@ export default function StudentDashboard() {
         <div style={{ animation: 'fadeUp 0.4s ease' }}>
           <h2 className="text-xl font-black mb-6" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Mis cursos</h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {myCourses.map(c => {
+            {myCourses.map((c, i) => {
               const progress = lms.progressForStudentCourse(studentId, c.id)
               const courseGrades = gradesByCourse.find(g => g.course.id === c.id)
+              const menuOpen = openCourseMenuId === c.id
               return (
-                <div key={c.id} className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
-                  <div style={{ height: 8, backgroundColor: c.color ?? '#005187' }} />
+                <div key={c.id} className="rounded-xl overflow-hidden transition-shadow hover:shadow-md" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
+                  <button onClick={() => openCourseDetail(c.id)} className="block w-full text-left" style={{ height: 110, ...courseCardStyle(c, i) }} />
                   <div className="p-4">
-                    <h3 className="font-bold text-sm mb-1 leading-snug" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>{c.name}</h3>
-                    <p className="text-xs mb-3" style={{ color: 'var(--muted-foreground)' }}>Profesor: {lms.teacherName(c.teacherId)}</p>
-                    <div className="mb-2">
-                      <div className="flex justify-between text-xs mb-1" style={{ color: 'var(--muted-foreground)' }}>
-                        <span>Progreso</span><span>{progress.percent}%</span>
+                    <button onClick={() => openCourseDetail(c.id)}
+                      className="font-bold text-sm mb-0.5 leading-snug text-left hover:underline"
+                      style={{ fontFamily: 'var(--font-display)', color: '#005187' }}>
+                      {c.name}
+                    </button>
+                    <p className="text-xs mb-4" style={{ color: 'var(--muted-foreground)' }}>{c.category}</p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium" style={{ color: 'var(--muted-foreground)' }}>{progress.percent}% completado</span>
+                      <div className="relative" data-course-menu>
+                        <button onClick={() => setOpenCourseMenuId(menuOpen ? null : c.id)}
+                          className="p-1 rounded-lg transition-colors" style={{ color: 'var(--muted-foreground)' }}
+                          onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--muted)'}
+                          onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
+                          aria-label="Más opciones">
+                          <MoreVertical size={16} />
+                        </button>
+                        {menuOpen && (
+                          <div className="absolute right-0 bottom-full mb-1.5 rounded-xl overflow-hidden z-20"
+                            style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', boxShadow: '0 12px 32px rgba(0,0,0,0.15)', minWidth: 180, animation: 'fadeUp 0.15s ease' }}>
+                            <button onClick={() => { openCourseDetail(c.id); setOpenCourseMenuId(null) }}
+                              className="w-full text-left text-sm px-3.5 py-2.5 transition-colors" style={{ color: 'var(--foreground)' }}
+                              onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--muted)'}
+                              onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
+                              Ver curso
+                            </button>
+                            <button onClick={() => { setSection('grades'); setOpenCourseMenuId(null) }}
+                              className="w-full text-left text-sm px-3.5 py-2.5 transition-colors" style={{ color: 'var(--foreground)' }}
+                              onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--muted)'}
+                              onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
+                              {courseGrades?.average != null ? `Calificación: ${courseGrades.average}/100` : 'Ver calificaciones'}
+                            </button>
+                          </div>
+                        )}
                       </div>
-                      <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--muted)' }}>
-                        <div style={{ width: `${progress.percent}%`, height: '100%', backgroundColor: c.color ?? '#005187', transition: 'width 0.4s ease' }} />
-                      </div>
-                    </div>
-                    <p className="text-sm font-bold mb-3" style={{ color: 'var(--foreground)' }}>
-                      Mi calificación: {courseGrades?.average != null ? `${courseGrades.average}/100` : 'Sin calificar aún'}
-                    </p>
-                    <div className="flex gap-2">
-                      <button onClick={() => openCourseDetail(c.id)} className="flex-1 py-1.5 rounded-lg text-xs font-bold text-white" style={{ backgroundColor: '#005187' }}>Ver Curso</button>
-                      <button onClick={() => setSection('grades')} className="flex-1 py-1.5 rounded-lg text-xs font-bold" style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>Ver Calificaciones</button>
                     </div>
                   </div>
                 </div>

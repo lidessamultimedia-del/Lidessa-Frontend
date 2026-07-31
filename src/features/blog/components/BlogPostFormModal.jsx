@@ -1,9 +1,6 @@
 import { useState } from 'react'
 
-const categories = ['Noticias de actualidad', 'Consultas normativas', 'Publicaciones recientes']
-
 const emptyForm = {
-  category: categories[0],
   title: '',
   excerpt: '',
   date: '',
@@ -52,18 +49,6 @@ export default function BlogPostFormModal({ post, onSave, onClose }) {
         </h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--foreground)' }}>Categoría</label>
-            <select
-              value={form.category}
-              onChange={e => set('category', e.target.value)}
-              className="w-full px-3 py-2.5 rounded-lg text-sm outline-none"
-              style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
-            >
-              {categories.map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
-
           {fields.map(f => (
             <div key={f.key}>
               <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--foreground)' }}>

@@ -1,7 +1,14 @@
 import { useState } from 'react'
 import FormField, { errorInputStyle } from '@/shared/components/FormField'
+import { Plus } from '@/shared/components/Icons'
 
 const MODALITIES = ['Virtual', 'Presencial', 'Semipresencial']
+
+// La imagen se guarda como base64 directo en el navegador (localStorage), que
+// tiene un límite total de unos 5-10 MB compartido entre todo el sitio — por
+// eso se limita el tamaño de cada foto individual.
+const MAX_IMAGE_MB = 1.5
+const MAX_IMAGE_BYTES = MAX_IMAGE_MB * 1024 * 1024
 
 export default function CatalogCourseFormModal({ course, onSave, onClose }) {
   const [form, setForm] = useState({
@@ -11,7 +18,6 @@ export default function CatalogCourseFormModal({ course, onSave, onClose }) {
     duration: course?.duration ?? '',
     modality: course?.modality ?? MODALITIES[0],
     category: course?.category ?? '',
-    price: course?.price ?? 'Consultar valor',
     image: course?.image ?? '',
     objectives: (course?.objectives ?? []).join('\n'),
     modules: (course?.modules ?? []).join('\n'),
@@ -84,17 +90,36 @@ export default function CatalogCourseFormModal({ course, onSave, onClose }) {
                 className="w-full px-3 py-2.5 rounded-lg text-sm outline-none"
                 style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }} />
             </FormField>
-            <FormField label="Precio">
-              <input value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))}
-                className="w-full px-3 py-2.5 rounded-lg text-sm outline-none"
-                style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }} />
-            </FormField>
           </div>
-          <FormField label="Imagen (ruta en /assets)" required error={errors.image}>
-            <input value={form.image} placeholder="/assets/nombre.png"
-              onChange={e => { setForm(f => ({ ...f, image: e.target.value })); setErrors(er => ({ ...er, image: null })) }}
-              className="w-full px-3 py-2.5 rounded-lg text-sm outline-none"
-              style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)', ...errorInputStyle(!!errors.image) }} />
+          <FormField label="Imagen del curso" required error={errors.image}>
+            <div className="flex items-center gap-2">
+              {form.image ? (
+                <img src={form.image} alt="" className="w-11 h-11 object-cover rounded-lg shrink-0" style={{ border: '1px solid var(--border)' }} />
+              ) : (
+                <div className="w-11 h-11 rounded-lg shrink-0 flex items-center justify-center"
+                  style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', ...errorInputStyle(!!errors.image) }}>
+                  <Plus size={16} style={{ color: 'var(--muted-foreground)' }} />
+                </div>
+              )}
+              <label
+                className="flex-1 cursor-pointer text-xs px-3 py-2.5 rounded-lg text-center font-semibold transition-colors"
+                style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: '#005187', border: '1px solid rgba(0,81,135,0.2)' }}
+              >
+                {form.image ? 'Cambiar' : 'Elegir foto…'}
+                <input type="file" accept="image/*" className="hidden" onChange={e => {
+                  const file = e.target.files?.[0]
+                  e.target.value = ''
+                  if (!file) return
+                  if (file.size > MAX_IMAGE_BYTES) {
+                    setErrors(er => ({ ...er, image: `La imagen pesa ${(file.size / 1024 / 1024).toFixed(1)} MB. Use una de máximo ${MAX_IMAGE_MB} MB.` }))
+                    return
+                  }
+                  const reader = new FileReader()
+                  reader.onload = () => { setForm(f => ({ ...f, image: reader.result })); setErrors(er => ({ ...er, image: null })) }
+                  reader.readAsDataURL(file)
+                }} />
+              </label>
+            </div>
           </FormField>
           <FormField label="Objetivos (uno por línea)">
             <textarea rows={4} value={form.objectives} onChange={e => setForm(f => ({ ...f, objectives: e.target.value }))}

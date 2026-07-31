@@ -107,12 +107,9 @@ export default function Training() {
                 {/* Back — details */}
                 <div className="flip-card-back rounded-2xl overflow-hidden p-5 flex flex-col"
                   style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
-                  <div className="flex items-start justify-between gap-2 mb-1">
+                  <div className="mb-1">
                     <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: 'var(--secondary)', color: 'var(--primary)' }}>
                       {course.category}
-                    </span>
-                    <span className="text-base font-black shrink-0" style={{ color: '#b8860b', fontFamily: 'var(--font-display)' }}>
-                      {course.price}
                     </span>
                   </div>
                   <h3 className="font-bold text-base mt-2 mb-1 leading-snug"

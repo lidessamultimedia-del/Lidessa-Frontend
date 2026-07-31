@@ -9,9 +9,9 @@ import ThemeToggle from '@/shared/components/ThemeToggle'
 export default function Header({ theme, setTheme }) {
   const { user, logout } = useAuth()
   const { services, categories } = useServicesData()
-  const megaMenu = categories.map(label => ({
-    label,
-    items: services.filter(s => s.category === label && s.active !== false).map(s => ({ label: s.title, slug: s.slug })),
+  const megaMenu = categories.filter(c => c.active !== false).map(c => ({
+    label: c.name,
+    items: services.filter(s => s.category === c.name && s.active !== false).map(s => ({ label: s.title, slug: s.slug })),
   })).filter(cat => cat.items.length > 0)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [megaOpen, setMegaOpen] = useState(false)

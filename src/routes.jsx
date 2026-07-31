@@ -38,7 +38,8 @@ function PublicLayout({ theme, setTheme }) {
 }
 
 function ProtectedRoute({ roles, children }) {
-  const { user } = useAuth()
+  const { user, initialized } = useAuth()
+  if (!initialized) return null
   if (!user || !roles.includes(user.role)) return <Navigate to="/" replace />
   return <>{children}</>
 }

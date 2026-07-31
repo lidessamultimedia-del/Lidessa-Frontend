@@ -40,10 +40,12 @@ export const ROLE_HOME = {
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
+  const [initialized, setInitialized] = useState(false)
 
   useEffect(() => {
     const stored = localStorage.getItem('lidessa_user')
     if (stored) setUser(JSON.parse(stored))
+    setInitialized(true)
   }, [])
 
   async function login(email, password) {
@@ -68,7 +70,7 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, updateProfile }}>
+    <AuthContext.Provider value={{ user, initialized, login, logout, updateProfile }}>
       {children}
     </AuthContext.Provider>
   )

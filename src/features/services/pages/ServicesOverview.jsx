@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { servicesData } from '../data/servicesData'
-import { megaMenu } from '@/shared/data/megaMenu'
+import { useServicesData } from '../context/ServicesDataContext'
 import { useScrollReveal } from '@/shared/hooks/useScrollReveal'
 
 const categoryMeta = [
@@ -31,12 +30,14 @@ export default function ServicesOverview() {
   const pageRef = useScrollReveal('reveal')
   useScrollReveal('reveal-scale')
   const [openCategory, setOpenCategory] = useState(null)
+  const { services, categories: categoryNames } = useServicesData()
 
-  const categories = megaMenu.map((category, i) => ({
-    ...category,
-    ...categoryMeta[i],
-    items: category.items.map(it => servicesData.find(s => s.slug === it.slug)).filter(Boolean),
-  }))
+  const categories = categoryNames.map((label, i) => ({
+    label,
+    image: categoryMeta[i]?.image ?? '/assets/GestionEmpresas.png',
+    summary: categoryMeta[i]?.summary ?? `Servicios de la categoría ${label}.`,
+    items: services.filter(s => s.category === label && s.active !== false),
+  })).filter(cat => cat.items.length > 0)
 
   return (
     <div ref={pageRef}>

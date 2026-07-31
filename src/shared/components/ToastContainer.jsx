@@ -1,6 +1,14 @@
 import { useEffect, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { useToast } from '@/shared/context/ToastContext'
 import { Check, X, AlertTriangle, Info } from '@/shared/components/Icons'
+
+// El panel admin/profesor/estudiante tiene su propia barra superior (sin el
+// header flotante público) y un botón de acción arriba a la derecha de cada
+// sección — con top:80 el toast quedaba justo encima y bloqueaba el clic.
+// Ahí lo mandamos abajo a la derecha; en el sitio público se queda arriba
+// porque abajo a la derecha está el botón de WhatsApp.
+const DASHBOARD_PREFIXES = ['/admin', '/profesor', '/estudiante']
 
 const typeConfig = {
   success: { bg: '#16a34a', icon: Check, label: 'Éxito' },
@@ -82,17 +90,19 @@ function ToastItem({ t, onDismiss }) {
 
 export default function ToastContainer() {
   const { toasts, dismiss } = useToast()
+  const { pathname } = useLocation()
+  const inDashboard = DASHBOARD_PREFIXES.some(p => pathname.startsWith(p))
 
   return (
     <div
       aria-label="Notificaciones"
       style={{
         position: 'fixed',
-        top: 80,
+        ...(inDashboard ? { bottom: 20 } : { top: 80 }),
         right: 20,
         zIndex: 9999,
         display: 'flex',
-        flexDirection: 'column',
+        flexDirection: inDashboard ? 'column-reverse' : 'column',
         gap: 10,
         pointerEvents: 'none',
       }}

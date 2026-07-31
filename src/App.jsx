@@ -6,6 +6,8 @@ import { ToastProvider } from '@/shared/context/ToastContext'
 import { BlogProvider } from '@/features/blog/context/BlogContext'
 import { PQRSFProvider } from '@/features/pqrsf/context/PQRSFContext'
 import { LMSProvider } from '@/features/lms/context/LMSContext'
+import { CoursesProvider } from '@/features/training/context/CoursesContext'
+import { ServicesDataProvider } from '@/features/services/context/ServicesDataContext'
 import AppRoutes from './routes'
 
 export default function App() {
@@ -17,8 +19,12 @@ export default function App() {
           <BlogProvider>
             <PQRSFProvider>
               <LMSProvider>
-                <AppRoutes />
-                <ToastContainer />
+                <CoursesProvider>
+                  <ServicesDataProvider>
+                    <AppRoutes />
+                    <ToastContainer />
+                  </ServicesDataProvider>
+                </CoursesProvider>
               </LMSProvider>
             </PQRSFProvider>
           </BlogProvider>

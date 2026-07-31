@@ -1,31 +1,37 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/features/auth/context/AuthContext'
 import { useToast } from '@/shared/context/ToastContext'
 import { useBlog } from '@/features/blog/context/BlogContext'
 import { usePQRSF } from '@/features/pqrsf/context/PQRSFContext'
 import { useLMS } from '@/features/lms/context/LMSContext'
+import { useCourses } from '@/features/training/context/CoursesContext'
+import { useServicesData } from '@/features/services/context/ServicesDataContext'
 import BlogPostFormModal from '@/features/blog/components/BlogPostFormModal'
 import CourseFormModal from '@/features/lms/components/CourseFormModal'
 import DirectoryUserFormModal from '@/features/lms/components/DirectoryUserFormModal'
-import { courses } from '@/features/training/data/courses'
+import PQRSFReplyModal from '@/features/pqrsf/components/PQRSFReplyModal'
+import ServiceFormModal from '../components/ServiceFormModal'
+import ClientFormModal from '../components/ClientFormModal'
+import CatalogCourseFormModal from '../components/CatalogCourseFormModal'
 import AnimatedCounter from '@/shared/components/AnimatedCounter'
-import { BarChart2, Building, FileText, GraduationCap, Users, Clipboard, Sliders, Bell, User, AlertTriangle, Edit2, Plus, Send, BookOpen, Trash, Search } from '@/shared/components/Icons'
+import ThemeToggle from '@/shared/components/ThemeToggle'
+import { BarChart2, Building, FileText, GraduationCap, Users, Clipboard, Sliders, Bell, User, AlertTriangle, Edit2, Plus, Send, BookOpen, Trash, Search, Eye, Lock, X } from '@/shared/components/Icons'
 
-const mockUsers = [
-  { id: '1', name: 'María García', email: 'cliente@lidessa.co', role: 'client', company: 'Construcciones García S.A.S.', joined: '2025-05-12' },
-  { id: '3', name: 'Carlos Rodríguez', email: 'carlos.r@empresa.com', role: 'client', company: 'Distribuidora del Pacífico', joined: '2025-06-01' },
-  { id: '4', name: 'Ana Martínez', email: 'ana.m@colegio.edu.co', role: 'client', company: 'IED La Esperanza', joined: '2025-07-02' },
+const SETTINGS_KEY = 'lidessa_site_settings'
+
+const mockClients = [
+  { id: '1', name: 'María García', email: 'cliente@lidessa.co', company: 'Construcciones García S.A.S.', joined: '2025-05-12' },
+  { id: '3', name: 'Carlos Rodríguez', email: 'carlos.r@empresa.com', company: 'Distribuidora del Pacífico', joined: '2025-06-01' },
+  { id: '4', name: 'Ana Martínez', email: 'ana.m@colegio.edu.co', company: 'IED La Esperanza', joined: '2025-07-02' },
 ]
 
-const mockServices = [
-  { id: 1, name: 'Seguridad y salud en el trabajo', category: 'Propiedades horizontales', active: true },
-  { id: 2, name: 'Plan de manejo de residuos sólidos', category: 'Propiedades horizontales', active: true },
-  { id: 3, name: 'Evaluación de riesgo psicosocial', category: 'Gestión de empresas', active: true },
-  { id: 4, name: 'Proyecto educativo institucional', category: 'Gestión de instituciones', active: false },
-  { id: 5, name: 'Gestión para instituciones educativas', category: 'Gestión de instituciones', active: true },
-  { id: 6, name: 'Formación a la medida', category: 'Educación y formación', active: true },
-]
+const defaultSettings = {
+  phone: '+57 300 123 4567',
+  email: 'info@lidessa.co',
+  address: 'Calle 100 # 19-61, Bogotá D.C.',
+  schedule: 'Lunes a viernes: 7:30 am – 5:30 pm',
+}
 
 const statusColor = {
   'Pendiente': '#d97706',
@@ -33,28 +39,48 @@ const statusColor = {
   'Revisando': '#005187',
 }
 
-export default function AdminDashboard() {
+export default function AdminDashboard({ theme, setTheme }) {
   const { user, logout } = useAuth()
   const { toast } = useToast()
   const navigate = useNavigate()
   const { posts: blogPosts, addPost, updatePost, deletePost } = useBlog()
   const { tickets: pqrsfTickets, updateTicket: updatePQRSF } = usePQRSF()
   const lms = useLMS()
+  const { courses: catalogCourses, addCourse: addCatalogCourse, updateCourse: updateCatalogCourse, deleteCourse: deleteCatalogCourse } = useCourses()
+  const { services, addService, updateService, deleteService, toggleServiceActive, categories: serviceCategories, addCategory, deleteCategory } = useServicesData()
   const [section, setSection] = useState('dashboard')
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [bellOpen, setBellOpen] = useState(false)
-  const [services, setServices] = useState(mockServices)
+  const [clients, setClients] = useState(mockClients)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [blogModal, setBlogModal] = useState(null)
   const [lmsCourseModal, setLmsCourseModal] = useState(null)
   const [directoryModal, setDirectoryModal] = useState(null)
+  const [serviceModal, setServiceModal] = useState(null)
+  const [clientModal, setClientModal] = useState(null)
+  const [catalogModal, setCatalogModal] = useState(null)
+  const [pqrsfReplyModal, setPqrsfReplyModal] = useState(null)
+  const [servicesSearch, setServicesSearch] = useState('')
+  const [servicesCategoryFilter, setServicesCategoryFilter] = useState('all')
+  const [categoryFilterOpen, setCategoryFilterOpen] = useState(false)
+  const categoryFilterRef = useRef(null)
+
+  useEffect(() => {
+    function handleClick(e) {
+      if (categoryFilterRef.current && !categoryFilterRef.current.contains(e.target)) setCategoryFilterOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
   const [lmsCoursesSearch, setLmsCoursesSearch] = useState('')
   const [directorySearch, setDirectorySearch] = useState('')
-  const [settings, setSettings] = useState({
-    phone: '+57 300 123 4567',
-    email: 'info@lidessa.co',
-    address: 'Calle 100 # 19-61, Bogotá D.C.',
-    schedule: 'Lunes a viernes: 7:30 am – 5:30 pm',
+  const [settings, setSettings] = useState(() => {
+    try {
+      const stored = localStorage.getItem(SETTINGS_KEY)
+      return stored ? JSON.parse(stored) : defaultSettings
+    } catch {
+      return defaultSettings
+    }
   })
 
   function handleLogout() {
@@ -63,10 +89,54 @@ export default function AdminDashboard() {
     navigate('/')
   }
 
-  function toggleService(id) {
-    setServices(prev => prev.map(s => s.id === id ? { ...s, active: !s.active } : s))
-    const svc = services.find(s => s.id === id)
-    toast(svc.active ? 'warning' : 'success', `Servicio ${svc.active ? 'desactivado' : 'activado'}`, svc.name)
+  function toggleService(slug) {
+    const svc = services.find(s => s.slug === slug)
+    toggleServiceActive(slug)
+    toast(svc.active === false ? 'success' : 'warning', svc.active === false ? 'Servicio activado' : 'Servicio desactivado', svc.title)
+  }
+
+  function handleSaveService(form) {
+    if (serviceModal.mode === 'edit') {
+      updateService(serviceModal.service.slug, form)
+      toast('success', 'Servicio actualizado', form.title)
+    } else {
+      addService(form)
+      toast('success', 'Servicio creado', form.title)
+    }
+    setServiceModal(null)
+  }
+
+  function handleSaveClient(form) {
+    if (clientModal.mode === 'edit') {
+      setClients(prev => prev.map(c => c.id === clientModal.client.id ? { ...c, ...form } : c))
+      toast('success', 'Cliente actualizado', form.name)
+    } else {
+      setClients(prev => [{ id: `c${Date.now()}`, joined: new Date().toISOString().slice(0, 10), ...form }, ...prev])
+      toast('success', 'Cliente creado', form.name)
+    }
+    setClientModal(null)
+  }
+
+  function handleSaveCatalogCourse(form) {
+    if (catalogModal.mode === 'edit') {
+      updateCatalogCourse(catalogModal.course.id, form)
+      toast('success', 'Curso actualizado', form.name)
+    } else {
+      addCatalogCourse(form)
+      toast('success', 'Curso creado', form.name)
+    }
+    setCatalogModal(null)
+  }
+
+  function togglePublishLmsCourse(course) {
+    lms.updateCourse(course.id, { published: !course.published })
+    toast(course.published ? 'warning' : 'success', course.published ? 'Curso despublicado' : 'Curso publicado', course.name)
+  }
+
+  function handleReplyPQRSF(response) {
+    updatePQRSF(pqrsfReplyModal.id, { status: 'Respondida', response })
+    toast('success', 'Respuesta enviada', `Se respondió a ${pqrsfReplyModal.from}`)
+    setPqrsfReplyModal(null)
   }
 
   function handleDeleteConfirm() {
@@ -79,6 +149,15 @@ export default function AdminDashboard() {
     } else if (deleteConfirm.type === 'directory') {
       lms.deleteDirectoryUser(deleteConfirm.id)
       toast('success', 'Usuario eliminado', deleteConfirm.label)
+    } else if (deleteConfirm.type === 'service') {
+      deleteService(deleteConfirm.id)
+      toast('success', 'Servicio eliminado', deleteConfirm.label)
+    } else if (deleteConfirm.type === 'client') {
+      setClients(prev => prev.filter(c => c.id !== deleteConfirm.id))
+      toast('success', 'Cliente eliminado', deleteConfirm.label)
+    } else if (deleteConfirm.type === 'catalogCourse') {
+      deleteCatalogCourse(deleteConfirm.id)
+      toast('success', 'Curso eliminado', deleteConfirm.label)
     } else {
       toast('success', 'Elemento eliminado', 'El registro fue eliminado correctamente.')
     }
@@ -120,6 +199,7 @@ export default function AdminDashboard() {
 
   function handleSettingsSave(e) {
     e.preventDefault()
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings))
     toast('success', 'Configuración guardada', 'Los cambios fueron aplicados exitosamente.')
   }
 
@@ -138,11 +218,11 @@ export default function AdminDashboard() {
   ]
 
   return (
-    <div className="min-h-screen flex" style={{ backgroundColor: 'var(--background)' }}>
+    <div className="h-screen flex overflow-hidden" style={{ backgroundColor: 'var(--background)' }}>
       {/* Sidebar */}
       <aside style={{
         width: sidebarOpen ? 232 : 68,
-        minHeight: '100vh',
+        height: '100%',
         background: 'linear-gradient(180deg, #10294d 0%, #071426 55%, #0c0c0c 100%)',
         transition: 'width 0.25s ease',
         flexShrink: 0,
@@ -163,7 +243,7 @@ export default function AdminDashboard() {
             )}
           </div>
         </div>
-        <nav className="flex-1 py-4 px-3">
+        <nav className="flex-1 py-4 px-3 overflow-y-auto min-h-0">
           {sidebarOpen && (
             <p className="text-[10px] font-bold px-3 mb-2" style={{ color: 'rgba(255,255,255,0.3)', letterSpacing: '0.12em' }}>
               NAVEGACIÓN
@@ -181,22 +261,25 @@ export default function AdminDashboard() {
                 onClick={() => setSection(item.id)}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 11,
-                  width: '100%', padding: '9px 11px', borderRadius: 10,
-                  background: section === item.id
+                  justifyContent: sidebarOpen ? 'flex-start' : 'center',
+                  width: '100%', padding: sidebarOpen ? '9px 11px' : '9px 0', borderRadius: 10,
+                  background: sidebarOpen && section === item.id
                     ? 'linear-gradient(135deg, rgba(232,199,102,0.18) 0%, rgba(232,199,102,0.06) 100%)'
                     : 'transparent',
                   color: section === item.id ? '#e8c766' : 'rgba(255,255,255,0.6)',
-                  border: section === item.id ? '1px solid rgba(232,199,102,0.35)' : '1px solid transparent',
-                  boxShadow: section === item.id ? '0 4px 16px rgba(232,199,102,0.14)' : 'none',
+                  border: sidebarOpen && section === item.id ? '1px solid rgba(232,199,102,0.35)' : '1px solid transparent',
+                  boxShadow: sidebarOpen && section === item.id ? '0 4px 16px rgba(232,199,102,0.14)' : 'none',
                   cursor: 'pointer', textAlign: 'left',
                   transform: 'translateX(0)',
                   transition: 'background 0.35s ease, border-color 0.35s ease, color 0.35s ease, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s ease',
                 }}
                 onMouseEnter={e => {
                   if (section === item.id) return
-                  e.currentTarget.style.background = 'linear-gradient(135deg, rgba(232,199,102,0.1) 0%, rgba(255,255,255,0.04) 100%)'
+                  if (sidebarOpen) {
+                    e.currentTarget.style.background = 'linear-gradient(135deg, rgba(232,199,102,0.1) 0%, rgba(255,255,255,0.04) 100%)'
+                    e.currentTarget.style.transform = 'translateX(4px)'
+                  }
                   e.currentTarget.style.color = '#e8c766'
-                  e.currentTarget.style.transform = 'translateX(4px)'
                 }}
                 onMouseLeave={e => {
                   if (section === item.id) return
@@ -209,7 +292,8 @@ export default function AdminDashboard() {
                   flexShrink: 0, width: 28, height: 28, borderRadius: 8,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   backgroundColor: section === item.id ? 'rgba(232,199,102,0.16)' : 'rgba(255,255,255,0.05)',
-                  transition: 'background-color 0.35s ease',
+                  border: !sidebarOpen && section === item.id ? '1px solid rgba(232,199,102,0.35)' : '1px solid transparent',
+                  transition: 'background-color 0.35s ease, border-color 0.35s ease',
                 }}>
                   <item.icon size={15} />
                 </span>
@@ -218,26 +302,6 @@ export default function AdminDashboard() {
             ))}
           </div>
         </nav>
-
-        {/* Profile mini-card */}
-        <div style={{ padding: '0 12px 12px' }}>
-          <div className="flex items-center gap-2.5" style={{
-            padding: sidebarOpen ? '10px 10px' : '10px 0', borderRadius: 10,
-            backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(232,199,102,0.12)',
-            justifyContent: sidebarOpen ? 'flex-start' : 'center',
-          }}>
-            <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
-              style={{ background: 'linear-gradient(135deg, #e8c766, #b8860b)', color: '#0c0c0c' }}>
-              {user?.name?.charAt(0) ?? 'A'}
-            </div>
-            {sidebarOpen && (
-              <div className="min-w-0">
-                <p className="text-xs font-bold truncate" style={{ color: 'white' }}>{user?.name ?? 'Administrador'}</p>
-                <p className="text-[11px] truncate" style={{ color: 'rgba(255,255,255,0.4)' }}>Administrador</p>
-              </div>
-            )}
-          </div>
-        </div>
 
         <div style={{ padding: 12, borderTop: '1px solid rgba(232,199,102,0.15)' }}>
           <button onClick={() => setSidebarOpen(s => !s)} style={{
@@ -267,6 +331,7 @@ export default function AdminDashboard() {
             Administración — {navItems.find(n => n.id === section)?.label}
           </h1>
           <div className="flex items-center gap-4">
+            <ThemeToggle theme={theme} setTheme={setTheme} />
             {/* Bell */}
             <div style={{ position: 'relative' }}>
               <button onClick={() => setBellOpen(o => !o)}
@@ -401,49 +466,182 @@ export default function AdminDashboard() {
           )}
 
           {/* ── SERVICES ── */}
-          {section === 'services' && (
+          {section === 'services' && (() => {
+            const filteredServices = services
+              .filter(s => s.title.toLowerCase().includes(servicesSearch.toLowerCase()))
+              .filter(s => servicesCategoryFilter === 'all' || s.category === servicesCategoryFilter)
+            return (
             <div style={{ animation: 'fadeUp 0.4s ease' }}>
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center justify-between mb-1">
                 <h2 className="text-xl font-black" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Servicios</h2>
-                <button onClick={() => toast('info', 'Próximamente', 'Formulario de creación de servicio en desarrollo.')}
-                  className="px-4 py-2 rounded-lg text-sm font-bold text-white"
-                  style={{ backgroundColor: '#005187' }}>
-                  + Nuevo servicio
+                <button onClick={() => setServiceModal({ mode: 'new' })}
+                  className="px-4 py-2.5 rounded-lg text-sm font-bold text-white flex items-center gap-1.5 transition-transform"
+                  style={{ background: 'linear-gradient(135deg, #005187 0%, #4d82bc 55%, #b8860b 100%)', boxShadow: '0 4px 14px rgba(0,81,135,0.25)' }}
+                  onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
+                  onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+                >
+                  <Plus size={14} /> Nuevo servicio
                 </button>
               </div>
-              <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-                {services.map((s, i) => (
-                  <div key={s.id} style={{
-                    display: 'flex', gap: 12, padding: '14px 16px', alignItems: 'center',
-                    borderBottom: i < services.length - 1 ? '1px solid var(--border)' : 'none',
-                    backgroundColor: 'var(--card)',
-                  }}>
-                    <div className="flex-1">
-                      <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{s.name}</p>
-                      <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{s.category}</p>
-                    </div>
-                    <span className="text-xs px-2 py-1 rounded-full font-semibold"
-                      style={{ backgroundColor: s.active ? 'rgba(22,163,74,0.12)' : 'var(--muted)', color: s.active ? '#16a34a' : 'var(--muted-foreground)' }}>
-                      {s.active ? 'Activo' : 'Inactivo'}
-                    </span>
-                    <button onClick={() => toggleService(s.id)}
-                      className="text-xs px-3 py-1.5 rounded-lg font-medium transition-colors"
-                      style={{ border: '1px solid var(--border)', color: 'var(--muted-foreground)' }}
-                      onMouseEnter={e => { e.currentTarget.style.borderColor = s.active ? '#dc2626' : '#16a34a'; e.currentTarget.style.color = s.active ? '#dc2626' : '#16a34a' }}
-                      onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--muted-foreground)' }}
-                    >
-                      {s.active ? 'Desactivar' : 'Activar'}
-                    </button>
-                    <button onClick={() => toast('info', 'Editor', `Editando: ${s.name}`)}
-                      className="text-xs px-3 py-1.5 rounded-lg font-medium transition-colors"
-                      style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: '#005187', border: '1px solid rgba(0,81,135,0.2)' }}>
-                      Editar
-                    </button>
+              <p className="text-xs mb-5" style={{ color: 'var(--muted-foreground)' }}>
+                {services.length} servicios · {services.filter(s => s.active !== false).length} activos
+              </p>
+              <div className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl mb-4" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', maxWidth: 340 }}>
+                <Search size={15} style={{ color: 'var(--muted-foreground)' }} />
+                <input value={servicesSearch} onChange={e => setServicesSearch(e.target.value)} placeholder="Buscar servicio…"
+                  className="text-sm outline-none bg-transparent flex-1" style={{ color: 'var(--foreground)' }} />
+              </div>
+              <div className="relative inline-block mb-5" ref={categoryFilterRef}>
+                <button onClick={() => setCategoryFilterOpen(o => !o)}
+                  className="text-sm px-3.5 py-2.5 rounded-xl font-medium flex items-center gap-2 transition-colors"
+                  style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
+                >
+                  Categoría: <strong style={{ color: '#005187' }}>{servicesCategoryFilter === 'all' ? 'Todas' : servicesCategoryFilter}</strong>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+                    style={{ transition: 'transform 0.2s ease', transform: categoryFilterOpen ? 'rotate(180deg)' : 'none' }}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 9l6 6 6-6" />
+                  </svg>
+                </button>
+                {categoryFilterOpen && (
+                  <div className="absolute top-full left-0 mt-1.5 rounded-xl overflow-hidden z-20"
+                    style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', boxShadow: '0 12px 32px rgba(0,0,0,0.15)', minWidth: 240, animation: 'fadeUp 0.15s ease' }}>
+                    {['all', ...serviceCategories].map(cat => (
+                      <div key={cat}
+                        onClick={() => { setServicesCategoryFilter(cat); setCategoryFilterOpen(false) }}
+                        className="flex items-center justify-between gap-2 px-3.5 py-2.5 text-sm cursor-pointer transition-colors"
+                        style={{
+                          backgroundColor: servicesCategoryFilter === cat ? 'rgba(0,81,135,0.08)' : 'transparent',
+                          color: servicesCategoryFilter === cat ? '#005187' : 'var(--foreground)',
+                          fontWeight: servicesCategoryFilter === cat ? 700 : 500,
+                        }}
+                        onMouseEnter={e => { if (servicesCategoryFilter !== cat) e.currentTarget.style.backgroundColor = 'var(--muted)' }}
+                        onMouseLeave={e => { if (servicesCategoryFilter !== cat) e.currentTarget.style.backgroundColor = 'transparent' }}
+                      >
+                        <span>{cat === 'all' ? 'Todas' : cat}</span>
+                        {cat !== 'all' && (
+                          <span
+                            role="button"
+                            title="Eliminar categoría"
+                            onClick={e => {
+                              e.stopPropagation()
+                              const inUse = services.filter(s => s.category === cat).length
+                              if (inUse > 0) {
+                                toast('warning', 'No se puede eliminar', `${inUse} servicio(s) todavía usan "${cat}". Cámbieles la categoría primero.`)
+                                return
+                              }
+                              deleteCategory(cat)
+                              if (servicesCategoryFilter === cat) setServicesCategoryFilter('all')
+                              toast('success', 'Categoría eliminada', cat)
+                            }}
+                            style={{ opacity: 0.5, display: 'inline-flex', color: '#dc2626', flexShrink: 0 }}
+                            onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+                            onMouseLeave={e => e.currentTarget.style.opacity = '0.5'}
+                          >
+                            <X size={13} />
+                          </span>
+                        )}
+                      </div>
+                    ))}
                   </div>
-                ))}
+                )}
+              </div>
+              <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid var(--border)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                {filteredServices.map((s, i) => {
+                  const isActive = s.active !== false
+                  return (
+                  <div key={s.slug}
+                    className="transition-colors"
+                    style={{
+                      display: 'flex', gap: 16, padding: '13px 20px', alignItems: 'center',
+                      borderBottom: i < filteredServices.length - 1 ? '1px solid var(--border)' : 'none',
+                      backgroundColor: 'var(--card)',
+                      opacity: 0,
+                      animation: 'fadeUpSoft 0.45s ease forwards',
+                      animationDelay: `${Math.min(i * 0.04, 0.3)}s`,
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--muted)'}
+                    onMouseLeave={e => e.currentTarget.style.backgroundColor = 'var(--card)'}
+                  >
+                    {s.hero ? (
+                      <img src={s.hero} alt={s.title} className="w-14 h-11 object-cover rounded-lg shrink-0" style={{ border: '1px solid var(--border)' }} />
+                    ) : (
+                      <div className="w-14 h-11 rounded-lg shrink-0" style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)' }} />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-sm font-semibold truncate" style={{ color: 'var(--foreground)' }}>{s.title}</p>
+                        {s.locked && (
+                          <span title="Contenido protegido" style={{ color: 'var(--muted-foreground)', opacity: 0.6, display: 'inline-flex', shrink: 0 }}>
+                            <Lock size={11} />
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs truncate" style={{ color: 'var(--muted-foreground)' }}>{s.category}</p>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <a href={`/servicios/${s.slug}`} target="_blank" rel="noreferrer" title="Ver en el sitio"
+                        className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+                        style={{ border: '1px solid var(--border)', color: 'var(--muted-foreground)' }}
+                        onMouseEnter={e => { e.currentTarget.style.borderColor = '#4d82bc'; e.currentTarget.style.color = '#4d82bc' }}
+                        onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--muted-foreground)' }}
+                      >
+                        <Eye size={14} />
+                      </a>
+
+                      {/* Toggle activo/inactivo */}
+                      <button
+                        onClick={() => toggleService(s.slug)}
+                        onMouseDown={e => e.currentTarget.style.transform = 'scale(0.94)'}
+                        onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
+                        onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                        role="switch"
+                        aria-checked={isActive}
+                        title={isActive ? 'Desactivar' : 'Activar'}
+                        className="relative shrink-0"
+                        style={{
+                          width: 40, height: 22, borderRadius: 9999,
+                          backgroundColor: isActive ? '#16a34a' : 'var(--border)',
+                          boxShadow: isActive ? '0 0 0 4px rgba(22,163,74,0.15)' : '0 0 0 4px transparent',
+                          transition: 'background-color 0.35s ease, box-shadow 0.35s ease, transform 0.15s ease',
+                        }}
+                      >
+                        <span
+                          style={{
+                            position: 'absolute', top: 2, left: isActive ? 20 : 2,
+                            width: 18, height: 18, borderRadius: '50%',
+                            backgroundColor: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.3)',
+                            transition: 'left 0.32s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                          }}
+                        />
+                      </button>
+                      <span className="text-xs font-medium shrink-0" style={{ width: 52, color: isActive ? '#16a34a' : 'var(--muted-foreground)', transition: 'color 0.35s ease' }}>
+                        {isActive ? 'Activo' : 'Inactivo'}
+                      </span>
+
+                      <button onClick={() => setServiceModal({ mode: 'edit', service: s })} title="Editar"
+                        className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+                        style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: '#005187', border: '1px solid rgba(0,81,135,0.2)' }}>
+                        <Edit2 size={13} />
+                      </button>
+                      <button onClick={() => setDeleteConfirm({ type: 'service', id: s.slug, label: s.title })} title="Eliminar"
+                        className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+                        style={{ border: '1px solid rgba(220,38,38,0.3)', color: '#dc2626' }}>
+                        <Trash size={13} />
+                      </button>
+                    </div>
+                  </div>
+                  )
+                })}
+                {filteredServices.length === 0 && (
+                  <p className="text-sm px-4 py-6 text-center" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)' }}>
+                    Sin resultados para esa búsqueda.
+                  </p>
+                )}
               </div>
             </div>
-          )}
+            )
+          })()}
 
           {/* ── BLOG ── */}
           {section === 'blog' && (
@@ -492,33 +690,47 @@ export default function AdminDashboard() {
           {section === 'courses' && (
             <div style={{ animation: 'fadeUp 0.4s ease' }}>
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-black" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Cursos</h2>
-                <button onClick={() => toast('info', 'Próximamente', 'Formulario de creación de curso en desarrollo.')}
-                  className="px-4 py-2 rounded-lg text-sm font-bold text-white"
+                <h2 className="text-xl font-black" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Catálogo web (CEET)</h2>
+                <button onClick={() => setCatalogModal({ mode: 'new' })}
+                  className="px-4 py-2 rounded-lg text-sm font-bold text-white flex items-center gap-1.5"
                   style={{ backgroundColor: '#005187' }}>
-                  + Nuevo curso
+                  <Plus size={14} /> Nuevo curso
                 </button>
               </div>
               <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-                {courses.map((c, i) => (
+                {catalogCourses.map((c, i) => (
                   <div key={c.id} style={{
                     display: 'flex', gap: 12, padding: '14px 16px', alignItems: 'center',
-                    borderBottom: i < courses.length - 1 ? '1px solid var(--border)' : 'none',
+                    borderBottom: i < catalogCourses.length - 1 ? '1px solid var(--border)' : 'none',
                     backgroundColor: 'var(--card)',
                   }}>
-                    <img src={c.image} alt={c.name} className="w-12 h-10 object-cover rounded-lg shrink-0" />
+                    {c.image ? (
+                      <img src={c.image} alt={c.name} className="w-12 h-10 object-cover rounded-lg shrink-0" />
+                    ) : (
+                      <div className="w-12 h-10 rounded-lg shrink-0" style={{ backgroundColor: 'var(--muted)' }} />
+                    )}
                     <div className="flex-1">
                       <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{c.name}</p>
                       <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{c.category} · {c.duration} · {c.modality}</p>
                     </div>
                     <span className="text-sm font-black shrink-0" style={{ color: '#16a34a', fontFamily: 'var(--font-display)' }}>{c.price}</span>
-                    <button onClick={() => toast('info', 'Editar curso', c.name)}
+                    <button onClick={() => setCatalogModal({ mode: 'edit', course: c })}
                       className="text-xs px-3 py-1.5 rounded-lg font-medium"
                       style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: '#005187', border: '1px solid rgba(0,81,135,0.2)' }}>
                       Editar
                     </button>
+                    <button onClick={() => setDeleteConfirm({ type: 'catalogCourse', id: c.id, label: c.name })}
+                      className="text-xs px-3 py-1.5 rounded-lg font-medium"
+                      style={{ border: '1px solid rgba(220,38,38,0.3)', color: '#dc2626' }}>
+                      Eliminar
+                    </button>
                   </div>
                 ))}
+                {catalogCourses.length === 0 && (
+                  <p className="text-sm px-4 py-6 text-center" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)' }}>
+                    No hay cursos en el catálogo todavía.
+                  </p>
+                )}
               </div>
             </div>
           )}
@@ -528,10 +740,10 @@ export default function AdminDashboard() {
             <div style={{ animation: 'fadeUp 0.4s ease' }}>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-black" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Clientes registrados</h2>
-                <button onClick={() => toast('info', 'Próximamente', 'Creación de usuario en desarrollo.')}
-                  className="px-4 py-2 rounded-lg text-sm font-bold text-white"
+                <button onClick={() => setClientModal({ mode: 'new' })}
+                  className="px-4 py-2 rounded-lg text-sm font-bold text-white flex items-center gap-1.5"
                   style={{ backgroundColor: '#005187' }}>
-                  + Nuevo usuario
+                  <Plus size={14} /> Nuevo cliente
                 </button>
               </div>
               <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
@@ -540,7 +752,7 @@ export default function AdminDashboard() {
                     <span key={h} className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--muted-foreground)' }}>{h}</span>
                   ))}
                 </div>
-                {mockUsers.map((u, i) => (
+                {clients.map((u) => (
                   <div key={u.id} style={{
                     display: 'grid', gridTemplateColumns: '1fr 1fr 1fr auto',
                     gap: '0 16px', padding: '14px 16px', alignItems: 'center',
@@ -552,14 +764,25 @@ export default function AdminDashboard() {
                     </div>
                     <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>{u.company}</p>
                     <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>{u.joined}</p>
-                    <button onClick={() => setDeleteConfirm({ type: 'user', label: `usuario ${u.name}` })}
-                      className="text-xs px-3 py-1.5 rounded-lg font-medium shrink-0"
-                      style={{ border: '1px solid rgba(220,38,38,0.3)', color: '#dc2626' }}
-                      key={i}>
-                      Eliminar
-                    </button>
+                    <div className="flex gap-2 shrink-0">
+                      <button onClick={() => setClientModal({ mode: 'edit', client: u })}
+                        className="text-xs px-3 py-1.5 rounded-lg font-medium"
+                        style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: '#005187', border: '1px solid rgba(0,81,135,0.2)' }}>
+                        Editar
+                      </button>
+                      <button onClick={() => setDeleteConfirm({ type: 'client', id: u.id, label: `cliente ${u.name}` })}
+                        className="text-xs px-3 py-1.5 rounded-lg font-medium"
+                        style={{ border: '1px solid rgba(220,38,38,0.3)', color: '#dc2626' }}>
+                        Eliminar
+                      </button>
+                    </div>
                   </div>
                 ))}
+                {clients.length === 0 && (
+                  <p className="text-sm px-4 py-6 text-center" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)' }}>
+                    No hay clientes registrados todavía.
+                  </p>
+                )}
               </div>
             </div>
           )}
@@ -585,11 +808,16 @@ export default function AdminDashboard() {
                       </div>
                       <p className="text-sm font-semibold mb-0.5" style={{ color: 'var(--foreground)' }}>{p.subject}</p>
                       <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{p.from} · {p.type} · {p.date}</p>
+                      {p.response && (
+                        <p className="text-xs mt-2 p-2 rounded-lg" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--muted)' }}>
+                          <strong style={{ color: 'var(--foreground)' }}>Respuesta:</strong> {p.response}
+                        </p>
+                      )}
                     </div>
-                    <button onClick={() => toast('info', 'Responder', `Respondiendo a ${p.from}`)}
+                    <button onClick={() => setPqrsfReplyModal(p)}
                       className="text-xs px-3 py-1.5 rounded-lg font-bold text-white shrink-0"
                       style={{ backgroundColor: '#005187' }}>
-                      Responder
+                      {p.status === 'Respondida' ? 'Editar respuesta' : 'Responder'}
                     </button>
                   </div>
                 ))}
@@ -631,10 +859,12 @@ export default function AdminDashboard() {
                     </div>
                     <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>{lms.teacherName(c.teacherId)}</p>
                     <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>{c.studentIds.length}</p>
-                    <span className="text-xs px-2 py-0.5 rounded-full font-semibold w-fit"
+                    <button onClick={() => togglePublishLmsCourse(c)}
+                      className="text-xs px-2 py-0.5 rounded-full font-semibold w-fit transition-opacity hover:opacity-75"
+                      title={c.published ? 'Click para despublicar' : 'Click para publicar'}
                       style={{ backgroundColor: c.published ? 'rgba(22,163,74,0.12)' : 'rgba(217,119,6,0.12)', color: c.published ? '#16a34a' : '#d97706' }}>
                       {c.published ? '✓ Publicado' : '⏳ Borrador'}
-                    </span>
+                    </button>
                     <div className="flex gap-2 shrink-0">
                       <button onClick={() => setLmsCourseModal({ mode: 'edit', course: c })}
                         className="text-xs px-3 py-1.5 rounded-lg font-medium"
@@ -816,6 +1046,40 @@ export default function AdminDashboard() {
           role={directoryModal.role}
           onSave={handleSaveDirectoryUser}
           onClose={() => setDirectoryModal(null)}
+        />
+      )}
+
+      {serviceModal && (
+        <ServiceFormModal
+          service={serviceModal.mode === 'edit' ? serviceModal.service : null}
+          categories={serviceCategories}
+          onAddCategory={addCategory}
+          onSave={handleSaveService}
+          onClose={() => setServiceModal(null)}
+        />
+      )}
+
+      {clientModal && (
+        <ClientFormModal
+          client={clientModal.mode === 'edit' ? clientModal.client : null}
+          onSave={handleSaveClient}
+          onClose={() => setClientModal(null)}
+        />
+      )}
+
+      {catalogModal && (
+        <CatalogCourseFormModal
+          course={catalogModal.mode === 'edit' ? catalogModal.course : null}
+          onSave={handleSaveCatalogCourse}
+          onClose={() => setCatalogModal(null)}
+        />
+      )}
+
+      {pqrsfReplyModal && (
+        <PQRSFReplyModal
+          ticket={pqrsfReplyModal}
+          onSave={handleReplyPQRSF}
+          onClose={() => setPqrsfReplyModal(null)}
         />
       )}
     </div>

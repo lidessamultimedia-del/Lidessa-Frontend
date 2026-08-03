@@ -6,8 +6,6 @@ export const blogPosts = [
     date: '10 julio 2025',
     image: 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=600&h=400&fit=crop&auto=format',
     author: 'Dra. Carolina Mejía',
-    authorRole: 'Especialista en SST',
-    email: 'carolina.mejia@lidessa.co',
     phone: '+57 300 123 4567',
   },
   {
@@ -17,8 +15,6 @@ export const blogPosts = [
     date: '3 julio 2025',
     image: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=600&h=400&fit=crop&auto=format',
     author: 'Ing. Andrés Castillo',
-    authorRole: 'Consultor de Gestión',
-    email: 'andres.castillo@lidessa.co',
     phone: '+57 300 123 4567',
   },
   {
@@ -28,8 +24,6 @@ export const blogPosts = [
     date: '28 junio 2025',
     image: 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=600&h=400&fit=crop&auto=format',
     author: 'Equipo Editorial Lidessa',
-    authorRole: 'Redacción',
-    email: 'editorial@lidessa.co',
     phone: '+57 300 123 4567',
   },
   {
@@ -39,8 +33,6 @@ export const blogPosts = [
     date: '20 junio 2025',
     image: 'https://images.unsplash.com/photo-1434626881859-194d67b2b86f?w=600&h=400&fit=crop&auto=format',
     author: 'Dr. Fernando Ruiz',
-    authorRole: 'Asesor Jurídico',
-    email: 'fernando.ruiz@lidessa.co',
     phone: '+57 300 987 6543',
   },
   {
@@ -50,8 +42,6 @@ export const blogPosts = [
     date: '15 junio 2025',
     image: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?w=600&h=400&fit=crop&auto=format',
     author: 'Lic. Patricia Vega',
-    authorRole: 'Gestión Educativa',
-    email: 'patricia.vega@lidessa.co',
     phone: '+57 300 123 4567',
   },
   {
@@ -61,8 +51,6 @@ export const blogPosts = [
     date: '8 junio 2025',
     image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=600&h=400&fit=crop&auto=format',
     author: 'Ing. Andrés Castillo',
-    authorRole: 'Consultor de Gestión',
-    email: 'andres.castillo@lidessa.co',
     phone: '+57 300 123 4567',
   },
 ]

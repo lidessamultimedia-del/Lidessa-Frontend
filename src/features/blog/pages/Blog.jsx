@@ -122,7 +122,7 @@ export default function Blog() {
                   <div className="absolute bottom-0 left-0 right-0 p-5">
                     <div className="w-8 h-0.5 rounded-full mb-2.5" style={{ backgroundColor: GOLD, opacity: 0.8 }} />
                     <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.65)' }}>{post.date}</span>
-                    <h3 className="font-bold text-lg mt-1 leading-snug text-white break-words" style={{ fontFamily: 'var(--font-display)' }}>
+                    <h3 className="font-bold text-lg mt-1 leading-snug text-white wrap-break-word" style={{ fontFamily: 'var(--font-display)' }}>
                       {post.title}
                     </h3>
                   </div>
@@ -136,10 +136,10 @@ export default function Blog() {
                     <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: GOLD }}>Converge</span>
                     <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{post.date}</span>
                   </div>
-                  <h3 className="font-bold text-base mb-2 leading-snug break-words" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
+                  <h3 className="font-bold text-base mb-2 leading-snug wrap-break-word" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
                     {post.title}
                   </h3>
-                  <p className="text-sm mb-3 leading-relaxed flex-1 overflow-hidden break-words" style={{ color: 'var(--muted-foreground)' }}>
+                  <p className="text-sm mb-3 leading-relaxed flex-1 overflow-hidden wrap-break-word" style={{ color: 'var(--muted-foreground)' }}>
                     {post.excerpt}
                   </p>
                   <div className="flex items-center justify-between gap-2 pt-3" style={{ borderTop: '1px solid var(--border)' }}>

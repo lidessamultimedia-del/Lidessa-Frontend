@@ -99,7 +99,7 @@ export default function Store() {
             <p className="text-sm mb-5" style={{ color: 'var(--muted-foreground)' }}>
               Recuerde, nuestro asesoramiento es totalmente gratuito. ¡Estamos aquí para ayudarle!
             </p>
-            <a href="https://wa.me/573009876543?text=Hola, quisiera asesoramiento gratuito sobre botiquines de primeros auxilios" target="_blank" rel="noreferrer"
+            <a href="https://wa.me/573016280574?text=Hola, quisiera asesoramiento gratuito sobre botiquines de primeros auxilios" target="_blank" rel="noreferrer"
               className="inline-block px-5 py-2.5 rounded-lg text-sm font-bold text-white transition-opacity hover:opacity-90"
               style={{ backgroundColor: 'var(--primary)' }}>
               ¡Asesoramiento Gratis!
@@ -157,7 +157,7 @@ export default function Store() {
           <p className="text-sm max-w-2xl mx-auto mb-6 leading-relaxed" style={{ color: '#cbb98a' }}>
             ¿Cómo puede asegurarse de cumplir con la norma? Contar con un botiquín tipo A certificado y con asesoría de nuestro equipo. Actuar de manera proactiva garantiza la seguridad de su entorno laboral y evita riesgos y sanciones para su empresa.
           </p>
-          <a href="https://wa.me/573009876543?text=Hola, quisiera asesoría para cumplir con la Resolución 0705 en mi empresa" target="_blank" rel="noreferrer"
+          <a href="https://wa.me/573016280574?text=Hola, quisiera asesoría para cumplir con la Resolución 0705 en mi empresa" target="_blank" rel="noreferrer"
             className="inline-block px-5 py-2.5 rounded-lg text-sm font-bold"
             style={{ backgroundColor: '#e8c766', color: '#141414' }}>
             Solicitar asesoría →
@@ -175,7 +175,7 @@ export default function Store() {
               <p className="text-sm leading-relaxed mb-4" style={{ color: 'var(--muted-foreground)' }}>
                 La Resolución 0312 de 2019 y el SG-SST determinan los equipos de protección personal obligatorios según el nivel de riesgo de su actividad económica. Nuestros asesores pueden orientarle sin costo.
               </p>
-              <a href="https://wa.me/573001234567?text=Hola, quisiera asesoría sobre qué EPP necesita mi empresa" target="_blank" rel="noreferrer"
+              <a href="https://wa.me/573016280574?text=Hola, quisiera asesoría sobre qué EPP necesita mi empresa" target="_blank" rel="noreferrer"
                 className="inline-block px-5 py-2.5 rounded-lg text-sm font-bold text-white transition-opacity hover:opacity-90"
                 style={{ backgroundColor: 'var(--primary)' }}>
                 Solicitar asesoría gratuita →

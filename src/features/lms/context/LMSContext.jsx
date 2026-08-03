@@ -1,12 +1,13 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import {
   seedDirectory, seedCourses, seedTopics, seedLessons, seedAssignments, seedSubmissions, seedLessonProgress,
+  seedQuizzes, seedQuizAttempts,
 } from '../data/seed'
 
 const LMSContext = createContext(null)
-// v2: agrega Temas y nuevos campos de curso (publicación, fechas, formato, finalización).
-// Se cambia la clave para que las sesiones con datos de la v1 (sin estos campos) reseeden en vez de quedar con forma incompleta.
-const STORAGE_KEY = 'lidessa_lms_v2'
+// v3: agrega Cuestionarios (exámenes autocalificados) y adjuntos de archivo en lecciones.
+// Se cambia la clave para que las sesiones con datos de v1/v2 reseeden en vez de quedar con forma incompleta.
+const STORAGE_KEY = 'lidessa_lms_v3'
 
 const defaultState = {
   directory: seedDirectory,
@@ -16,6 +17,8 @@ const defaultState = {
   assignments: seedAssignments,
   submissions: seedSubmissions,
   lessonProgress: seedLessonProgress,
+  quizzes: seedQuizzes,
+  quizAttempts: seedQuizAttempts,
 }
 
 export function LMSProvider({ children }) {
@@ -45,7 +48,7 @@ export function LMSProvider({ children }) {
     return () => window.removeEventListener('storage', onStorage)
   }, [])
 
-  const { directory, courses, topics, lessons, assignments, submissions, lessonProgress } = state
+  const { directory, courses, topics, lessons, assignments, submissions, lessonProgress, quizzes, quizAttempts } = state
 
   // ── Directory (profesores / estudiantes) ──
   function addDirectoryUser(data) {
@@ -73,15 +76,20 @@ export function LMSProvider({ children }) {
     setState(s => ({ ...s, courses: s.courses.map(c => c.id === id ? { ...c, ...data } : c) }))
   }
   function deleteCourse(id) {
-    setState(s => ({
-      ...s,
-      courses: s.courses.filter(c => c.id !== id),
-      topics: s.topics.filter(t => t.courseId !== id),
-      lessons: s.lessons.filter(l => l.courseId !== id),
-      assignments: s.assignments.filter(a => a.courseId !== id),
-      submissions: s.submissions.filter(sub => !s.assignments.some(a => a.courseId === id && a.id === sub.assignmentId)),
-      lessonProgress: s.lessonProgress.filter(p => p.courseId !== id),
-    }))
+    setState(s => {
+      const courseQuizIds = s.quizzes.filter(q => q.courseId === id).map(q => q.id)
+      return {
+        ...s,
+        courses: s.courses.filter(c => c.id !== id),
+        topics: s.topics.filter(t => t.courseId !== id),
+        lessons: s.lessons.filter(l => l.courseId !== id),
+        assignments: s.assignments.filter(a => a.courseId !== id),
+        submissions: s.submissions.filter(sub => !s.assignments.some(a => a.courseId === id && a.id === sub.assignmentId)),
+        lessonProgress: s.lessonProgress.filter(p => p.courseId !== id),
+        quizzes: s.quizzes.filter(q => q.courseId !== id),
+        quizAttempts: s.quizAttempts.filter(a => !courseQuizIds.includes(a.quizId)),
+      }
+    })
   }
   function enrollStudent(courseId, studentId) {
     setState(s => ({
@@ -113,6 +121,7 @@ export function LMSProvider({ children }) {
       topics: s.topics.filter(t => t.id !== id),
       lessons: s.lessons.map(l => l.topicId === id ? { ...l, topicId: null } : l),
       assignments: s.assignments.map(a => a.topicId === id ? { ...a, topicId: null } : a),
+      quizzes: s.quizzes.map(q => q.topicId === id ? { ...q, topicId: null } : q),
     }))
   }
 
@@ -153,6 +162,33 @@ export function LMSProvider({ children }) {
     }))
   }
 
+  // ── Cuestionarios (exámenes autocalificados) ──
+  function addQuiz(courseId, data) {
+    const quiz = { id: `q${Date.now()}`, courseId, questions: [], ...data }
+    setState(s => ({ ...s, quizzes: [...s.quizzes, quiz] }))
+    return quiz
+  }
+  function updateQuiz(id, data) {
+    setState(s => ({ ...s, quizzes: s.quizzes.map(q => q.id === id ? { ...q, ...data } : q) }))
+  }
+  function deleteQuiz(id) {
+    setState(s => ({
+      ...s,
+      quizzes: s.quizzes.filter(q => q.id !== id),
+      quizAttempts: s.quizAttempts.filter(a => a.quizId !== id),
+    }))
+  }
+  function submitQuizAttempt({ quizId, studentId, answers }) {
+    const quiz = quizzes.find(q => q.id === quizId)
+    const correct = quiz.questions.filter((q, i) => answers[i] === q.correctIndex).length
+    const score = quiz.questions.length ? Math.round((correct / quiz.questions.length) * 1000) / 10 : 0
+    setState(s => ({
+      ...s,
+      quizAttempts: [...s.quizAttempts, { id: `qa${Date.now()}`, quizId, studentId, answers, score, submittedAt: new Date().toISOString() }],
+    }))
+    return score
+  }
+
   // ── Submissions ──
   function submitAssignment({ assignmentId, studentId, fileName = '', fileSize = 0, textResponse = '', notes = '', draft = false }) {
     setState(s => {
@@ -186,6 +222,8 @@ export function LMSProvider({ children }) {
   const lessonsByCourse = courseId => lessons.filter(l => l.courseId === courseId).sort((a, b) => a.order - b.order)
   const assignmentsByCourse = courseId => assignments.filter(a => a.courseId === courseId)
   const submissionFor = (assignmentId, studentId) => submissions.find(sub => sub.assignmentId === assignmentId && sub.studentId === studentId) ?? null
+  const quizzesByCourse = courseId => quizzes.filter(q => q.courseId === courseId)
+  const attemptFor = (quizId, studentId) => quizAttempts.find(a => a.quizId === quizId && a.studentId === studentId) ?? null
 
   function progressForStudentCourse(studentId, courseId) {
     const total = lessonsByCourse(courseId).length
@@ -210,6 +248,7 @@ export function LMSProvider({ children }) {
     const items = [
       ...lessons.filter(l => l.topicId === topicId).map(l => ({ kind: 'lesson', item: l })),
       ...assignments.filter(a => a.topicId === topicId).map(a => ({ kind: 'assignment', item: a })),
+      ...quizzes.filter(q => q.topicId === topicId).map(q => ({ kind: 'quiz', item: q })),
     ]
     return items.sort((x, y) => (x.item.order ?? 0) - (y.item.order ?? 0))
   }
@@ -217,6 +256,7 @@ export function LMSProvider({ children }) {
   function courseCompletion(studentId, courseId) {
     const courseLessons = lessonsByCourse(courseId)
     const courseAssignments = assignmentsByCourse(courseId)
+    const courseQuizzes = quizzesByCourse(courseId)
     const lessonStatus = courseLessons.map(l => ({
       kind: 'lesson', item: l,
       done: lessonProgress.some(p => p.studentId === studentId && p.lessonId === l.id),
@@ -225,7 +265,10 @@ export function LMSProvider({ children }) {
       const sub = submissionFor(a.id, studentId)
       return { kind: 'assignment', item: a, done: !!sub && sub.status !== 'draft' }
     })
-    const all = [...lessonStatus, ...assignmentStatus]
+    const quizStatus = courseQuizzes.map(q => ({
+      kind: 'quiz', item: q, done: !!attemptFor(q.id, studentId),
+    }))
+    const all = [...lessonStatus, ...assignmentStatus, ...quizStatus]
     const completed = all.filter(x => x.done).length
     return { items: all, completed, total: all.length, complete: all.length > 0 && completed === all.length }
   }
@@ -257,15 +300,17 @@ export function LMSProvider({ children }) {
   }
 
   const value = {
-    directory, courses, topics, lessons, assignments, submissions, lessonProgress,
+    directory, courses, topics, lessons, assignments, submissions, lessonProgress, quizzes, quizAttempts,
     addDirectoryUser, updateDirectoryUser, toggleDirectoryUserActive, deleteDirectoryUser,
     addCourse, updateCourse, deleteCourse, enrollStudent, unenrollStudent,
     addTopic, updateTopic, deleteTopic,
     addLesson, updateLesson, deleteLesson, markLessonComplete,
     addAssignment, updateAssignment, deleteAssignment,
+    addQuiz, updateQuiz, deleteQuiz, submitQuizAttempt,
     submitAssignment, gradeSubmission,
     directoryById, teacherName, studentName,
     coursesByTeacher, coursesByStudent, lessonsByCourse, assignmentsByCourse, submissionFor,
+    quizzesByCourse, attemptFor,
     progressForStudentCourse, isLessonUnlocked,
     topicsByCourse, topicById, itemsByTopic, courseCompletion,
     submissionsPendingForTeacher, submissionsForTeacherCourse, gradesForStudent,

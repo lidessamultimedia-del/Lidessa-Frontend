@@ -161,7 +161,7 @@ export default function ServicesOverview() {
             Contáctenos y nuestro equipo le ayudará a identificar la solución adecuada para su organización.
           </p>
           <a
-            href="https://wa.me/573001234567?text=Hola, quisiera información sobre sus servicios"
+            href="https://wa.me/573016280574?text=Hola, quisiera información sobre sus servicios"
             target="_blank" rel="noreferrer"
             className="inline-block px-6 py-3 rounded-lg text-sm font-bold text-white"
             style={{ backgroundColor: '#25D366' }}

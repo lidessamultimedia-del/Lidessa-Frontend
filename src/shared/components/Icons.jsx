@@ -38,6 +38,8 @@ import {
   Download as LucideDownload,
   ClipboardCheck as LucideClipboardCheck,
   EllipsisVertical as LucideEllipsisVertical,
+  HelpCircle as LucideHelpCircle,
+  Paperclip as LucidePaperclip,
 } from 'lucide-react'
 
 function withDefaultSize(LucideIcon) {
@@ -81,3 +83,5 @@ export const Search = withDefaultSize(LucideSearch)
 export const Download = withDefaultSize(LucideDownload)
 export const ClipboardCheck = withDefaultSize(LucideClipboardCheck)
 export const MoreVertical = withDefaultSize(LucideEllipsisVertical)
+export const HelpCircle = withDefaultSize(LucideHelpCircle)
+export const Paperclip = withDefaultSize(LucidePaperclip)

@@ -118,7 +118,7 @@ export default function CourseModal({ course, onClose }) {
             Crear cuenta e inscribirme
           </Link>
           <a
-            href={`https://wa.me/573009876543?text=${encodeURIComponent(`Hola, quiero inscribirme en el curso "${course.name}"`)}`}
+            href={`https://wa.me/573016280574?text=${encodeURIComponent(`Hola, quiero inscribirme en el curso "${course.name}"`)}`}
             target="_blank"
             rel="noreferrer"
             className="block w-full text-center py-2.5 mt-2 rounded-lg text-sm font-medium transition-colors"

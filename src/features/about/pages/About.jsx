@@ -640,7 +640,7 @@ export default function About() {
                     Escríbanos y un asesor le atenderá a la brevedad para resolver sus dudas o iniciar su proceso de consultoría.
                   </p>
                   <div className="flex flex-wrap gap-3">
-                    <a href="https://wa.me/573001234567" target="_blank" rel="noreferrer"
+                    <a href="https://wa.me/573016280574" target="_blank" rel="noreferrer"
                       className="px-5 py-2.5 rounded-xl text-sm font-bold text-white"
                       style={{ backgroundColor: '#25D366', transition: 'opacity 0.2s' }}
                       onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
@@ -660,8 +660,7 @@ export default function About() {
                 </div>
                 <ul className="space-y-3 text-sm" style={{ color: bodyText }}>
                   <li className="flex items-start gap-2"><MapPin size={15} className="shrink-0 mt-0.5" /> Cra. 71 #46-28, Laureles, Medellín, Antioquia</li>
-                  <li className="flex items-start gap-2"><Phone size={15} className="shrink-0 mt-0.5" /> +57 300 123 4567 (General)</li>
-                  <li className="flex items-start gap-2"><Phone size={15} className="shrink-0 mt-0.5" /> +57 300 987 6543 (Comercial)</li>
+                  <li className="flex items-start gap-2"><Phone size={15} className="shrink-0 mt-0.5" /> +57 301 628 0574</li>
                   <li className="flex items-start gap-2"><Mail size={15} className="shrink-0 mt-0.5" /> comercial@lidessa.co</li>
                 </ul>
               </div>
@@ -715,8 +714,7 @@ export default function About() {
             <ul className="space-y-3 text-sm">
               {[
                 { icon: MapPin, text: 'Cra. 71 #46-28, Laureles, Medellín, Antioquia' },
-                { icon: Phone, text: '+57 300 123 4567 (General)', href: 'https://wa.me/573001234567' },
-                { icon: Phone, text: '+57 300 987 6543 (Comercial)', href: 'https://wa.me/573009876543' },
+                { icon: Phone, text: '+57 301 628 0574', href: 'https://wa.me/573016280574' },
                 { icon: Mail, text: 'comercial@lidessa.co', href: 'mailto:comercial@lidessa.co' },
               ].map(c => (
                 <li key={c.text}>

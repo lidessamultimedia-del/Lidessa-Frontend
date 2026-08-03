@@ -118,7 +118,7 @@ export default function Home() {
               >
                 Quiénes somos
               </Link>
-              <a href="https://wa.me/573001234567?text=Hola, quisiera una asesoría"
+              <a href="https://wa.me/573016280574?text=Hola, quisiera una asesoría"
                 target="_blank" rel="noreferrer"
                 className="px-7 py-3.5 rounded-xl text-sm font-bold"
                 style={{
@@ -408,7 +408,7 @@ export default function Home() {
             <ul className="space-y-3 text-sm">
               {[
                 { icon: MapPin, text: 'Cra. 71 #46-28, Laureles, Medellín, Antioquia' },
-                { icon: Phone, text: '+57 300 123 4567', href: 'https://wa.me/573001234567' },
+                { icon: Phone, text: '+57 301 628 0574', href: 'https://wa.me/573016280574' },
                 { icon: Mail, text: 'info@lidessa.co', href: 'mailto:info@lidessa.co' },
               ].map(c => (
                 <li key={c.text}>

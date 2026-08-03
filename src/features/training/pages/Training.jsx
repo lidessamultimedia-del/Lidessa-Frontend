@@ -150,7 +150,7 @@ export default function Training() {
             <p className="text-sm mb-8" style={{ color: 'rgba(255,255,255,0.85)' }}>
               Diseñamos programas de capacitación corporativa adaptados a los objetivos, la cultura y las necesidades específicas de su organización. Grupos desde 5 personas.
             </p>
-            <a href="https://wa.me/573009876543?text=Hola, quiero cotizar un programa de formación a la medida para mi empresa"
+            <a href="https://wa.me/573016280574?text=Hola, quiero cotizar un programa de formación a la medida para mi empresa"
               target="_blank" rel="noreferrer"
               className="inline-block px-8 py-3 rounded-lg text-sm font-bold transition-transform hover:scale-105"
               style={{ backgroundColor: 'white', color: '#005187' }}>

@@ -107,17 +107,22 @@ export default function Blog() {
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {blogPosts.map((post, i) => (
-            <div key={post.id} className={`flip-card h-95 reveal-scale stagger-${(i % 6) + 1}`}>
+            <div key={post.id} className={`flip-card h-95 reveal-scale stagger-${(i % 6) + 1} card-interactive`}>
               <div className="flip-card-inner">
                 {/* Front — image poster */}
                 <div className="flip-card-front rounded-2xl overflow-hidden cursor-pointer"
-                  style={{ backgroundColor: 'var(--secondary)', border: '1px solid var(--border)' }}
+                  style={{ backgroundColor: 'var(--secondary)', border: '1px solid var(--border)', boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }}
                   onClick={() => setSelectedPost(post)}>
                   <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.85), rgba(0,0,0,0.15) 55%, transparent)' }} />
+                  <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(7,20,38,0.92) 0%, rgba(7,20,38,0.35) 55%, transparent 85%)' }} />
+                  <span className="absolute top-4 left-4 text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full"
+                    style={{ backgroundColor: 'rgba(232,199,102,0.15)', color: GOLD, border: `1px solid rgba(232,199,102,0.4)`, backdropFilter: 'blur(4px)' }}>
+                    Converge
+                  </span>
                   <div className="absolute bottom-0 left-0 right-0 p-5">
-                    <span className="text-xs" style={{ color: '#cbd5e1' }}>{post.date}</span>
-                    <h3 className="font-bold text-lg mt-1 leading-snug text-white" style={{ fontFamily: 'var(--font-display)' }}>
+                    <div className="w-8 h-0.5 rounded-full mb-2.5" style={{ backgroundColor: GOLD, opacity: 0.8 }} />
+                    <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.65)' }}>{post.date}</span>
+                    <h3 className="font-bold text-lg mt-1 leading-snug text-white break-words" style={{ fontFamily: 'var(--font-display)' }}>
                       {post.title}
                     </h3>
                   </div>
@@ -125,26 +130,29 @@ export default function Blog() {
 
                 {/* Back — details */}
                 <div className="flip-card-back rounded-2xl overflow-hidden p-5 flex flex-col cursor-pointer"
-                  style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}
+                  style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', borderTop: `3px solid ${GOLD}`, boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }}
                   onClick={() => setSelectedPost(post)}>
-                  <div className="flex items-center justify-end mb-2">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: GOLD }}>Converge</span>
                     <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{post.date}</span>
                   </div>
-                  <h3 className="font-bold text-base mb-2 leading-snug" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
+                  <h3 className="font-bold text-base mb-2 leading-snug break-words" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
                     {post.title}
                   </h3>
-                  <p className="text-sm mb-3 leading-relaxed flex-1 overflow-hidden" style={{ color: 'var(--muted-foreground)' }}>
+                  <p className="text-sm mb-3 leading-relaxed flex-1 overflow-hidden break-words" style={{ color: 'var(--muted-foreground)' }}>
                     {post.excerpt}
                   </p>
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
-                      style={{ background: 'linear-gradient(135deg, #c9a227, #e8c766)', color: '#141414' }}>
-                      {post.author[0]}
+                  <div className="flex items-center justify-between gap-2 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+                        style={{ background: 'linear-gradient(135deg, #c9a227, #e8c766)', color: '#141414' }}>
+                        {post.author[0]}
+                      </div>
+                      <p className="text-xs font-medium truncate" style={{ color: 'var(--foreground)' }}>{post.author}</p>
                     </div>
-                    <div>
-                      <p className="text-xs font-medium" style={{ color: 'var(--foreground)' }}>{post.author}</p>
-                      <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{post.authorRole}</p>
-                    </div>
+                    <span className="text-xs font-bold shrink-0 flex items-center gap-1" style={{ color: '#4d82bc' }}>
+                      Leer más <span className="icon-nudge">→</span>
+                    </span>
                   </div>
                 </div>
               </div>

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { MessageCircle, Briefcase } from '@/shared/components/Icons'
+import { MessageCircle } from '@/shared/components/Icons'
 
 export default function WhatsAppButton() {
   const [open, setOpen] = useState(false)
@@ -26,24 +26,14 @@ export default function WhatsAppButton() {
           Contactar por WhatsApp
         </p>
         <a
-          href="https://wa.me/573001234567?text=Hola, me gustaría información sobre sus servicios."
+          href="https://wa.me/573016280574?text=Hola, me gustaría información sobre sus servicios."
           target="_blank" rel="noreferrer"
-          className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-bold mb-2 text-white"
+          className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-bold text-white"
           style={{ backgroundColor: '#25D366', transition: 'opacity 0.2s, transform 0.2s' }}
           onMouseEnter={e => { e.currentTarget.style.opacity = '0.9'; e.currentTarget.style.transform = 'translateY(-1px)' }}
           onMouseLeave={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'translateY(0)' }}
         >
           <MessageCircle size={16} /> Atención general
-        </a>
-        <a
-          href="https://wa.me/573009876543?text=Hola, me gustaría hablar con el área comercial."
-          target="_blank" rel="noreferrer"
-          className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-bold text-white"
-          style={{ backgroundColor: '#128C7E', transition: 'opacity 0.2s, transform 0.2s' }}
-          onMouseEnter={e => { e.currentTarget.style.opacity = '0.9'; e.currentTarget.style.transform = 'translateY(-1px)' }}
-          onMouseLeave={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'translateY(0)' }}
-        >
-          <Briefcase size={16} /> Atención comercial
         </a>
       </div>
 

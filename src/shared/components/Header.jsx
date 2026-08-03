@@ -16,7 +16,7 @@ export default function Header({ theme, setTheme }) {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [megaOpen, setMegaOpen] = useState(false)
   const [mobileServicesOpen, setMobileServicesOpen] = useState(false)
-  const [activeCategory, setActiveCategory] = useState(0)
+  const [activeCategory, setActiveCategory] = useState(null)
   const [scrolled, setScrolled] = useState(false)
   const [indicator, setIndicator] = useState({ left: 0, width: 0, opacity: 0 })
   const megaRef = useRef(null)
@@ -34,11 +34,15 @@ export default function Header({ theme, setTheme }) {
   useEffect(() => {
     setMobileOpen(false)
     setMegaOpen(false)
+    setActiveCategory(null)
   }, [location])
 
   useEffect(() => {
     const handleClick = (e) => {
-      if (megaRef.current && !megaRef.current.contains(e.target)) setMegaOpen(false)
+      if (megaRef.current && !megaRef.current.contains(e.target)) {
+        setMegaOpen(false)
+        setActiveCategory(null)
+      }
     }
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
@@ -194,7 +198,12 @@ export default function Header({ theme, setTheme }) {
             })}
 
             {/* Mega-menu */}
-            <div className="relative" ref={megaRef} onMouseEnter={() => moveIndicatorTo('servicios')}>
+            <div
+              className="relative"
+              ref={megaRef}
+              onMouseEnter={() => { moveIndicatorTo('servicios'); setMegaOpen(true) }}
+              onMouseLeave={() => { setMegaOpen(false); setActiveCategory(null) }}
+            >
               <button
                 ref={el => { linkRefs.current['servicios'] = el }}
                 onClick={() => setMegaOpen(!megaOpen)}
@@ -219,23 +228,32 @@ export default function Header({ theme, setTheme }) {
               <div
                 style={{
                   position: 'absolute',
-                  top: 'calc(100% + 8px)',
+                  top: '100%',
+                  paddingTop: '8px',
                   left: '50%',
-                  width: '740px',
+                  width: activeCategory !== null ? '740px' : '260px',
+                  transformOrigin: 'top center',
+                  opacity: megaOpen ? 1 : 0,
+                  pointerEvents: megaOpen ? 'all' : 'none',
+                  transition: megaOpen
+                    ? 'opacity 0.28s ease, translate 0.32s cubic-bezier(0.22, 1, 0.36, 1), scale 0.32s cubic-bezier(0.22, 1, 0.36, 1), width 0.32s cubic-bezier(0.22, 1, 0.36, 1)'
+                    : 'opacity 0.16s ease, translate 0.18s ease, scale 0.18s ease, width 0.32s cubic-bezier(0.22, 1, 0.36, 1)',
+                  translate: megaOpen ? '-50% 0' : '-50% -10px',
+                  scale: megaOpen ? '1' : '0.96',
+                }}
+              >
+              <div
+                style={{
                   backgroundColor: 'var(--card)',
                   border: '1px solid var(--border)',
                   borderRadius: '16px',
                   boxShadow: '0 20px 60px rgba(0,81,135,0.15)',
                   overflow: 'hidden',
-                  opacity: megaOpen ? 1 : 0,
-                  pointerEvents: megaOpen ? 'all' : 'none',
-                  transition: 'opacity 0.22s ease, transform 0.22s ease',
-                  translate: megaOpen ? '-50% 0' : '-50% -8px',
                 }}
               >
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr' }}>
+                <div style={{ display: 'flex' }}>
                   {/* Categories */}
-                  <div style={{ backgroundColor: 'var(--muted)', borderRight: '1px solid var(--border)' }}>
+                  <div style={{ width: '260px', flexShrink: 0, backgroundColor: 'var(--muted)', borderRight: '1px solid var(--border)' }}>
                     {megaMenu.map((cat, i) => (
                       <button
                         key={i}
@@ -257,34 +275,46 @@ export default function Header({ theme, setTheme }) {
                   </div>
 
                   {/* Sub-items */}
-                  <div className="p-4">
-                    <p className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: '#4d82bc' }}>
-                      {megaMenu[activeCategory].label}
-                    </p>
-                    <div className="grid gap-0.5">
-                      {megaMenu[activeCategory].items.map((item, j) => (
-                        <Link
-                          key={j}
-                          to={`/servicios/${item.slug}`}
-                          className="px-3 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2"
-                          style={{
-                            color: 'var(--foreground)',
-                            transition: 'background-color 0.18s, color 0.18s',
-                          }}
-                          onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#c4dafa'; e.currentTarget.style.color = '#005187' }}
-                          onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--foreground)' }}
-                        >
-                          <span style={{ color: '#4d82bc', fontWeight: 700 }}>→</span> {item.label}
-                        </Link>
-                      ))}
-                    </div>
+                  <div className="p-4" style={{ width: '480px', flexShrink: 0, opacity: activeCategory !== null ? 1 : 0, transition: 'opacity 0.18s ease' }}>
+                    {activeCategory !== null && (
+                      <>
+                        <p className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: '#4d82bc' }}>
+                          {megaMenu[activeCategory].label}
+                        </p>
+                        <div className="grid gap-0.5">
+                          {megaMenu[activeCategory].items.map((item, j) => (
+                            <Link
+                              key={j}
+                              to={`/servicios/${item.slug}`}
+                              className="px-3 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2"
+                              style={{
+                                color: 'var(--foreground)',
+                                transition: 'background-color 0.18s, color 0.18s',
+                              }}
+                              onMouseEnter={e => { e.currentTarget.style.backgroundColor = '#c4dafa'; e.currentTarget.style.color = '#005187' }}
+                              onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--foreground)' }}
+                            >
+                              <span style={{ color: '#4d82bc', fontWeight: 700 }}>→</span> {item.label}
+                            </Link>
+                          ))}
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
 
                 {/* Footer strip */}
                 <div
                   className="px-5 py-3 flex items-center justify-between"
-                  style={{ borderTop: '1px solid var(--border)', backgroundColor: 'var(--muted)' }}
+                  style={{
+                    borderTop: '1px solid var(--border)',
+                    backgroundColor: 'var(--muted)',
+                    width: '740px',
+                    boxSizing: 'border-box',
+                    opacity: activeCategory !== null ? 1 : 0,
+                    pointerEvents: activeCategory !== null ? 'auto' : 'none',
+                    transition: 'opacity 0.18s ease',
+                  }}
                 >
                   <Link
                     to="/servicios"
@@ -294,7 +324,7 @@ export default function Header({ theme, setTheme }) {
                     Ver todos los servicios →
                   </Link>
                   <a
-                    href="https://wa.me/573001234567?text=Hola, quisiera información sobre un servicio"
+                    href="https://wa.me/573016280574?text=Hola, quisiera información sobre un servicio"
                     target="_blank" rel="noreferrer"
                     className="text-xs font-bold px-3 py-1.5 rounded-lg text-white"
                     style={{ backgroundColor: '#25D366', transition: 'opacity 0.2s' }}
@@ -304,6 +334,7 @@ export default function Header({ theme, setTheme }) {
                     <span className="inline-flex items-center gap-1.5"><MessageCircle size={13} /> Consúltenos</span>
                   </a>
                 </div>
+              </div>
               </div>
             </div>
           </nav>

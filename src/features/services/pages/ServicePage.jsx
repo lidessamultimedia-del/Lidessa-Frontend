@@ -32,7 +32,7 @@ export default function ServicePage() {
             ← Ir al inicio
           </Link>
           <a
-            href="https://wa.me/573001234567"
+            href="https://wa.me/573016280574"
             target="_blank" rel="noreferrer"
             className="px-4 py-2 rounded-lg text-sm font-bold text-white"
             style={{ backgroundColor: '#25D366' }}
@@ -62,7 +62,7 @@ export default function ServicePage() {
           <h1 className="text-4xl sm:text-5xl font-black text-white mb-5 reveal stagger-1" style={{ fontFamily: 'var(--font-display)' }}>
             {service.title}
           </h1>
-          <p className="text-base max-w-2xl mx-auto leading-relaxed reveal stagger-2 break-words" style={{ color: '#cbb98a' }}>
+          <p className="text-base max-w-2xl mx-auto leading-relaxed reveal stagger-2 wrap-break-word" style={{ color: '#cbb98a' }}>
             {service.description}
           </p>
         </div>
@@ -192,7 +192,7 @@ export default function ServicePage() {
                     )}
                     {section.text && (
                       <p
-                        className="leading-relaxed break-words"
+                        className="leading-relaxed wrap-break-word"
                         style={isLead
                           ? { fontSize: '1.0625rem', color: 'var(--foreground)' }
                           : { fontSize: '0.875rem', color: 'var(--muted-foreground)', marginBottom: section.bullets ? 14 : 0 }}
@@ -216,7 +216,7 @@ export default function ServicePage() {
                             >
                               <Check size={13} strokeWidth="3" />
                             </span>
-                            <p className="text-sm leading-relaxed break-words min-w-0" style={{ color: 'var(--foreground)' }}>
+                            <p className="text-sm leading-relaxed wrap-break-word min-w-0" style={{ color: 'var(--foreground)' }}>
                               {b.label && <strong>{b.label}</strong>} {b.text}
                             </p>
                           </div>
@@ -268,7 +268,7 @@ export default function ServicePage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <a
-                href={`https://wa.me/573001234567?text=Hola, me interesa el servicio de ${service.title}`}
+                href={`https://wa.me/573016280574?text=Hola, me interesa el servicio de ${service.title}`}
                 target="_blank" rel="noreferrer"
                 className="px-6 py-3 rounded-lg text-sm font-bold text-white transition-opacity hover:opacity-90"
                 style={{ backgroundColor: '#25D366' }}

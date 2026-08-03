@@ -13,6 +13,25 @@ export default function DashboardShell({ roleLabel, navItems, activeSection, onS
   const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [bellOpen, setBellOpen] = useState(false)
+  const seenKey = `lidessa_seen_notifications_${user?.id ?? 'anon'}`
+  const [seenIds, setSeenIds] = useState(() => {
+    try {
+      const stored = localStorage.getItem(seenKey)
+      return stored ? new Set(JSON.parse(stored)) : new Set()
+    } catch {
+      return new Set()
+    }
+  })
+  const unreadNotifications = notifications.filter(n => !seenIds.has(n.id))
+
+  function markAllSeen() {
+    setSeenIds(prev => {
+      const next = new Set(prev)
+      notifications.forEach(n => next.add(n.id))
+      localStorage.setItem(seenKey, JSON.stringify([...next]))
+      return next
+    })
+  }
 
   function handleLogout() {
     logout()
@@ -144,17 +163,21 @@ export default function DashboardShell({ roleLabel, navItems, activeSection, onS
           </h1>
           <div className="flex items-center gap-4">
             <div style={{ position: 'relative' }}>
-              <button onClick={() => setBellOpen(o => !o)}
+              <button onClick={() => {
+                const next = !bellOpen
+                setBellOpen(next)
+                if (next) markAllSeen()
+              }}
                 style={{ position: 'relative', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--foreground)' }}>
                 <Bell size={20} />
-                {notifications.length > 0 && (
+                {unreadNotifications.length > 0 && (
                   <span style={{
                     position: 'absolute', top: -4, right: -4,
                     width: 18, height: 18, borderRadius: '50%',
                     backgroundColor: '#dc2626', color: 'white',
                     fontSize: 10, fontWeight: 700,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>{notifications.length}</span>
+                  }}>{unreadNotifications.length}</span>
                 )}
               </button>
               {bellOpen && (
@@ -170,17 +193,38 @@ export default function DashboardShell({ roleLabel, navItems, activeSection, onS
                   {notifications.length === 0 && (
                     <p className="text-xs px-4 py-4" style={{ color: 'var(--muted-foreground)' }}>Sin novedades por ahora.</p>
                   )}
-                  {notifications.map((n, i) => (
-                    <div key={i} style={{ padding: '10px 16px', borderBottom: i < notifications.length - 1 ? '1px solid var(--border)' : 'none' }}>
-                      <div className="flex gap-3">
-                        <span style={{ flexShrink: 0, color: 'var(--muted-foreground)' }}><n.icon size={16} /></span>
-                        <div>
-                          <p className="text-xs" style={{ color: 'var(--foreground)' }}>{n.text}</p>
-                          <p className="text-xs" style={{ color: 'var(--muted-foreground)', opacity: 0.7 }}>{n.time}</p>
+                  {notifications.map((n, i) => {
+                    const wasUnread = !seenIds.has(n.id)
+                    return (
+                      <div key={n.id ?? i}
+                        onClick={() => { n.onClick?.(); setBellOpen(false) }}
+                        className={n.onClick ? 'cursor-pointer transition-colors' : undefined}
+                        style={{
+                          padding: '10px 16px',
+                          borderBottom: i < notifications.length - 1 ? '1px solid var(--border)' : 'none',
+                          backgroundColor: wasUnread ? 'rgba(0,81,135,0.05)' : 'transparent',
+                        }}
+                        onMouseEnter={e => { if (n.onClick) e.currentTarget.style.backgroundColor = 'rgba(0,81,135,0.1)' }}
+                        onMouseLeave={e => { if (n.onClick) e.currentTarget.style.backgroundColor = wasUnread ? 'rgba(0,81,135,0.05)' : 'transparent' }}
+                      >
+                        <div className="flex gap-3">
+                          <span style={{ flexShrink: 0, color: 'var(--muted-foreground)', position: 'relative' }}>
+                            <n.icon size={16} />
+                            {wasUnread && (
+                              <span style={{
+                                position: 'absolute', top: -2, right: -2,
+                                width: 6, height: 6, borderRadius: '50%', backgroundColor: '#005187',
+                              }} />
+                            )}
+                          </span>
+                          <div>
+                            <p className="text-xs" style={{ color: 'var(--foreground)', opacity: wasUnread ? 1 : 0.65 }}>{n.text}</p>
+                            <p className="text-xs" style={{ color: 'var(--muted-foreground)', opacity: 0.7 }}>{n.time}</p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               )}
             </div>

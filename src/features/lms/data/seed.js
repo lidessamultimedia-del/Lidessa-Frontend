@@ -88,6 +88,23 @@ export const seedSubmissions = [
   { id: 'sub4', assignmentId: 'a4', studentId: 's1', submittedAt: '2026-07-29T18:20:00', fileName: '', fileSize: 0, textResponse: 'La sesión formativa propuesta utiliza aprendizaje basado en problemas...', notes: '', status: 'submitted', grade: null, feedback: '', gradedAt: null },
 ]
 
+export const seedQuizzes = [
+  {
+    id: 'q1', courseId: 'c3', topicId: 't3_1', title: 'Cuestionario: Marco Legal SG-SST',
+    description: 'Evalúa los conceptos clave de la normatividad vista en el módulo.',
+    dueDate: '2026-08-10',
+    questions: [
+      { id: 'q1_1', text: '¿Qué entidad regula el Sistema de Gestión de SST en Colombia?', options: ['Ministerio de Trabajo', 'Ministerio de Educación', 'DIAN', 'Cámara de Comercio'], correctIndex: 0 },
+      { id: 'q1_2', text: '¿Cuándo se debe actualizar la matriz de riesgos?', options: ['Cada 5 años sin excepción', 'Solo al crear la empresa', 'Cuando cambian las condiciones de trabajo', 'Nunca es necesario'], correctIndex: 2 },
+      { id: 'q1_3', text: '¿Quién es responsable de implementar el SG-SST en una empresa?', options: ['Solo los trabajadores', 'El empleador', 'El Ministerio de Trabajo', 'Una ARL externa únicamente'], correctIndex: 1 },
+    ],
+  },
+]
+
+export const seedQuizAttempts = [
+  { id: 'qa1', quizId: 'q1', studentId: 's2', answers: [0, 2, 1], score: 100, submittedAt: '2026-07-30T11:00:00' },
+]
+
 export const seedLessonProgress = [
   { studentId: 's1', courseId: 'c1', lessonId: 'l1', completedAt: '2026-07-20T12:00:00' },
   { studentId: 's1', courseId: 'c1', lessonId: 'l2', completedAt: '2026-07-22T12:00:00' },

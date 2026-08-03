@@ -1,11 +1,21 @@
 import { useState } from 'react'
 import FormField, { errorInputStyle } from '@/shared/components/FormField'
+import { Upload, FileText, X } from '@/shared/components/Icons'
+
+// El material se guarda como base64 directo en el navegador (localStorage),
+// que tiene un límite total de unos 5-10 MB compartido entre todo el sitio —
+// por eso se limita el tamaño de cada archivo individual.
+const MAX_FILE_MB = 3
+const MAX_FILE_BYTES = MAX_FILE_MB * 1024 * 1024
 
 export default function LessonFormModal({ lesson, topics = [], initialTopicId, onSave, onClose }) {
   const [form, setForm] = useState({
     title: lesson?.title ?? '',
     content: lesson?.content ?? '',
     topicId: lesson?.topicId ?? initialTopicId ?? topics[0]?.id ?? '',
+    fileName: lesson?.fileName ?? '',
+    fileData: lesson?.fileData ?? '',
+    fileSize: lesson?.fileSize ?? 0,
   })
   const [errors, setErrors] = useState({})
 
@@ -37,6 +47,41 @@ export default function LessonFormModal({ lesson, topics = [], initialTopicId, o
             <textarea rows={5} value={form.content} onChange={e => setForm(f => ({ ...f, content: e.target.value }))}
               className="w-full px-3 py-2.5 rounded-lg text-sm outline-none resize-none"
               style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }} />
+          </FormField>
+          <FormField label="Material adjunto (PDF, Word, PowerPoint, Excel, imagen)" error={errors.file}>
+            {form.fileName ? (
+              <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg" style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)' }}>
+                <FileText size={16} style={{ color: '#005187' }} />
+                <span className="text-sm flex-1 truncate" style={{ color: 'var(--foreground)' }}>{form.fileName}</span>
+                <span className="text-xs shrink-0" style={{ color: 'var(--muted-foreground)' }}>{(form.fileSize / 1024).toFixed(0)} KB</span>
+                <button type="button" onClick={() => setForm(f => ({ ...f, fileName: '', fileData: '', fileSize: 0 }))}
+                  className="shrink-0 p-1 rounded" style={{ color: '#dc2626' }} title="Quitar archivo">
+                  <X size={14} />
+                </button>
+              </div>
+            ) : (
+              <label
+                className="flex items-center gap-2 cursor-pointer px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors"
+                style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: '#005187', border: '1px solid rgba(0,81,135,0.2)' }}
+              >
+                <Upload size={15} /> Subir archivo…
+                <input type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,image/*" className="hidden" onChange={e => {
+                  const file = e.target.files?.[0]
+                  e.target.value = ''
+                  if (!file) return
+                  if (file.size > MAX_FILE_BYTES) {
+                    setErrors(er => ({ ...er, file: `El archivo pesa ${(file.size / 1024 / 1024).toFixed(1)} MB. Use uno de máximo ${MAX_FILE_MB} MB.` }))
+                    return
+                  }
+                  const reader = new FileReader()
+                  reader.onload = () => {
+                    setForm(f => ({ ...f, fileName: file.name, fileData: reader.result, fileSize: file.size }))
+                    setErrors(er => ({ ...er, file: null }))
+                  }
+                  reader.readAsDataURL(file)
+                }} />
+              </label>
+            )}
           </FormField>
           {topics.length > 0 && (
             <FormField label="Tema">

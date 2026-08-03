@@ -1,5 +1,4 @@
 import { useEffect } from 'react'
-import { MessageCircle } from '@/shared/components/Icons'
 
 const GOLD = '#e8c766'
 
@@ -42,7 +41,7 @@ export default function BlogModal({ post, onClose }) {
               style={{ backgroundColor: 'rgba(232,199,102,0.15)', color: GOLD, border: `1px solid rgba(232,199,102,0.4)` }}>
               Converge
             </span>
-            <h2 className="text-2xl font-black leading-snug break-words text-white" style={{ fontFamily: 'var(--font-display)' }}>
+            <h2 className="text-2xl font-black leading-snug wrap-break-word text-white" style={{ fontFamily: 'var(--font-display)' }}>
               {post.title}
             </h2>
           </div>
@@ -58,7 +57,7 @@ export default function BlogModal({ post, onClose }) {
               <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{post.date}</p>
             </div>
           </div>
-          <p className="text-sm leading-relaxed mb-6 break-words" style={{ color: 'var(--muted-foreground)' }}>
+          <p className="text-sm leading-relaxed mb-6 wrap-break-word" style={{ color: 'var(--muted-foreground)' }}>
             {post.excerpt}
           </p>
           <div className="flex flex-wrap gap-3">
@@ -71,24 +70,9 @@ export default function BlogModal({ post, onClose }) {
                 onMouseEnter={e => e.currentTarget.style.backgroundColor = 'rgba(232,199,102,0.1)'}
                 onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
               >
-                Visitar página <span className="icon-nudge">→</span>
+                Visitar canal <span className="icon-nudge">→</span>
               </a>
             )}
-            <a
-              href="https://wa.me/573001234567"
-              target="_blank" rel="noreferrer"
-              className="px-4 py-2.5 rounded-lg text-sm font-bold text-white transition-opacity hover:opacity-90"
-              style={{ backgroundColor: '#25D366' }}
-            >
-              <span className="inline-flex items-center gap-1.5"><MessageCircle size={15} /> Consultar al autor</span>
-            </a>
-            <button
-              onClick={onClose}
-              className="px-4 py-2.5 rounded-lg text-sm font-medium border transition-colors"
-              style={{ borderColor: 'var(--border)', color: 'var(--muted-foreground)' }}
-            >
-              Cerrar
-            </button>
           </div>
         </div>
       </div>

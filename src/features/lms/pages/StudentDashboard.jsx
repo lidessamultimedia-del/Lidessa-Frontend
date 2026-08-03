@@ -7,6 +7,7 @@ import AnimatedCounter from '@/shared/components/AnimatedCounter'
 import { downloadCsv } from '@/features/lms/utils/csv'
 import {
   BarChart2, GraduationCap, ClipboardCheck, Check, Lock, BookOpen, FileText, Upload, Users, Download, MoreVertical,
+  HelpCircle, Paperclip,
 } from '@/shared/components/Icons'
 
 const navItems = [
@@ -57,6 +58,7 @@ export default function StudentDashboard() {
   const [selectedCourseId, setSelectedCourseId] = useState(null)
   const [courseTab, setCourseTab] = useState('general')
   const [submitAssignmentId, setSubmitAssignmentId] = useState(null)
+  const [openQuizId, setOpenQuizId] = useState(null)
   const [openCourseMenuId, setOpenCourseMenuId] = useState(null)
 
   useEffect(() => {
@@ -80,6 +82,13 @@ export default function StudentDashboard() {
     return !sub || sub.status !== 'submitted' && sub.status !== 'graded'
   }).sort((a, b) => a.dueDate.localeCompare(b.dueDate))
 
+  const myQuizzes = useMemo(() => {
+    const courseIds = myCourses.map(c => c.id)
+    return lms.quizzes.filter(q => courseIds.includes(q.courseId))
+  }, [myCourses, lms.quizzes])
+
+  const pendingQuizzes = myQuizzes.filter(q => !lms.attemptFor(q.id, studentId)).sort((a, b) => a.dueDate.localeCompare(b.dueDate))
+
   const gradesByCourse = lms.gradesForStudent(studentId)
   const overallGrades = gradesByCourse.flatMap(g => g.rows).filter(r => r.submission?.status === 'graded')
   const averageGrade = overallGrades.length
@@ -100,6 +109,11 @@ export default function StudentDashboard() {
     setSection('submit')
   }
 
+  function openQuiz(quizId) {
+    setOpenQuizId(quizId)
+    setSection('quiz')
+  }
+
   function courseAverageGrade(courseId) {
     const graded = lms.assignmentsByCourse(courseId)
       .flatMap(a => lms.submissions.filter(s => s.assignmentId === a.id && s.status === 'graded'))
@@ -111,11 +125,16 @@ export default function StudentDashboard() {
   const submitCourse = submitAssignment ? lms.courses.find(c => c.id === submitAssignment.courseId) : null
   const submitExisting = submitAssignment ? lms.submissionFor(submitAssignment.id, studentId) : null
 
+  const currentQuiz = openQuizId ? lms.quizzes.find(q => q.id === openQuizId) : null
+  const currentQuizCourse = currentQuiz ? lms.courses.find(c => c.id === currentQuiz.courseId) : null
+  const currentQuizAttempt = currentQuiz ? lms.attemptFor(currentQuiz.id, studentId) : null
+
   const sectionTitle = {
     dashboard: 'Panel del estudiante',
     courses: 'Mis cursos',
     courseDetail: selectedCourse?.name ?? 'Curso',
     submit: submitAssignment?.title ?? 'Entregar tarea',
+    quiz: currentQuiz?.title ?? 'Examen',
     grades: 'Mis calificaciones',
   }[section]
 
@@ -139,11 +158,24 @@ export default function StudentDashboard() {
       activeSection={['dashboard', 'courses', 'grades'].includes(section) ? section : (section === 'grades' ? 'grades' : 'courses')}
       onSectionChange={id => { setSection(id); setSelectedCourseId(null) }}
       title={sectionTitle}
-      notifications={pendingAssignments.slice(0, 5).map(a => ({
-        icon: ClipboardCheck,
-        text: `"${a.title}" — ${daysUntil(a.dueDate)}`,
-        time: lms.courses.find(c => c.id === a.courseId)?.name ?? '',
-      }))}
+      notifications={[
+        ...pendingAssignments.map(a => ({
+          id: a.id,
+          icon: ClipboardCheck,
+          text: `"${a.title}" — ${daysUntil(a.dueDate)}`,
+          time: lms.courses.find(c => c.id === a.courseId)?.name ?? '',
+          onClick: () => openSubmit(a.id),
+          dueDate: a.dueDate,
+        })),
+        ...pendingQuizzes.map(q => ({
+          id: q.id,
+          icon: HelpCircle,
+          text: `"${q.title}" — ${daysUntil(q.dueDate)}`,
+          time: lms.courses.find(c => c.id === q.courseId)?.name ?? '',
+          onClick: () => openQuiz(q.id),
+          dueDate: q.dueDate,
+        })),
+      ].sort((a, b) => a.dueDate.localeCompare(b.dueDate)).slice(0, 5)}
     >
       {/* ── DASHBOARD ── */}
       {section === 'dashboard' && (
@@ -156,7 +188,7 @@ export default function StudentDashboard() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             {[
               { label: 'Mis Cursos', value: myCourses.length, icon: GraduationCap, color: '#005187' },
-              { label: 'Tareas Pendientes', value: pendingAssignments.length, icon: ClipboardCheck, color: '#d97706' },
+              { label: 'Actividades Pendientes', value: pendingAssignments.length + pendingQuizzes.length, icon: ClipboardCheck, color: '#d97706' },
               { label: 'Calificación Promedio', value: averageGrade, icon: BarChart2, color: '#7c3aed' },
               { label: 'Progreso General', value: overallProgress, suffix: '%', icon: Check, color: '#16a34a' },
             ].map(s => (
@@ -181,20 +213,23 @@ export default function StudentDashboard() {
             ))}
           </div>
 
-          <h2 className="font-bold text-sm mb-3" style={{ color: 'var(--foreground)', fontFamily: 'var(--font-display)' }}>Tareas próximas a vencer</h2>
+          <h2 className="font-bold text-sm mb-3" style={{ color: 'var(--foreground)', fontFamily: 'var(--font-display)' }}>Actividades próximas a vencer</h2>
           <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-            {pendingAssignments.length === 0 && (
-              <p className="text-sm px-4 py-6 text-center" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)' }}>¡Estás al día! No tienes tareas pendientes.</p>
+            {pendingAssignments.length === 0 && pendingQuizzes.length === 0 && (
+              <p className="text-sm px-4 py-6 text-center" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)' }}>¡Estás al día! No tienes actividades pendientes.</p>
             )}
-            {pendingAssignments.slice(0, 6).map((a, i, arr) => (
-              <div key={a.id} style={{ display: 'flex', gap: 12, padding: '14px 16px', alignItems: 'center', borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none', backgroundColor: 'var(--card)' }}>
+            {[
+              ...pendingAssignments.map(a => ({ kind: 'assignment', item: a })),
+              ...pendingQuizzes.map(q => ({ kind: 'quiz', item: q })),
+            ].sort((x, y) => x.item.dueDate.localeCompare(y.item.dueDate)).slice(0, 6).map(({ kind, item }, i, arr) => (
+              <div key={item.id} style={{ display: 'flex', gap: 12, padding: '14px 16px', alignItems: 'center', borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none', backgroundColor: 'var(--card)' }}>
                 <div className="flex-1">
-                  <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{a.title}</p>
-                  <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{lms.courses.find(c => c.id === a.courseId)?.name} · {daysUntil(a.dueDate)}</p>
+                  <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{item.title}</p>
+                  <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{lms.courses.find(c => c.id === item.courseId)?.name} · {daysUntil(item.dueDate)}</p>
                 </div>
-                <button onClick={() => openSubmit(a.id)}
+                <button onClick={() => kind === 'assignment' ? openSubmit(item.id) : openQuiz(item.id)}
                   className="text-xs px-3 py-1.5 rounded-lg font-bold text-white shrink-0" style={{ backgroundColor: '#005187' }}>
-                  Entregar
+                  {kind === 'assignment' ? 'Entregar' : 'Responder'}
                 </button>
               </div>
             ))}
@@ -325,21 +360,32 @@ export default function StudentDashboard() {
 
               <h3 className="text-sm font-bold mb-2" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Próximas actividades</h3>
               <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-                {lms.assignmentsByCourse(selectedCourse.id).filter(a => {
-                  const sub = lms.submissionFor(a.id, studentId)
-                  return !sub || (sub.status !== 'submitted' && sub.status !== 'graded')
-                }).map((a, i, arr) => (
-                  <div key={a.id} style={{ display: 'flex', gap: 12, padding: '12px 16px', alignItems: 'center', borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none', backgroundColor: 'var(--card)' }}>
-                    <div className="flex-1">
-                      <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{a.title}</p>
-                      <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{daysUntil(a.dueDate)}</p>
+                {(() => {
+                  const pendingCourseAssignments = lms.assignmentsByCourse(selectedCourse.id).filter(a => {
+                    const sub = lms.submissionFor(a.id, studentId)
+                    return !sub || (sub.status !== 'submitted' && sub.status !== 'graded')
+                  })
+                  const pendingCourseQuizzes = lms.quizzesByCourse(selectedCourse.id).filter(q => !lms.attemptFor(q.id, studentId))
+                  const rows = [
+                    ...pendingCourseAssignments.map(a => ({ kind: 'assignment', item: a })),
+                    ...pendingCourseQuizzes.map(q => ({ kind: 'quiz', item: q })),
+                  ].sort((x, y) => x.item.dueDate.localeCompare(y.item.dueDate))
+                  if (rows.length === 0) {
+                    return <p className="text-sm px-4 py-4 text-center" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)' }}>No tienes actividades pendientes en este curso.</p>
+                  }
+                  return rows.map(({ kind, item }, i, arr) => (
+                    <div key={item.id} style={{ display: 'flex', gap: 12, padding: '12px 16px', alignItems: 'center', borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none', backgroundColor: 'var(--card)' }}>
+                      <div className="flex-1">
+                        <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{item.title}</p>
+                        <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{daysUntil(item.dueDate)}</p>
+                      </div>
+                      <button onClick={() => kind === 'assignment' ? openSubmit(item.id) : openQuiz(item.id)}
+                        className="text-xs px-3 py-1.5 rounded-lg font-bold text-white shrink-0" style={{ backgroundColor: '#005187' }}>
+                        {kind === 'assignment' ? 'Ir a la tarea →' : 'Ir al examen →'}
+                      </button>
                     </div>
-                    <button onClick={() => openSubmit(a.id)} className="text-xs px-3 py-1.5 rounded-lg font-bold text-white shrink-0" style={{ backgroundColor: '#005187' }}>Ir a la tarea →</button>
-                  </div>
-                ))}
-                {lms.assignmentsByCourse(selectedCourse.id).every(a => { const sub = lms.submissionFor(a.id, studentId); return sub?.status === 'submitted' || sub?.status === 'graded' }) && (
-                  <p className="text-sm px-4 py-4 text-center" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)' }}>No tienes actividades pendientes en este curso.</p>
-                )}
+                  ))
+                })()}
               </div>
             </div>
           )}
@@ -356,8 +402,10 @@ export default function StudentDashboard() {
                       <div key={item.id} style={{ display: 'flex', gap: 12, padding: '12px 16px', alignItems: 'center', borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none', backgroundColor: 'var(--card)' }}>
                         {kind === 'lesson' ? (
                           <LessonRow lms={lms} studentId={studentId} course={selectedCourse} lesson={item} onToast={toast} />
-                        ) : (
+                        ) : kind === 'assignment' ? (
                           <AssignmentRow lms={lms} studentId={studentId} assignment={item} onSubmit={openSubmit} />
+                        ) : (
+                          <QuizRow lms={lms} studentId={studentId} quiz={item} onOpen={openQuiz} />
                         )}
                       </div>
                     ))}
@@ -401,6 +449,20 @@ export default function StudentDashboard() {
             lms.submitAssignment({ assignmentId: submitAssignment.id, studentId, ...data, draft })
             toast('success', draft ? 'Borrador guardado' : 'Tarea enviada', submitAssignment.title)
             setSection('courseDetail')
+          }}
+        />
+      )}
+
+      {/* ── RESPONDER EXAMEN ── */}
+      {section === 'quiz' && currentQuiz && (
+        <QuizAttemptForm
+          quiz={currentQuiz}
+          course={currentQuizCourse}
+          existingAttempt={currentQuizAttempt}
+          onCancel={() => setSection('courseDetail')}
+          onSubmit={answers => {
+            const score = lms.submitQuizAttempt({ quizId: currentQuiz.id, studentId, answers })
+            toast('success', 'Examen entregado', `${currentQuiz.title} — ${score}/100`)
           }}
         />
       )}
@@ -478,6 +540,12 @@ function LessonRow({ lms, studentId, course, lesson, onToast }) {
         {done && <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>Completada</p>}
         {!done && unlocked && <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{lesson.content}</p>}
         {!unlocked && <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>Bloqueada — completa la lección anterior</p>}
+        {unlocked && lesson.fileName && (
+          <a href={lesson.fileData} download={lesson.fileName}
+            className="text-xs flex items-center gap-1 mt-0.5 w-fit" style={{ color: '#005187' }}>
+            <Paperclip size={11} /> {lesson.fileName}
+          </a>
+        )}
       </div>
       {unlocked && !done && (
         <button onClick={() => { lms.markLessonComplete(studentId, course.id, lesson.id); onToast('success', 'Lección completada', lesson.title) }}
@@ -510,6 +578,98 @@ function AssignmentRow({ lms, studentId, assignment, onSubmit }) {
         </button>
       )}
     </>
+  )
+}
+
+function QuizRow({ lms, studentId, quiz, onOpen }) {
+  const attempt = lms.attemptFor(quiz.id, studentId)
+  return (
+    <>
+      <span style={{ color: '#d97706' }}><HelpCircle size={18} /></span>
+      <div className="flex-1">
+        <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{quiz.title}</p>
+        <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>Vence: {formatDate(quiz.dueDate)} · {quiz.questions?.length ?? 0} preguntas</p>
+      </div>
+      {attempt ? (
+        <span className="text-xs px-3 py-1.5 rounded-full font-bold shrink-0" style={{ backgroundColor: 'rgba(22,163,74,0.12)', color: '#16a34a' }}>
+          Calificado · {attempt.score}/100
+        </span>
+      ) : (
+        <button onClick={() => onOpen(quiz.id)} className="text-xs px-3 py-1.5 rounded-lg font-bold text-white shrink-0" style={{ backgroundColor: '#005187' }}>
+          Responder
+        </button>
+      )}
+    </>
+  )
+}
+
+function QuizAttemptForm({ quiz, course, existingAttempt, onSubmit, onCancel }) {
+  const [answers, setAnswers] = useState(() => quiz.questions.map(() => null))
+  const [error, setError] = useState('')
+
+  if (existingAttempt) {
+    return (
+      <div style={{ animation: 'fadeUp 0.4s ease', maxWidth: 640 }}>
+        <button onClick={onCancel} className="text-xs font-semibold mb-3" style={{ color: '#005187' }}>← Volver</button>
+        <h2 className="text-xl font-black mb-1" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>{quiz.title}</h2>
+        <p className="text-sm mb-4" style={{ color: 'var(--muted-foreground)' }}>{course?.name}</p>
+        <div className="rounded-xl p-5" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
+          <p className="text-sm font-bold mb-1" style={{ color: '#16a34a' }}>Ya entregaste este examen</p>
+          <p className="text-sm" style={{ color: 'var(--foreground)' }}>Tu calificación: <strong>{existingAttempt.score}/100</strong></p>
+          <p className="text-xs mt-1" style={{ color: 'var(--muted-foreground)' }}>Entregado: {formatDate(existingAttempt.submittedAt)}</p>
+        </div>
+      </div>
+    )
+  }
+
+  function handleSubmit() {
+    if (answers.some(a => a === null)) { setError('Responde todas las preguntas antes de entregar.'); return }
+    setError('')
+    onSubmit(answers)
+    onCancel()
+  }
+
+  return (
+    <div style={{ animation: 'fadeUp 0.4s ease', maxWidth: 640 }}>
+      <button onClick={onCancel} className="text-xs font-semibold mb-3" style={{ color: '#005187' }}>← Volver</button>
+      <h2 className="text-xl font-black mb-1" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>{quiz.title}</h2>
+      <p className="text-sm mb-4" style={{ color: 'var(--muted-foreground)' }}>{course?.name}</p>
+
+      <div className="rounded-xl p-4 mb-5" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
+        <p className="text-sm mb-2" style={{ color: 'var(--foreground)' }}>{quiz.description}</p>
+        <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>Fecha límite: {formatDate(quiz.dueDate)} · {daysUntil(quiz.dueDate)} · Se califica automáticamente al entregar</p>
+      </div>
+
+      <div className="space-y-4">
+        {quiz.questions.map((q, qi) => (
+          <div key={q.id} className="rounded-xl p-4" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
+            <p className="text-sm font-semibold mb-3" style={{ color: 'var(--foreground)' }}>{qi + 1}. {q.text}</p>
+            <div className="space-y-2">
+              {q.options.map((opt, oi) => (
+                <label key={oi} className="flex items-center gap-2 text-sm cursor-pointer" style={{ color: 'var(--foreground)' }}>
+                  <input type="radio" name={`q-${q.id}`} checked={answers[qi] === oi}
+                    onChange={() => { setAnswers(a => a.map((v, i) => i === qi ? oi : v)); setError('') }} />
+                  {opt}
+                </label>
+              ))}
+            </div>
+          </div>
+        ))}
+
+        {error && (
+          <p className="text-xs px-3 py-2 rounded-lg" style={{ backgroundColor: 'rgba(220,38,38,0.1)', color: '#dc2626' }}>⚠ {error}</p>
+        )}
+        <p className="text-xs px-3 py-2 rounded-lg" style={{ backgroundColor: 'rgba(217,119,6,0.1)', color: '#d97706' }}>
+          ⚠ Una vez entregado no podrás cambiar tus respuestas.
+        </p>
+        <div className="flex gap-3">
+          <button onClick={onCancel} className="flex-1 py-2.5 rounded-lg text-sm font-bold" style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>Cancelar</button>
+          <button onClick={handleSubmit} className="flex-1 py-2.5 rounded-lg text-sm font-bold text-white" style={{ backgroundColor: '#005187' }}>
+            Entregar Examen
+          </button>
+        </div>
+      </div>
+    </div>
   )
 }
 

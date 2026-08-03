@@ -7,15 +7,18 @@ import CourseFormModal from '@/features/lms/components/CourseFormModal'
 import TopicFormModal from '@/features/lms/components/TopicFormModal'
 import LessonFormModal from '@/features/lms/components/LessonFormModal'
 import AssignmentFormModal from '@/features/lms/components/AssignmentFormModal'
+import QuizFormModal from '@/features/lms/components/QuizFormModal'
 import ConfirmDeleteModal from '@/features/lms/components/ConfirmDeleteModal'
 import PublishCourseModal from '@/features/lms/components/PublishCourseModal'
 import GradebookReport from '@/features/lms/components/GradebookReport'
 import CompletionReport from '@/features/lms/components/CompletionReport'
+import CourseContentTab from '@/features/lms/components/CourseContentTab'
+import CourseSettingsForm from '@/features/lms/components/CourseSettingsForm'
 import AnimatedCounter from '@/shared/components/AnimatedCounter'
 import FormField, { errorInputStyle } from '@/shared/components/FormField'
 import {
   BarChart2, GraduationCap, ClipboardCheck, Plus, Users, FileText,
-  BookOpen, Search, Edit2, Trash,
+  BookOpen, Search, Edit2,
 } from '@/shared/components/Icons'
 
 const navItems = [
@@ -51,6 +54,7 @@ export default function TeacherDashboard() {
   const [topicModal, setTopicModal] = useState(null)
   const [lessonModal, setLessonModal] = useState(null)
   const [assignmentModal, setAssignmentModal] = useState(null)
+  const [quizModal, setQuizModal] = useState(null)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [publishModal, setPublishModal] = useState(null)
   const [addStudentId, setAddStudentId] = useState('')
@@ -125,6 +129,8 @@ export default function TeacherDashboard() {
       lms.deleteLesson(id)
     } else if (type === 'assignment') {
       lms.deleteAssignment(id)
+    } else if (type === 'quiz') {
+      lms.deleteQuiz(id)
     }
     toast('success', 'Eliminado', label)
     setDeleteConfirm(null)
@@ -166,9 +172,11 @@ export default function TeacherDashboard() {
       onSectionChange={id => { setSection(id); setSelectedCourseId(null) }}
       title={sectionTitle}
       notifications={pendingSubmissions.slice(0, 5).map(sub => ({
+        id: sub.id,
         icon: ClipboardCheck,
         text: `${lms.studentName(sub.studentId)} entregó "${assignmentOf(sub)?.title ?? 'una tarea'}"`,
         time: formatDate(sub.submittedAt),
+        onClick: () => goGrade(sub.id),
       }))}
     >
       {/* ── DASHBOARD ── */}
@@ -386,6 +394,9 @@ export default function TeacherDashboard() {
               onAddAssignment={topicId => setAssignmentModal({ mode: 'new', topicId })}
               onEditAssignment={assignment => setAssignmentModal({ mode: 'edit', assignment })}
               onDeleteAssignment={assignment => setDeleteConfirm({ type: 'assignment', id: assignment.id, label: assignment.title })}
+              onAddQuiz={topicId => setQuizModal({ mode: 'new', topicId })}
+              onEditQuiz={quiz => setQuizModal({ mode: 'edit', quiz })}
+              onDeleteQuiz={quiz => setDeleteConfirm({ type: 'quiz', id: quiz.id, label: quiz.title })}
             />
           )}
 
@@ -545,6 +556,19 @@ export default function TeacherDashboard() {
           onClose={() => setAssignmentModal(null)}
         />
       )}
+      {quizModal && selectedCourse && (
+        <QuizFormModal
+          quiz={quizModal.mode === 'edit' ? quizModal.quiz : null}
+          topics={lms.topicsByCourse(selectedCourse.id)}
+          initialTopicId={quizModal.topicId}
+          onSave={form => {
+            if (quizModal.mode === 'edit') { lms.updateQuiz(quizModal.quiz.id, form); toast('success', 'Examen actualizado', form.title) }
+            else { lms.addQuiz(selectedCourse.id, form); toast('success', 'Examen creado', form.title) }
+            setQuizModal(null)
+          }}
+          onClose={() => setQuizModal(null)}
+        />
+      )}
       {deleteConfirm && (
         <ConfirmDeleteModal label={deleteConfirm.label} onConfirm={handleDeleteConfirm} onClose={() => setDeleteConfirm(null)} />
       )}
@@ -563,204 +587,6 @@ export default function TeacherDashboard() {
         />
       )}
     </DashboardShell>
-  )
-}
-
-function CourseContentTab({ course, lms, onAddTopic, onEditTopic, onDeleteTopic, onAddLesson, onEditLesson, onDeleteLesson, onAddAssignment, onEditAssignment, onDeleteAssignment }) {
-  const topics = lms.topicsByCourse(course.id)
-  const untitled = lms.itemsByTopic(null)
-  const weekly = course.format === 'weekly'
-
-  return (
-    <div>
-      <div className="flex justify-end mb-3">
-        <button onClick={onAddTopic}
-          className="px-3 py-1.5 rounded-lg text-xs font-bold text-white flex items-center gap-1.5" style={{ backgroundColor: '#005187' }}>
-          <Plus size={13} /> {weekly ? 'Añadir semana' : 'Añadir tema'}
-        </button>
-      </div>
-
-      {topics.map((topic, ti) => (
-        <TopicBlock key={topic.id} topic={topic} index={ti + 1} weekly={weekly} lms={lms}
-          onEdit={() => onEditTopic(topic)} onDelete={() => onDeleteTopic(topic)}
-          onAddLesson={() => onAddLesson(topic.id)} onAddAssignment={() => onAddAssignment(topic.id)}
-          onEditLesson={onEditLesson} onDeleteLesson={onDeleteLesson}
-          onEditAssignment={onEditAssignment} onDeleteAssignment={onDeleteAssignment}
-        />
-      ))}
-
-      {untitled.length > 0 && (
-        <TopicBlock topic={{ title: 'Sin tema' }} weekly={weekly} lms={lms} plain items={untitled}
-          onEdit={null} onDelete={null}
-          onAddLesson={() => onAddLesson(null)} onAddAssignment={() => onAddAssignment(null)}
-          onEditLesson={onEditLesson} onDeleteLesson={onDeleteLesson}
-          onEditAssignment={onEditAssignment} onDeleteAssignment={onDeleteAssignment}
-        />
-      )}
-
-      {topics.length === 0 && untitled.length === 0 && (
-        <p className="text-sm px-4 py-6 text-center rounded-xl" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
-          Crea tu primer {weekly ? 'semana' : 'tema'} para empezar a agregar lecciones y tareas.
-        </p>
-      )}
-    </div>
-  )
-}
-
-function TopicBlock({ topic, index, weekly, lms, plain, items, onEdit, onDelete, onAddLesson, onAddAssignment, onEditLesson, onDeleteLesson, onEditAssignment, onDeleteAssignment }) {
-  const rows = plain ? items : lms.itemsByTopic(topic.id)
-  return (
-    <div className="mb-5">
-      <div className="flex items-center justify-between mb-2">
-        <h4 className="text-sm font-bold" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
-          {plain ? topic.title : `${weekly ? 'Semana' : 'Tema'} ${index}: ${topic.title}`}
-        </h4>
-        {!plain && (
-          <div className="flex gap-2">
-            <button onClick={onEdit} title="Editar" className="p-1 rounded flex items-center justify-center" style={{ color: 'var(--muted-foreground)' }}><Edit2 size={13} /></button>
-            <button onClick={onDelete} title="Eliminar" className="p-1 rounded flex items-center justify-center" style={{ color: '#dc2626' }}><Trash size={13} /></button>
-          </div>
-        )}
-      </div>
-      <div className="rounded-xl overflow-hidden mb-2" style={{ border: '1px solid var(--border)' }}>
-        {rows.map(({ kind, item }, i) => (
-          <div key={item.id} style={{ display: 'flex', gap: 12, padding: '12px 16px', alignItems: 'center', borderBottom: i < rows.length - 1 ? '1px solid var(--border)' : 'none', backgroundColor: 'var(--card)' }}>
-            <span style={{ color: kind === 'lesson' ? '#005187' : '#7c3aed' }}>
-              {kind === 'lesson' ? <BookOpen size={16} /> : <FileText size={16} />}
-            </span>
-            <div className="flex-1">
-              <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{item.title}</p>
-              {kind === 'lesson' ? (
-                <p className="text-xs truncate" style={{ color: 'var(--muted-foreground)', maxWidth: 480 }}>{item.content}</p>
-              ) : (
-                <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
-                  Vence: {new Date(item.dueDate).toLocaleDateString('es-CO')} · {lms.submissions.filter(s => s.assignmentId === item.id).length} entregas · /{item.maxScore} pts
-                </p>
-              )}
-            </div>
-            <button onClick={() => kind === 'lesson' ? onEditLesson(item) : onEditAssignment(item)} title="Editar"
-              className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>
-              <Edit2 size={13} />
-            </button>
-            <button onClick={() => kind === 'lesson' ? onDeleteLesson(item) : onDeleteAssignment(item)} title="Eliminar"
-              className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ border: '1px solid rgba(220,38,38,0.3)', color: '#dc2626' }}>
-              <Trash size={13} />
-            </button>
-          </div>
-        ))}
-        {rows.length === 0 && <p className="text-sm px-4 py-4 text-center" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)' }}>Sin contenido en este {weekly ? 'semana' : 'tema'} todavía.</p>}
-      </div>
-      <div className="flex gap-2">
-        <button onClick={onAddLesson} className="text-xs px-3 py-1.5 rounded-lg font-medium" style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>+ Lección</button>
-        <button onClick={onAddAssignment} className="text-xs px-3 py-1.5 rounded-lg font-medium" style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>+ Tarea</button>
-      </div>
-    </div>
-  )
-}
-
-function CourseSettingsForm({ course, onSave }) {
-  const [form, setForm] = useState({
-    name: course.name, shortName: course.shortName ?? '', category: course.category,
-    visible: course.visible ?? true, startDate: course.startDate ?? '', endDate: course.endDate ?? '',
-    description: course.description ?? '', format: course.format ?? 'topics',
-    completionTrackingEnabled: course.completionTrackingEnabled ?? true,
-  })
-  const [nameError, setNameError] = useState('')
-  const wordCount = form.description.trim() ? form.description.trim().split(/\s+/).length : 0
-
-  return (
-    <div style={{ maxWidth: 640 }}>
-      <form onSubmit={e => {
-        e.preventDefault()
-        if (!form.name.trim()) { setNameError('El nombre del curso es obligatorio.'); return }
-        setNameError('')
-        onSave(form)
-      }} className="space-y-6" noValidate>
-        <section className="space-y-3">
-          <SectionHeading>General</SectionHeading>
-          <FormField label="Nombre completo del curso" required error={nameError}>
-            <input value={form.name} onChange={e => { setForm(f => ({ ...f, name: e.target.value })); setNameError('') }}
-              className="w-full px-3 py-2.5 rounded-lg text-sm outline-none" style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)', ...errorInputStyle(!!nameError) }} />
-          </FormField>
-          <SettingField label="Nombre corto del curso">
-            <input value={form.shortName} onChange={e => setForm(f => ({ ...f, shortName: e.target.value }))}
-              className="w-full px-3 py-2.5 rounded-lg text-sm outline-none" style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }} />
-          </SettingField>
-          <SettingField label="Visibilidad del curso">
-            <select value={form.visible ? 'show' : 'hide'} onChange={e => setForm(f => ({ ...f, visible: e.target.value === 'show' }))}
-              className="w-full px-3 py-2.5 rounded-lg text-sm outline-none" style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }}>
-              <option value="show">Mostrar</option>
-              <option value="hide">Ocultar</option>
-            </select>
-          </SettingField>
-          <div className="grid grid-cols-2 gap-3">
-            <SettingField label="Fecha de inicio">
-              <input type="date" value={form.startDate} onChange={e => setForm(f => ({ ...f, startDate: e.target.value }))}
-                className="w-full px-3 py-2.5 rounded-lg text-sm outline-none" style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }} />
-            </SettingField>
-            <SettingField label="Fecha de finalización">
-              <input type="date" value={form.endDate} onChange={e => setForm(f => ({ ...f, endDate: e.target.value }))}
-                className="w-full px-3 py-2.5 rounded-lg text-sm outline-none" style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }} />
-            </SettingField>
-          </div>
-          <SettingField label="Número (ID) del curso">
-            <input disabled value={course.id} className="w-full px-3 py-2.5 rounded-lg text-sm outline-none opacity-60"
-              style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }} />
-          </SettingField>
-        </section>
-
-        <section className="space-y-3">
-          <SectionHeading>Descripción</SectionHeading>
-          <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-            <div className="flex gap-3 px-3 py-2 text-xs font-bold" style={{ backgroundColor: 'var(--muted)', color: 'var(--muted-foreground)' }}>
-              <span>B</span><span style={{ fontStyle: 'italic' }}>I</span><span style={{ textDecoration: 'underline' }}>U</span>
-            </div>
-            <textarea rows={5} value={form.description} onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-              className="w-full px-3 py-2.5 text-sm outline-none resize-none" style={{ backgroundColor: 'var(--card)', color: 'var(--foreground)' }} />
-            <div className="px-3 py-1.5 text-xs" style={{ backgroundColor: 'var(--muted)', color: 'var(--muted-foreground)' }}>{wordCount} palabras</div>
-          </div>
-        </section>
-
-        <section className="space-y-3">
-          <SectionHeading>Formato de curso</SectionHeading>
-          <SettingField label="Formato">
-            <select value={form.format} onChange={e => setForm(f => ({ ...f, format: e.target.value }))}
-              className="w-full px-3 py-2.5 rounded-lg text-sm outline-none" style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }}>
-              <option value="topics">Por Tópicos</option>
-              <option value="weekly">Semanal</option>
-            </select>
-          </SettingField>
-        </section>
-
-        <section className="space-y-2">
-          <SectionHeading>Rastreo de finalización</SectionHeading>
-          <label className="flex items-center gap-2 text-sm" style={{ color: 'var(--foreground)' }}>
-            <input type="checkbox" checked={form.completionTrackingEnabled} onChange={e => setForm(f => ({ ...f, completionTrackingEnabled: e.target.checked }))} />
-            Habilitar seguimiento de finalización (bloquea lecciones hasta completar la anterior)
-          </label>
-        </section>
-
-        <button type="submit" className="w-full py-2.5 rounded-lg text-sm font-bold text-white" style={{ backgroundColor: '#005187' }}>
-          Guardar cambios
-        </button>
-      </form>
-    </div>
-  )
-}
-
-function SectionHeading({ children }) {
-  return (
-    <p className="text-xs font-bold uppercase tracking-wider pb-1.5" style={{ color: 'var(--muted-foreground)', borderBottom: '1px solid var(--border)' }}>
-      {children}
-    </p>
-  )
-}
-function SettingField({ label, children }) {
-  return (
-    <div>
-      <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--foreground)' }}>{label}</label>
-      {children}
-    </div>
   )
 }
 

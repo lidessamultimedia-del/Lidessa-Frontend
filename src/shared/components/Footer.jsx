@@ -110,7 +110,7 @@ export default function Footer() {
                     Sábados, domingos y festivos: cerrado
                   </li>
                   <li>
-                    <a href="https://wa.me/573001234567" target="_blank" rel="noreferrer"
+                    <a href="https://wa.me/573016280574" target="_blank" rel="noreferrer"
                       className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold text-white transition-opacity hover:opacity-90"
                       style={{ backgroundColor: '#25D366' }}>
                       <MessageCircle size={14} /> WhatsApp disponible
@@ -154,12 +154,11 @@ export default function Footer() {
             </div>
 
             {/* Contact strip */}
-            <div className="mt-10 pt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 text-center text-sm" style={{ borderTop: '1px solid rgba(132,182,244,0.15)' }}>
+            <div className="mt-10 pt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-center text-sm" style={{ borderTop: '1px solid rgba(132,182,244,0.15)' }}>
               <a href="mailto:comercial@lidessa.co" className="hover:text-white transition-colors">comercial@lidessa.co</a>
               <a href="mailto:mercadeo@lidessa.co" className="hover:text-white transition-colors">mercadeo@lidessa.co</a>
               <a href="mailto:servicios@lidessa.co" className="hover:text-white transition-colors">servicios@lidessa.co</a>
-              <a href="https://wa.me/573001234567" target="_blank" rel="noreferrer" className="hover:text-white transition-colors">+57 300 123 4567 (General)</a>
-              <a href="https://wa.me/573009876543" target="_blank" rel="noreferrer" className="hover:text-white transition-colors">+57 300 987 6543 (Comercial)</a>
+              <a href="https://wa.me/573016280574" target="_blank" rel="noreferrer" className="hover:text-white transition-colors">+57 301 628 0574</a>
             </div>
 
             <div className="text-center mt-6">

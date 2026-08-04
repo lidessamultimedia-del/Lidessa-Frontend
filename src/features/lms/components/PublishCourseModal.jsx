@@ -1,11 +1,12 @@
 import { Check } from '@/shared/components/Icons'
 
-export default function PublishCourseModal({ course, topicsCount, lessonsCount, assignmentsCount, onConfirm, onClose }) {
+export default function PublishCourseModal({ course, topicsCount, lessonsCount, assignmentsCount, quizzesCount, onConfirm, onClose }) {
   const rows = [
     ['Nombre', course.name],
     ['Temas', topicsCount],
     ['Lecciones', lessonsCount],
     ['Tareas', assignmentsCount],
+    ['Exámenes', quizzesCount],
     ['Estudiantes', course.studentIds.length],
     ['Requisitos', course.requiresPassword ? 'Contraseña de acceso' : 'Ninguno'],
     ['Auto-inscripción', course.selfEnrollment ? 'Habilitada' : 'Deshabilitada'],
@@ -48,7 +49,9 @@ export default function PublishCourseModal({ course, topicsCount, lessonsCount, 
           <button onClick={onClose} className="flex-1 py-2.5 rounded-lg text-sm font-bold" style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>
             Cancelar
           </button>
-          <button onClick={onConfirm} className="flex-1 py-2.5 rounded-lg text-sm font-bold text-white" style={{ backgroundColor: '#16a34a' }}>
+          <button onClick={onConfirm}
+            className="flex-1 py-2.5 rounded-lg text-sm font-bold text-white"
+            style={{ backgroundColor: '#16a34a' }}>
             Publicar ahora
           </button>
         </div>

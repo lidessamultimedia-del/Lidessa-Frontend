@@ -1,9 +1,11 @@
 import { useState } from 'react'
-import { useLMS } from '../context/LMSContext'
+import { useLMS, PASS_THRESHOLD } from '../context/LMSContext'
 import { downloadCsv } from '../utils/csv'
-import { Search, Download } from '@/shared/components/Icons'
+import { Search, Download, FileText, HelpCircle } from '@/shared/components/Icons'
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
+const KIND_ICON = { assignment: FileText, quiz: HelpCircle }
+const KIND_COLOR = { assignment: '#7c3aed', quiz: '#d97706' }
 
 export default function GradebookReport({ courseId }) {
   const lms = useLMS()
@@ -13,17 +15,22 @@ export default function GradebookReport({ courseId }) {
   const [page, setPage] = useState(1)
 
   const course = lms.courses.find(c => c.id === courseId)
-  const assignments = lms.assignmentsByCourse(courseId)
   const students = course.studentIds.map(id => lms.directoryById(id)).filter(Boolean)
 
-  function gradeFor(studentId, assignmentId) {
-    const sub = lms.submissionFor(assignmentId, studentId)
-    return sub?.status === 'graded' ? sub.grade : null
-  }
-  function totalFor(studentId) {
-    const grades = assignments.map(a => gradeFor(studentId, a.id)).filter(g => g != null)
-    if (!grades.length) return null
-    return Math.round((grades.reduce((s, g) => s + g, 0) / grades.length) * 10) / 10
+  const topics = lms.topicsByCourse(courseId)
+  const untitledItems = lms.itemsByTopic(null).filter(r => r.kind !== 'lesson')
+  const topicGroups = [
+    ...topics.map(t => ({ id: t.id, title: t.title, items: lms.itemsByTopic(t.id).filter(r => r.kind !== 'lesson') })),
+    ...(untitledItems.length > 0 ? [{ id: 'untitled', title: 'Sin tema', items: untitledItems }] : []),
+  ].filter(g => g.items.length > 0)
+  const allItems = topicGroups.flatMap(g => g.items)
+
+  function gradeFor(studentId, kind, itemId) {
+    if (kind === 'assignment') {
+      const sub = lms.submissionFor(itemId, studentId)
+      return sub?.status === 'graded' ? sub.grade : null
+    }
+    return lms.attemptFor(itemId, studentId)?.score ?? null
   }
 
   const filtered = students
@@ -36,12 +43,16 @@ export default function GradebookReport({ courseId }) {
   const pageRows = filtered.slice((safePage - 1) * pageSize, safePage * pageSize)
 
   function handleExport() {
-    const headers = ['Nombre', 'Correo', ...assignments.map(a => a.title), 'Total']
-    const rows = filtered.map(s => [
-      s.name, s.email,
-      ...assignments.map(a => gradeFor(s.id, a.id) ?? ''),
-      totalFor(s.id) ?? '',
-    ])
+    const headers = ['Nombre', 'Correo', ...allItems.map(({ item }) => item.title), 'Total (ponderado)', 'Estado']
+    const rows = filtered.map(s => {
+      const wg = lms.courseWeightedGrade(s.id, courseId)
+      return [
+        s.name, s.email,
+        ...allItems.map(({ kind, item }) => gradeFor(s.id, kind, item.id) ?? ''),
+        wg.average ?? '',
+        wg.allGraded ? (wg.passed ? 'Aprobado' : 'Reprobado') : 'En curso',
+      ]
+    })
     downloadCsv(`calificador-${course.shortName || course.id}.csv`, headers, rows)
   }
 
@@ -85,43 +96,81 @@ export default function GradebookReport({ courseId }) {
         ))}
       </div>
 
-      <div className="rounded-xl overflow-x-auto" style={{ border: '1px solid var(--border)' }}>
-        <table className="text-sm" style={{ borderCollapse: 'collapse', width: '100%', minWidth: 480 + assignments.length * 120 }}>
-          <thead>
-            <tr style={{ backgroundColor: 'var(--muted)' }}>
-              <th className="text-left px-4 py-2 text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--muted-foreground)', position: 'sticky', left: 0, backgroundColor: 'var(--muted)' }}>Nombre / Correo</th>
-              {assignments.map(a => (
-                <th key={a.id} className="text-left px-4 py-2 text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--muted-foreground)' }}>{a.title}</th>
-              ))}
-              <th className="text-left px-4 py-2 text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--muted-foreground)' }}>Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            {pageRows.map(s => (
-              <tr key={s.id} style={{ borderTop: '1px solid var(--border)' }}>
-                <td className="px-4 py-2.5" style={{ position: 'sticky', left: 0, backgroundColor: 'var(--card)' }}>
-                  <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{s.name}</p>
-                  <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{s.email}</p>
-                </td>
-                {assignments.map(a => {
-                  const g = gradeFor(s.id, a.id)
+      {allItems.length === 0 ? (
+        <p className="text-sm px-4 py-6 text-center rounded-xl" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
+          Todavía no hay tareas ni exámenes en este curso.
+        </p>
+      ) : (
+        <div className="rounded-xl overflow-x-auto" style={{ border: '1px solid var(--border)' }}>
+          <table className="text-sm" style={{ borderCollapse: 'collapse', width: '100%', minWidth: 260 + allItems.length * 130 }}>
+            <thead>
+              <tr style={{ backgroundColor: 'var(--muted)' }}>
+                <th rowSpan={2} className="text-left px-4 py-2 text-xs font-bold uppercase tracking-wider align-bottom"
+                  style={{ color: 'var(--muted-foreground)', position: 'sticky', left: 0, backgroundColor: 'var(--muted)', borderRight: '1px solid var(--border)' }}>
+                  Nombre / Correo
+                </th>
+                {topicGroups.map(g => (
+                  <th key={g.id} colSpan={g.items.length} className="text-center px-3 py-1.5 text-xs font-bold"
+                    style={{ color: 'var(--foreground)', borderLeft: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
+                    {g.title}
+                  </th>
+                ))}
+                <th rowSpan={2} className="text-left px-4 py-2 text-xs font-bold uppercase tracking-wider align-bottom"
+                  style={{ color: 'var(--muted-foreground)', borderLeft: '1px solid var(--border)' }}>
+                  Total ponderado
+                </th>
+              </tr>
+              <tr style={{ backgroundColor: 'var(--muted)' }}>
+                {topicGroups.flatMap(g => g.items).map(({ kind, item }) => {
+                  const Icon = KIND_ICON[kind]
                   return (
-                    <td key={a.id} className="px-4 py-2.5 text-sm" style={{ color: g != null ? '#16a34a' : 'var(--muted-foreground)', fontWeight: g != null ? 700 : 400 }}>
-                      {g != null ? `${g.toFixed(2)} ✓` : '—'}
-                    </td>
+                    <th key={item.id} className="text-left px-3 py-2 text-xs font-semibold"
+                      style={{ color: KIND_COLOR[kind], whiteSpace: 'nowrap', borderLeft: '1px solid var(--border)' }}>
+                      <span className="flex items-center gap-1"><Icon size={11} /> {item.title}</span>
+                    </th>
                   )
                 })}
-                <td className="px-4 py-2.5 text-sm font-black" style={{ color: 'var(--foreground)' }}>
-                  {totalFor(s.id) != null ? totalFor(s.id).toFixed(2) : '—'}
-                </td>
               </tr>
-            ))}
-            {pageRows.length === 0 && (
-              <tr><td colSpan={assignments.length + 2} className="text-center py-6 text-sm" style={{ color: 'var(--muted-foreground)' }}>Sin estudiantes para este filtro.</td></tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {pageRows.map(s => {
+                const wg = lms.courseWeightedGrade(s.id, courseId)
+                return (
+                <tr key={s.id} style={{ borderTop: '1px solid var(--border)' }}>
+                  <td className="px-4 py-2.5" style={{ position: 'sticky', left: 0, backgroundColor: 'var(--card)', borderRight: '1px solid var(--border)' }}>
+                    <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{s.name}</p>
+                    <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{s.email}</p>
+                  </td>
+                  {topicGroups.flatMap(g => g.items).map(({ kind, item }) => {
+                    const g = gradeFor(s.id, kind, item.id)
+                    return (
+                      <td key={item.id} className="px-3 py-2.5 text-sm whitespace-nowrap"
+                        style={{ color: g != null ? '#16a34a' : 'var(--muted-foreground)', fontWeight: g != null ? 700 : 400, borderLeft: '1px solid var(--border)' }}>
+                        {g != null ? `${g.toFixed(1)} ✓` : '—'}
+                      </td>
+                    )
+                  })}
+                  <td className="px-4 py-2.5" style={{ borderLeft: '1px solid var(--border)' }}>
+                    <p className="text-sm font-black" style={{ color: 'var(--foreground)' }}>
+                      {wg.average != null ? wg.average.toFixed(1) : '—'}
+                    </p>
+                    {wg.allGraded && (
+                      <span className="text-xs font-bold px-1.5 py-0.5 rounded-full"
+                        style={{ backgroundColor: wg.passed ? 'rgba(22,163,74,0.12)' : 'rgba(220,38,38,0.12)', color: wg.passed ? '#16a34a' : '#dc2626' }}>
+                        {wg.passed ? '✓ Aprobado' : '✗ Reprobado'}
+                      </span>
+                    )}
+                  </td>
+                </tr>
+                )
+              })}
+              {pageRows.length === 0 && (
+                <tr><td colSpan={allItems.length + 2} className="text-center py-6 text-sm" style={{ color: 'var(--muted-foreground)' }}>Sin estudiantes para este filtro.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-2 mt-3">

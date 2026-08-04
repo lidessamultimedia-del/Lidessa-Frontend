@@ -1,6 +1,6 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useAuth } from '@/features/auth/context/AuthContext'
-import { useLMS } from '@/features/lms/context/LMSContext'
+import { useLMS, MAX_GRADE, PASS_THRESHOLD } from '@/features/lms/context/LMSContext'
 import { useToast } from '@/shared/context/ToastContext'
 import DashboardShell from '@/features/lms/components/DashboardShell'
 import AnimatedCounter from '@/shared/components/AnimatedCounter'
@@ -37,7 +37,19 @@ function courseCardStyle(course, i) {
 
 function formatDate(iso) {
   if (!iso) return '—'
-  return new Date(iso).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' })
+  const d = new Date(iso)
+  const datePart = d.toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' })
+  const hasTime = iso.includes('T') && !iso.endsWith('T00:00')
+  return hasTime ? `${datePart}, ${d.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}` : datePart
+}
+
+// Después de la fecha y hora límite, la actividad/examen deja de aparecerle
+// al estudiante — a menos que ya la haya entregado/presentado (para que pueda
+// seguir viendo su resultado).
+function isStillVisible(kind, item, lms, studentId) {
+  if (kind === 'lesson') return true
+  if (new Date(item.dueDate) >= new Date()) return true
+  return kind === 'assignment' ? !!lms.submissionFor(item.id, studentId) : !!lms.attemptFor(item.id, studentId)
 }
 
 function daysUntil(dateStr) {
@@ -74,20 +86,23 @@ export default function StudentDashboard() {
 
   const myAssignments = useMemo(() => {
     const courseIds = myCourses.map(c => c.id)
-    return lms.assignments.filter(a => courseIds.includes(a.courseId))
+    return lms.assignments.filter(a => courseIds.includes(a.courseId)).filter(lms.isPublished)
   }, [myCourses, lms.assignments])
 
-  const pendingAssignments = myAssignments.filter(a => {
+  const pendingAssignments = myAssignments.filter(a => new Date(a.dueDate) >= new Date()).filter(a => {
     const sub = lms.submissionFor(a.id, studentId)
-    return !sub || sub.status !== 'submitted' && sub.status !== 'graded'
+    return !sub || sub.status === 'draft' || (sub.status === 'graded' && sub.grade < PASS_THRESHOLD)
   }).sort((a, b) => a.dueDate.localeCompare(b.dueDate))
 
   const myQuizzes = useMemo(() => {
     const courseIds = myCourses.map(c => c.id)
-    return lms.quizzes.filter(q => courseIds.includes(q.courseId))
+    return lms.quizzes.filter(q => courseIds.includes(q.courseId)).filter(lms.isPublished)
   }, [myCourses, lms.quizzes])
 
-  const pendingQuizzes = myQuizzes.filter(q => !lms.attemptFor(q.id, studentId)).sort((a, b) => a.dueDate.localeCompare(b.dueDate))
+  const pendingQuizzes = myQuizzes.filter(q => new Date(q.dueDate) >= new Date()).filter(q => {
+    const attempt = lms.attemptFor(q.id, studentId)
+    return !attempt || attempt.score < PASS_THRESHOLD
+  }).sort((a, b) => a.dueDate.localeCompare(b.dueDate))
 
   const gradesByCourse = lms.gradesForStudent(studentId)
   const overallGrades = gradesByCourse.flatMap(g => g.rows).filter(r => r.submission?.status === 'graded')
@@ -115,10 +130,7 @@ export default function StudentDashboard() {
   }
 
   function courseAverageGrade(courseId) {
-    const graded = lms.assignmentsByCourse(courseId)
-      .flatMap(a => lms.submissions.filter(s => s.assignmentId === a.id && s.status === 'graded'))
-    if (!graded.length) return null
-    return Math.round((graded.reduce((sum, s) => sum + s.grade, 0) / graded.length) * 10) / 10
+    return lms.courseWeightedGrade(studentId, courseId).average
   }
 
   const submitAssignment = submitAssignmentId ? lms.assignments.find(a => a.id === submitAssignmentId) : null
@@ -279,7 +291,7 @@ export default function StudentDashboard() {
                               className="w-full text-left text-sm px-3.5 py-2.5 transition-colors" style={{ color: 'var(--foreground)' }}
                               onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--muted)'}
                               onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
-                              {courseGrades?.average != null ? `Calificación: ${courseGrades.average}/100` : 'Ver calificaciones'}
+                              {courseGrades?.average != null ? `Calificación: ${courseGrades.average}/${MAX_GRADE}` : 'Ver calificaciones'}
                             </button>
                           </div>
                         )}
@@ -317,7 +329,7 @@ export default function StudentDashboard() {
                 </div>
                 <p className="text-sm font-bold shrink-0" style={{ color: 'var(--foreground)' }}>
                   Calificación: {gradesByCourse.find(g => g.course.id === selectedCourse.id)?.average != null
-                    ? `${gradesByCourse.find(g => g.course.id === selectedCourse.id).average}/100` : 'Sin calificar'}
+                    ? `${gradesByCourse.find(g => g.course.id === selectedCourse.id).average}/${MAX_GRADE}` : 'Sin calificar'}
                 </p>
               </div>
             </div>
@@ -348,8 +360,8 @@ export default function StudentDashboard() {
                   ['Fecha de inicio', formatDate(selectedCourse.startDate)],
                   ['Fecha de conclusión', formatDate(selectedCourse.endDate)],
                   ['Estudiantes inscritos', selectedCourse.studentIds.length],
-                  ['Calificación promedio del curso', courseAverageGrade(selectedCourse.id) != null ? `${courseAverageGrade(selectedCourse.id)}/100` : 'Sin datos aún'],
-                  ['Lecciones', lms.lessonsByCourse(selectedCourse.id).length],
+                  ['Calificación promedio del curso', courseAverageGrade(selectedCourse.id) != null ? `${courseAverageGrade(selectedCourse.id)}/${MAX_GRADE}` : 'Sin datos aún'],
+                  ['Lecciones', lms.lessonsByCourse(selectedCourse.id).filter(lms.isPublished).length],
                 ].map(([label, value], i) => (
                   <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 16px', borderTop: i > 0 ? '1px solid var(--border)' : 'none', backgroundColor: 'var(--card)' }}>
                     <span className="text-sm" style={{ color: 'var(--muted-foreground)' }}>{label}</span>
@@ -361,11 +373,15 @@ export default function StudentDashboard() {
               <h3 className="text-sm font-bold mb-2" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Próximas actividades</h3>
               <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
                 {(() => {
-                  const pendingCourseAssignments = lms.assignmentsByCourse(selectedCourse.id).filter(a => {
+                  const notExpired = item => new Date(item.dueDate) >= new Date()
+                  const pendingCourseAssignments = lms.assignmentsByCourse(selectedCourse.id).filter(lms.isPublished).filter(notExpired).filter(a => {
                     const sub = lms.submissionFor(a.id, studentId)
-                    return !sub || (sub.status !== 'submitted' && sub.status !== 'graded')
+                    return !sub || sub.status === 'draft' || (sub.status === 'graded' && sub.grade < PASS_THRESHOLD)
                   })
-                  const pendingCourseQuizzes = lms.quizzesByCourse(selectedCourse.id).filter(q => !lms.attemptFor(q.id, studentId))
+                  const pendingCourseQuizzes = lms.quizzesByCourse(selectedCourse.id).filter(lms.isPublished).filter(notExpired).filter(q => {
+                    const attempt = lms.attemptFor(q.id, studentId)
+                    return !attempt || attempt.score < PASS_THRESHOLD
+                  })
                   const rows = [
                     ...pendingCourseAssignments.map(a => ({ kind: 'assignment', item: a })),
                     ...pendingCourseQuizzes.map(q => ({ kind: 'quiz', item: q })),
@@ -392,13 +408,17 @@ export default function StudentDashboard() {
 
           {courseTab === 'content' && (
             <div>
-              {lms.topicsByCourse(selectedCourse.id).map((topic, ti) => (
+              {lms.topicsByCourse(selectedCourse.id).map((topic, ti) => {
+                const publishedItems = lms.itemsByTopic(topic.id)
+                  .filter(({ item }) => lms.isPublished(item))
+                  .filter(({ kind, item }) => isStillVisible(kind, item, lms, studentId))
+                return (
                 <div key={topic.id} className="mb-5">
                   <h4 className="text-sm font-bold mb-2" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
                     {selectedCourse.format === 'weekly' ? 'Semana' : 'Tema'} {ti + 1}: {topic.title}
                   </h4>
                   <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-                    {lms.itemsByTopic(topic.id).map(({ kind, item }, i, arr) => (
+                    {publishedItems.map(({ kind, item }, i, arr) => (
                       <div key={item.id} style={{ display: 'flex', gap: 12, padding: '12px 16px', alignItems: 'center', borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none', backgroundColor: 'var(--card)' }}>
                         {kind === 'lesson' ? (
                           <LessonRow lms={lms} studentId={studentId} course={selectedCourse} lesson={item} onToast={toast} />
@@ -409,10 +429,11 @@ export default function StudentDashboard() {
                         )}
                       </div>
                     ))}
-                    {lms.itemsByTopic(topic.id).length === 0 && <p className="text-sm px-4 py-4 text-center" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)' }}>Sin contenido en este tema todavía.</p>}
+                    {publishedItems.length === 0 && <p className="text-sm px-4 py-4 text-center" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)' }}>Sin contenido en este tema todavía.</p>}
                   </div>
                 </div>
-              ))}
+                )
+              })}
               {lms.topicsByCourse(selectedCourse.id).length === 0 && (
                 <p className="text-sm px-4 py-6 text-center rounded-xl" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
                   El profesor aún no ha publicado contenido en este curso.
@@ -459,11 +480,13 @@ export default function StudentDashboard() {
           quiz={currentQuiz}
           course={currentQuizCourse}
           existingAttempt={currentQuizAttempt}
+          studentId={studentId}
           onCancel={() => setSection('courseDetail')}
           onSubmit={answers => {
             const score = lms.submitQuizAttempt({ quizId: currentQuiz.id, studentId, answers })
-            toast('success', 'Examen entregado', `${currentQuiz.title} — ${score}/100`)
+            toast('success', 'Examen entregado', `${currentQuiz.title} — ${score}/${MAX_GRADE}`)
           }}
+          onTimeUp={() => toast('warning', 'Se acabó el tiempo', 'Tu examen se entregó automáticamente con las respuestas que tenías.')}
         />
       )}
 
@@ -559,22 +582,33 @@ function LessonRow({ lms, studentId, course, lesson, onToast }) {
 
 function AssignmentRow({ lms, studentId, assignment, onSubmit }) {
   const sub = lms.submissionFor(assignment.id, studentId)
+  const passed = sub?.status === 'graded' && sub.grade >= PASS_THRESHOLD
+  const expired = new Date(assignment.dueDate) < new Date()
   return (
     <>
       <span style={{ color: '#7c3aed' }}><FileText size={18} /></span>
       <div className="flex-1">
         <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{assignment.title}</p>
         <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>Vence: {formatDate(assignment.dueDate)}</p>
+        {assignment.fileName && (
+          <a href={assignment.fileData} download={assignment.fileName}
+            className="text-xs flex items-center gap-1 mt-0.5 w-fit" style={{ color: '#7c3aed' }}>
+            <Paperclip size={11} /> {assignment.fileName}
+          </a>
+        )}
       </div>
-      {sub?.status === 'graded' ? (
-        <span className="text-xs px-3 py-1.5 rounded-full font-bold shrink-0" style={{ backgroundColor: 'rgba(22,163,74,0.12)', color: '#16a34a' }}>
-          Calificada · {sub.grade}/{assignment.maxScore}
+      {sub?.status === 'graded' && (
+        <span className="text-xs px-3 py-1.5 rounded-full font-bold shrink-0"
+          style={{ backgroundColor: passed ? 'rgba(22,163,74,0.12)' : 'rgba(220,38,38,0.12)', color: passed ? '#16a34a' : '#dc2626' }}>
+          {passed ? 'Aprobada' : 'No aprobada'} · {sub.grade}/{assignment.maxScore}
         </span>
-      ) : sub?.status === 'submitted' ? (
+      )}
+      {sub?.status === 'submitted' && (
         <span className="text-xs px-3 py-1.5 rounded-full font-bold shrink-0" style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: '#005187' }}>Enviada</span>
-      ) : (
+      )}
+      {!passed && sub?.status !== 'submitted' && !expired && (
         <button onClick={() => onSubmit(assignment.id)} className="text-xs px-3 py-1.5 rounded-lg font-bold text-white shrink-0" style={{ backgroundColor: '#005187' }}>
-          {sub?.status === 'draft' ? 'Continuar' : 'Entregar'}
+          {sub?.status === 'draft' ? 'Continuar' : sub?.status === 'graded' ? 'Reintentar' : 'Entregar'}
         </button>
       )}
     </>
@@ -583,39 +617,91 @@ function AssignmentRow({ lms, studentId, assignment, onSubmit }) {
 
 function QuizRow({ lms, studentId, quiz, onOpen }) {
   const attempt = lms.attemptFor(quiz.id, studentId)
+  const passed = attempt && attempt.score >= PASS_THRESHOLD
+  const expired = new Date(quiz.dueDate) < new Date()
   return (
     <>
       <span style={{ color: '#d97706' }}><HelpCircle size={18} /></span>
       <div className="flex-1">
         <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{quiz.title}</p>
-        <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>Vence: {formatDate(quiz.dueDate)} · {quiz.questions?.length ?? 0} preguntas</p>
+        <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
+          Vence: {formatDate(quiz.dueDate)} · {quiz.questions?.length ?? 0} preguntas{quiz.timeLimitMinutes ? ` · ${quiz.timeLimitMinutes} min` : ''}
+        </p>
       </div>
-      {attempt ? (
-        <span className="text-xs px-3 py-1.5 rounded-full font-bold shrink-0" style={{ backgroundColor: 'rgba(22,163,74,0.12)', color: '#16a34a' }}>
-          Calificado · {attempt.score}/100
+      {attempt && (
+        <span className="text-xs px-3 py-1.5 rounded-full font-bold shrink-0"
+          style={{ backgroundColor: passed ? 'rgba(22,163,74,0.12)' : 'rgba(220,38,38,0.12)', color: passed ? '#16a34a' : '#dc2626' }}>
+          {passed ? 'Aprobado' : 'No aprobado'} · {attempt.score}/{MAX_GRADE}
         </span>
-      ) : (
+      )}
+      {!passed && !expired && (
         <button onClick={() => onOpen(quiz.id)} className="text-xs px-3 py-1.5 rounded-lg font-bold text-white shrink-0" style={{ backgroundColor: '#005187' }}>
-          Responder
+          {attempt ? 'Reintentar' : 'Responder'}
         </button>
       )}
     </>
   )
 }
 
-function QuizAttemptForm({ quiz, course, existingAttempt, onSubmit, onCancel }) {
-  const [answers, setAnswers] = useState(() => quiz.questions.map(() => null))
-  const [error, setError] = useState('')
+function formatCountdown(ms) {
+  const totalSeconds = Math.max(0, Math.ceil(ms / 1000))
+  const m = Math.floor(totalSeconds / 60)
+  const s = totalSeconds % 60
+  return `${m}:${s.toString().padStart(2, '0')}`
+}
 
-  if (existingAttempt) {
+function QuizAttemptForm({ quiz, course, existingAttempt, studentId, onSubmit, onCancel, onTimeUp }) {
+  const locked = existingAttempt && existingAttempt.score >= PASS_THRESHOLD
+  const [answers, setAnswers] = useState(() => quiz.questions.map(q => q.type === 'open' ? '' : null))
+  const [error, setError] = useState('')
+  const answersRef = useRef(answers)
+  answersRef.current = answers
+
+  const timeLimitMs = quiz.timeLimitMinutes ? quiz.timeLimitMinutes * 60 * 1000 : null
+  const startKey = `lidessa_quiz_start_${quiz.id}_${studentId}`
+  const [remainingMs, setRemainingMs] = useState(() => {
+    if (!timeLimitMs || locked) return null
+    let startedAt = localStorage.getItem(startKey)
+    if (!startedAt) {
+      startedAt = Date.now().toString()
+      localStorage.setItem(startKey, startedAt)
+    }
+    return Math.max(0, timeLimitMs - (Date.now() - Number(startedAt)))
+  })
+
+  useEffect(() => {
+    if (remainingMs === null) return
+    if (remainingMs <= 0) {
+      localStorage.removeItem(startKey)
+      onSubmit(answersRef.current)
+      onTimeUp?.()
+      onCancel()
+      return
+    }
+    const id = setInterval(() => {
+      setRemainingMs(ms => {
+        if (ms === null || ms > 1000) return ms === null ? ms : ms - 1000
+        clearInterval(id)
+        localStorage.removeItem(startKey)
+        onSubmit(answersRef.current)
+        onTimeUp?.()
+        onCancel()
+        return 0
+      })
+    }, 1000)
+    return () => clearInterval(id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  if (locked) {
     return (
       <div style={{ animation: 'fadeUp 0.4s ease', maxWidth: 640 }}>
         <button onClick={onCancel} className="text-xs font-semibold mb-3" style={{ color: '#005187' }}>← Volver</button>
         <h2 className="text-xl font-black mb-1" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>{quiz.title}</h2>
         <p className="text-sm mb-4" style={{ color: 'var(--muted-foreground)' }}>{course?.name}</p>
         <div className="rounded-xl p-5" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
-          <p className="text-sm font-bold mb-1" style={{ color: '#16a34a' }}>Ya entregaste este examen</p>
-          <p className="text-sm" style={{ color: 'var(--foreground)' }}>Tu calificación: <strong>{existingAttempt.score}/100</strong></p>
+          <p className="text-sm font-bold mb-1" style={{ color: '#16a34a' }}>Ya aprobaste este examen</p>
+          <p className="text-sm" style={{ color: 'var(--foreground)' }}>Tu calificación: <strong>{existingAttempt.score}/{MAX_GRADE}</strong></p>
           <p className="text-xs mt-1" style={{ color: 'var(--muted-foreground)' }}>Entregado: {formatDate(existingAttempt.submittedAt)}</p>
         </div>
       </div>
@@ -623,8 +709,10 @@ function QuizAttemptForm({ quiz, course, existingAttempt, onSubmit, onCancel }) 
   }
 
   function handleSubmit() {
-    if (answers.some(a => a === null)) { setError('Responde todas las preguntas antes de entregar.'); return }
+    const missing = quiz.questions.some((q, i) => q.type === 'open' ? !answers[i]?.trim() : answers[i] === null)
+    if (missing) { setError('Responde todas las preguntas antes de entregar.'); return }
     setError('')
+    localStorage.removeItem(startKey)
     onSubmit(answers)
     onCancel()
   }
@@ -632,27 +720,52 @@ function QuizAttemptForm({ quiz, course, existingAttempt, onSubmit, onCancel }) 
   return (
     <div style={{ animation: 'fadeUp 0.4s ease', maxWidth: 640 }}>
       <button onClick={onCancel} className="text-xs font-semibold mb-3" style={{ color: '#005187' }}>← Volver</button>
-      <h2 className="text-xl font-black mb-1" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>{quiz.title}</h2>
+      <div className="flex items-start justify-between gap-3 mb-1">
+        <h2 className="text-xl font-black" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>{quiz.title}</h2>
+        {remainingMs !== null && (
+          <span className="text-sm font-black px-3 py-1 rounded-lg shrink-0"
+            style={{ backgroundColor: remainingMs < 5 * 60 * 1000 ? 'rgba(220,38,38,0.12)' : 'rgba(217,119,6,0.12)', color: remainingMs < 5 * 60 * 1000 ? '#dc2626' : '#d97706' }}>
+            ⏱ {formatCountdown(remainingMs)}
+          </span>
+        )}
+      </div>
       <p className="text-sm mb-4" style={{ color: 'var(--muted-foreground)' }}>{course?.name}</p>
 
       <div className="rounded-xl p-4 mb-5" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
         <p className="text-sm mb-2" style={{ color: 'var(--foreground)' }}>{quiz.description}</p>
-        <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>Fecha límite: {formatDate(quiz.dueDate)} · {daysUntil(quiz.dueDate)} · Se califica automáticamente al entregar</p>
+        <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
+          Fecha límite: {formatDate(quiz.dueDate)} · {daysUntil(quiz.dueDate)}
+          {quiz.timeLimitMinutes ? ` · Tienes ${quiz.timeLimitMinutes} minutos desde que abres el examen` : ''} · Se califica automáticamente al entregar
+        </p>
       </div>
+
+      {existingAttempt && !locked && (
+        <p className="text-xs px-3 py-2 rounded-lg mb-4" style={{ backgroundColor: 'rgba(220,38,38,0.1)', color: '#dc2626' }}>
+          Tu intento anterior fue {existingAttempt.score}/{MAX_GRADE} (no aprobado). Este intento reemplaza al anterior.
+        </p>
+      )}
 
       <div className="space-y-4">
         {quiz.questions.map((q, qi) => (
           <div key={q.id} className="rounded-xl p-4" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
             <p className="text-sm font-semibold mb-3" style={{ color: 'var(--foreground)' }}>{qi + 1}. {q.text}</p>
-            <div className="space-y-2">
-              {q.options.map((opt, oi) => (
-                <label key={oi} className="flex items-center gap-2 text-sm cursor-pointer" style={{ color: 'var(--foreground)' }}>
-                  <input type="radio" name={`q-${q.id}`} checked={answers[qi] === oi}
-                    onChange={() => { setAnswers(a => a.map((v, i) => i === qi ? oi : v)); setError('') }} />
-                  {opt}
-                </label>
-              ))}
-            </div>
+            {q.type === 'open' ? (
+              <textarea rows={4} value={answers[qi] ?? ''}
+                onChange={e => { const v = e.target.value; setAnswers(a => a.map((val, i) => i === qi ? v : val)); setError('') }}
+                placeholder="Escribe tu respuesta…"
+                className="w-full px-3 py-2 rounded-lg text-sm outline-none resize-none"
+                style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }} />
+            ) : (
+              <div className="space-y-2">
+                {q.options.map((opt, oi) => (
+                  <label key={oi} className="flex items-center gap-2 text-sm cursor-pointer" style={{ color: 'var(--foreground)' }}>
+                    <input type="radio" name={`q-${q.id}`} checked={answers[qi] === oi}
+                      onChange={() => { setAnswers(a => a.map((v, i) => i === qi ? oi : v)); setError('') }} />
+                    {opt}
+                  </label>
+                ))}
+              </div>
+            )}
           </div>
         ))}
 

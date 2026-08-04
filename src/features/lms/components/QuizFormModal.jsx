@@ -3,16 +3,27 @@ import FormField, { errorInputStyle } from '@/shared/components/FormField'
 import { Plus, Trash } from '@/shared/components/Icons'
 
 function newQuestion() {
-  return { id: `tmp${Date.now()}${Math.random().toString(36).slice(2, 6)}`, text: '', options: ['', ''], correctIndex: 0 }
+  return { id: `tmp${Date.now()}${Math.random().toString(36).slice(2, 6)}`, type: 'multiple', text: '', options: ['', ''], correctIndex: 0 }
+}
+
+// Exámenes viejos guardaron la fecha límite como solo-fecha ("2026-08-10"); el
+// input datetime-local necesita también la hora o se muestra vacío al editar.
+function toDatetimeLocal(value) {
+  if (!value) return ''
+  return value.includes('T') ? value : `${value}T00:00`
 }
 
 export default function QuizFormModal({ quiz, topics = [], initialTopicId, onSave, onClose }) {
   const [form, setForm] = useState({
     title: quiz?.title ?? '',
     description: quiz?.description ?? '',
-    dueDate: quiz?.dueDate ?? '',
+    dueDate: toDatetimeLocal(quiz?.dueDate),
+    publishAt: quiz?.publishAt ?? '',
+    timeLimitMinutes: quiz?.timeLimitMinutes ?? '',
     topicId: quiz?.topicId ?? initialTopicId ?? topics[0]?.id ?? '',
-    questions: quiz?.questions?.length ? quiz.questions.map(q => ({ ...q, options: [...q.options] })) : [newQuestion()],
+    questions: quiz?.questions?.length
+      ? quiz.questions.map(q => ({ type: 'multiple', ...q, options: q.options ? [...q.options] : ['', ''] }))
+      : [newQuestion()],
   })
   const [errors, setErrors] = useState({})
 
@@ -54,8 +65,8 @@ export default function QuizFormModal({ quiz, topics = [], initialTopicId, onSav
     if (!form.title.trim()) errs.title = 'El título del examen es obligatorio.'
     if (!form.dueDate) errs.dueDate = 'Seleccione la fecha límite.'
     if (form.questions.length === 0) errs.questions = 'Agregue al menos una pregunta.'
-    else if (form.questions.some(q => !q.text.trim() || q.options.some(o => !o.trim()))) {
-      errs.questions = 'Complete el texto de cada pregunta y todas sus opciones.'
+    else if (form.questions.some(q => !q.text.trim() || (q.type === 'multiple' && q.options.some(o => !o.trim())))) {
+      errs.questions = 'Complete el texto de cada pregunta (y todas sus opciones si es de selección múltiple).'
     }
     return errs
   }
@@ -66,8 +77,13 @@ export default function QuizFormModal({ quiz, topics = [], initialTopicId, onSav
     setErrors(errs)
     if (Object.keys(errs).length > 0) return
     onSave({
-      title: form.title, description: form.description, dueDate: form.dueDate, topicId: form.topicId,
-      questions: form.questions.map(({ id, text, options, correctIndex }) => ({ id, text: text.trim(), options: options.map(o => o.trim()), correctIndex })),
+      title: form.title, description: form.description, dueDate: form.dueDate, publishAt: form.publishAt,
+      timeLimitMinutes: form.timeLimitMinutes ? Number(form.timeLimitMinutes) : null, topicId: form.topicId,
+      questions: form.questions.map(({ id, type, text, options, correctIndex }) => (
+        type === 'open'
+          ? { id, type, text: text.trim(), options: [], correctIndex: null }
+          : { id, type, text: text.trim(), options: options.map(o => o.trim()), correctIndex }
+      )),
     })
   }
 
@@ -81,7 +97,7 @@ export default function QuizFormModal({ quiz, topics = [], initialTopicId, onSav
           {quiz ? 'Editar examen' : 'Nuevo examen'}
         </h3>
         <p className="text-xs mb-5" style={{ color: 'var(--muted-foreground)' }}>
-          Los estudiantes responden en línea y se califica automáticamente al entregar.
+          Las preguntas de selección múltiple se califican solas al entregar. Las de respuesta abierta hay que revisarlas y calificarlas tú — las respuestas pueden variar.
         </p>
         <form onSubmit={handleSubmit} className="space-y-4" noValidate>
           <FormField label="Título" required error={errors.title}>
@@ -95,21 +111,27 @@ export default function QuizFormModal({ quiz, topics = [], initialTopicId, onSav
               style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }} />
           </FormField>
           <div className="grid grid-cols-2 gap-3">
-            <FormField label="Fecha límite" required error={errors.dueDate}>
-              <input type="date" value={form.dueDate} onChange={e => { setForm(f => ({ ...f, dueDate: e.target.value })); setErrors(er => ({ ...er, dueDate: null })) }}
+            <FormField label="Fecha y hora límite" required error={errors.dueDate} helperText="Después de esta hora ya no le aparece al estudiante.">
+              <input type="datetime-local" value={form.dueDate} onChange={e => { setForm(f => ({ ...f, dueDate: e.target.value })); setErrors(er => ({ ...er, dueDate: null })) }}
                 className="w-full px-3 py-2.5 rounded-lg text-sm outline-none"
                 style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)', ...errorInputStyle(!!errors.dueDate) }} />
             </FormField>
-            {topics.length > 0 && (
-              <FormField label="Tema">
-                <select value={form.topicId} onChange={e => setForm(f => ({ ...f, topicId: e.target.value }))}
-                  className="w-full px-3 py-2.5 rounded-lg text-sm outline-none"
-                  style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }}>
-                  {topics.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}
-                </select>
-              </FormField>
-            )}
+            <FormField label="Duración (minutos)" helperText="Ej. 60 = una hora. Vacío = sin límite de tiempo.">
+              <input type="number" min={1} placeholder="Sin límite" value={form.timeLimitMinutes}
+                onChange={e => setForm(f => ({ ...f, timeLimitMinutes: e.target.value }))}
+                className="w-full px-3 py-2.5 rounded-lg text-sm outline-none"
+                style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }} />
+            </FormField>
           </div>
+          {topics.length > 0 && (
+            <FormField label="Tema">
+              <select value={form.topicId} onChange={e => setForm(f => ({ ...f, topicId: e.target.value }))}
+                className="w-full px-3 py-2.5 rounded-lg text-sm outline-none"
+                style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }}>
+                {topics.map(t => <option key={t.id} value={t.id}>{t.title}</option>)}
+              </select>
+            </FormField>
+          )}
 
           <div className="space-y-3 pt-1">
             <div className="flex items-center justify-between">
@@ -136,31 +158,50 @@ export default function QuizFormModal({ quiz, topics = [], initialTopicId, onSav
                     </button>
                   )}
                 </div>
-                <div className="space-y-1.5 pl-5">
-                  {q.options.map((opt, oi) => (
-                    <div key={oi} className="flex items-center gap-2">
-                      <input type="radio" name={`correct-${q.id}`} checked={q.correctIndex === oi}
-                        onChange={() => updateQuestion(qi, { correctIndex: oi })} title="Marcar como respuesta correcta" />
-                      <input value={opt} onChange={e => updateOption(qi, oi, e.target.value)}
-                        placeholder={`Opción ${oi + 1}`}
-                        className="flex-1 px-3 py-1.5 rounded-lg text-sm outline-none"
-                        style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', color: 'var(--foreground)' }} />
-                      {q.options.length > 2 && (
-                        <button type="button" onClick={() => removeOption(qi, oi)} title="Quitar opción"
-                          className="shrink-0 p-1.5 rounded-lg" style={{ color: 'var(--muted-foreground)' }}>
-                          <Trash size={12} />
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                  {q.options.length < 6 && (
-                    <button type="button" onClick={() => addOption(qi)}
-                      className="text-xs font-semibold pl-6" style={{ color: '#005187' }}>
-                      + Agregar opción
+                <div className="flex gap-1 pl-5">
+                  {[{ id: 'multiple', label: 'Selección múltiple' }, { id: 'open', label: 'Respuesta abierta' }].map(t => (
+                    <button key={t.id} type="button" onClick={() => updateQuestion(qi, { type: t.id })}
+                      className="text-xs px-2.5 py-1 rounded-full font-semibold"
+                      style={{
+                        backgroundColor: q.type === t.id ? '#005187' : 'var(--card)',
+                        color: q.type === t.id ? 'white' : 'var(--muted-foreground)',
+                        border: '1px solid var(--border)',
+                      }}>
+                      {t.label}
                     </button>
-                  )}
+                  ))}
                 </div>
-                <p className="text-xs pl-5" style={{ color: 'var(--muted-foreground)' }}>Marque con el punto la opción correcta.</p>
+                {q.type === 'open' ? (
+                  <p className="text-xs pl-5" style={{ color: 'var(--muted-foreground)' }}>
+                    El estudiante responde en un cuadro de texto libre — tú la calificas manualmente al revisar el examen.
+                  </p>
+                ) : (
+                  <div className="space-y-1.5 pl-5">
+                    {q.options.map((opt, oi) => (
+                      <div key={oi} className="flex items-center gap-2">
+                        <input type="radio" name={`correct-${q.id}`} checked={q.correctIndex === oi}
+                          onChange={() => updateQuestion(qi, { correctIndex: oi })} title="Marcar como respuesta correcta" />
+                        <input value={opt} onChange={e => updateOption(qi, oi, e.target.value)}
+                          placeholder={`Opción ${oi + 1}`}
+                          className="flex-1 px-3 py-1.5 rounded-lg text-sm outline-none"
+                          style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', color: 'var(--foreground)' }} />
+                        {q.options.length > 2 && (
+                          <button type="button" onClick={() => removeOption(qi, oi)} title="Quitar opción"
+                            className="shrink-0 p-1.5 rounded-lg" style={{ color: 'var(--muted-foreground)' }}>
+                            <Trash size={12} />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                    {q.options.length < 6 && (
+                      <button type="button" onClick={() => addOption(qi)}
+                        className="text-xs font-semibold pl-6" style={{ color: '#005187' }}>
+                        + Agregar opción
+                      </button>
+                    )}
+                    <p className="text-xs pl-5" style={{ color: 'var(--muted-foreground)' }}>Marque con el punto la opción correcta.</p>
+                  </div>
+                )}
               </div>
             ))}
           </div>

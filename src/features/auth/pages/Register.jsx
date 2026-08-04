@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth, ROLE_HOME } from '../context/AuthContext'
 import { useLMS } from '@/features/lms/context/LMSContext'
-import { useCourses } from '@/features/training/context/CoursesContext'
 import { useToast } from '@/shared/context/ToastContext'
 import FormField, { errorInputStyle } from '@/shared/components/FormField'
 
@@ -10,7 +9,8 @@ const EMAIL_RE = /^\S+@\S+\.\S+$/
 
 export default function Register() {
   const [searchParams] = useSearchParams()
-  const { courses } = useCourses()
+  const lms = useLMS()
+  const courses = lms.publicCourses
   const preselected = courses.find(c => c.name === searchParams.get('curso'))?.name ?? ''
 
   const [form, setForm] = useState({ name: '', email: '', phone: '', courseInterest: preselected, password: '', confirmPassword: '' })
@@ -18,7 +18,6 @@ export default function Register() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const { register } = useAuth()
-  const lms = useLMS()
   const { toast } = useToast()
   const navigate = useNavigate()
 

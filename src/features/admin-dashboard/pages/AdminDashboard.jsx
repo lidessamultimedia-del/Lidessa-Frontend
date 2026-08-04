@@ -5,7 +5,6 @@ import { useToast } from '@/shared/context/ToastContext'
 import { useBlog } from '@/features/blog/context/BlogContext'
 import { usePQRSF } from '@/features/pqrsf/context/PQRSFContext'
 import { useLMS } from '@/features/lms/context/LMSContext'
-import { useCourses } from '@/features/training/context/CoursesContext'
 import { useServicesData } from '@/features/services/context/ServicesDataContext'
 import BlogPostFormModal from '@/features/blog/components/BlogPostFormModal'
 import CourseFormModal from '@/features/lms/components/CourseFormModal'
@@ -58,7 +57,7 @@ export default function AdminDashboard({ theme, setTheme }) {
   const { posts: blogPosts, addPost, updatePost, deletePost } = useBlog()
   const { tickets: pqrsfTickets, updateTicket: updatePQRSF } = usePQRSF()
   const lms = useLMS()
-  const { courses: catalogCourses, addCourse: addCatalogCourse, updateCourse: updateCatalogCourse, deleteCourse: deleteCatalogCourse } = useCourses()
+  const catalogCourses = lms.listedCourses
   const { services, addService, updateService, deleteService, toggleServiceActive, categories: serviceCategories, addCategory, updateCategory, toggleCategoryActive, deleteCategory } = useServicesData()
   const [section, setSection] = useState('dashboard')
   const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -153,18 +152,32 @@ export default function AdminDashboard({ theme, setTheme }) {
 
   function handleSaveCatalogCourse(form) {
     if (catalogModal.mode === 'edit') {
-      updateCatalogCourse(catalogModal.course.id, form)
+      lms.updateCourse(catalogModal.course.id, form)
       toast('success', 'Curso actualizado', form.name)
     } else {
-      addCatalogCourse(form)
-      toast('success', 'Curso creado', form.name)
+      lms.addCourse({
+        listed: true, published: false, visible: true,
+        teacherId: null, format: 'topics', completionTrackingEnabled: true,
+        requiresPassword: false, password: '', selfEnrollment: true, guestAccess: false,
+        capacity: 100, color: '#005187', startDate: '', endDate: '',
+        ...form,
+      })
+      toast('success', 'Curso creado', 'Ya aparece en la página pública de CEET y en Cursos (LMS) para que un profesor lo complete.')
     }
     setCatalogModal(null)
+  }
+
+  function todayISO() {
+    return new Date().toISOString().slice(0, 10)
   }
 
   function togglePublishLmsCourse(course) {
     lms.updateCourse(course.id, { published: !course.published })
     toast(course.published ? 'warning' : 'success', course.published ? 'Curso despublicado' : 'Curso publicado', course.name)
+  }
+
+  function handleOpenPublishModal(course) {
+    setLmsPublishModal(course)
   }
 
   function openLmsCourseDetail(courseId, tab = 'content') {
@@ -206,7 +219,8 @@ export default function AdminDashboard({ theme, setTheme }) {
       deleteService(deleteConfirm.id)
       toast('success', 'Servicio eliminado', deleteConfirm.label)
     } else if (deleteConfirm.type === 'catalogCourse') {
-      deleteCatalogCourse(deleteConfirm.id)
+      lms.deleteCourse(deleteConfirm.id)
+      if (lmsSelectedCourseId === deleteConfirm.id) setLmsSelectedCourseId(null)
       toast('success', 'Curso eliminado', deleteConfirm.label)
     } else if (deleteConfirm.type === 'category') {
       deleteCategory(deleteConfirm.id)
@@ -262,7 +276,7 @@ export default function AdminDashboard({ theme, setTheme }) {
     { id: 'dashboard', label: 'Dashboard', icon: BarChart2 },
     { id: 'services', label: 'Servicios', icon: Building },
     { id: 'blog', label: 'Converge', icon: FileText },
-    { id: 'courses', label: 'Catálogo web', icon: GraduationCap },
+    { id: 'courses', label: 'CEET', icon: GraduationCap },
     { id: 'pqrsf', label: 'PQRSF', icon: Clipboard },
     { id: 'lms-divider', divider: true, label: 'LMS' },
     { id: 'lms-courses', label: 'Cursos (LMS)', icon: BookOpen },
@@ -766,14 +780,19 @@ export default function AdminDashboard({ theme, setTheme }) {
           {/* ── COURSES ── */}
           {section === 'courses' && (
             <div style={{ animation: 'fadeUp 0.4s ease' }}>
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-black" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Catálogo web (CEET)</h2>
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="text-xl font-black" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>CEET</h2>
                 <button onClick={() => setCatalogModal({ mode: 'new' })}
                   className="px-4 py-2 rounded-lg text-sm font-bold text-white flex items-center gap-1.5"
                   style={{ backgroundColor: '#005187' }}>
                   <Plus size={14} /> Nuevo curso
                 </button>
               </div>
+              <p className="text-xs mb-6" style={{ color: 'var(--muted-foreground)' }}>
+                Aquí solo se registra la información pública del curso (nombre, categoría, descripción, duración, imagen, certificado).
+                No aparece en la página web hasta que le des <strong style={{ color: 'var(--foreground)' }}>Publicar</strong>. Para armar el
+                contenido real (temas, materiales, tareas, exámenes) y asignar un profesor, ábrelo en <strong style={{ color: 'var(--foreground)' }}>Cursos (LMS)</strong>.
+              </p>
               <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
                 {catalogCourses.map((c, i) => (
                   <div key={c.id} style={{
@@ -786,10 +805,16 @@ export default function AdminDashboard({ theme, setTheme }) {
                     ) : (
                       <div className="w-12 h-10 rounded-lg shrink-0" style={{ backgroundColor: 'var(--muted)' }} />
                     )}
-                    <div className="flex-1">
-                      <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{c.name}</p>
-                      <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{c.category} · {c.duration} · {c.modality}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold truncate" style={{ color: 'var(--foreground)' }}>{c.name}</p>
+                      <p className="text-xs truncate" style={{ color: 'var(--muted-foreground)' }}>{c.category} · {c.duration} · {c.modality}</p>
                     </div>
+                    <button onClick={() => c.published ? togglePublishLmsCourse(c) : handleOpenPublishModal(c)}
+                      className="text-xs px-2 py-0.5 rounded-full font-semibold w-fit shrink-0 transition-opacity hover:opacity-75"
+                      title={c.published ? 'Click para despublicar' : 'Click para ver el resumen y publicar'}
+                      style={{ backgroundColor: c.published ? 'rgba(22,163,74,0.12)' : 'rgba(217,119,6,0.12)', color: c.published ? '#16a34a' : '#d97706' }}>
+                      {c.published ? '✓ Publicado en LMS' : c.teacherId ? '⏳ Sin publicar' : '⏳ Sin profesor'}
+                    </button>
                     <button onClick={() => setCatalogModal({ mode: 'edit', course: c })} title="Editar"
                       className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors"
                       style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: '#005187', border: '1px solid rgba(0,81,135,0.2)' }}>
@@ -863,7 +888,7 @@ export default function AdminDashboard({ theme, setTheme }) {
                 addStudentId={lmsAddStudentId}
                 setAddStudentId={setLmsAddStudentId}
                 onBack={() => setLmsSelectedCourseId(null)}
-                onPublish={() => setLmsPublishModal(lmsSelectedCourse)}
+                onPublish={() => handleOpenPublishModal(lmsSelectedCourse)}
                 onEditCourse={() => setLmsCourseModal({ mode: 'edit', course: lmsSelectedCourse })}
                 onAddTopic={() => setLmsTopicModal({ mode: 'new' })}
                 onEditTopic={topic => setLmsTopicModal({ mode: 'edit', topic })}
@@ -877,16 +902,30 @@ export default function AdminDashboard({ theme, setTheme }) {
                 onAddQuiz={topicId => setLmsQuizModal({ mode: 'new', topicId })}
                 onEditQuiz={quiz => setLmsQuizModal({ mode: 'edit', quiz })}
                 onDeleteQuiz={quiz => setDeleteConfirm({ type: 'quiz', id: quiz.id, label: quiz.title })}
+                onPublishLesson={lesson => {
+                  const next = lesson.publishAt ? '' : todayISO()
+                  lms.updateLesson(lesson.id, { publishAt: next })
+                  toast(next ? 'success' : 'warning', next ? 'Material publicado' : 'Publicación cancelada', lesson.title)
+                }}
+                onPublishAssignment={assignment => {
+                  const next = assignment.publishAt ? '' : todayISO()
+                  lms.updateAssignment(assignment.id, { publishAt: next })
+                  toast(next ? 'success' : 'warning', next ? 'Tarea publicada' : 'Publicación cancelada', assignment.title)
+                }}
+                onPublishQuiz={quiz => {
+                  const next = quiz.publishAt ? '' : todayISO()
+                  lms.updateQuiz(quiz.id, { publishAt: next })
+                  toast(next ? 'success' : 'warning', next ? 'Examen publicado' : 'Publicación cancelada', quiz.title)
+                }}
               />
             ) : (
               <div style={{ animation: 'fadeUp 0.4s ease' }}>
-                <div className="flex items-center justify-between mb-6">
+                <div className="mb-6">
                   <h2 className="text-xl font-black" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Cursos del LMS</h2>
-                  <button onClick={() => setLmsCourseModal({ mode: 'new' })}
-                    className="px-4 py-2 rounded-lg text-sm font-bold text-white flex items-center gap-1.5"
-                    style={{ backgroundColor: '#005187' }}>
-                    <Plus size={14} /> Nuevo curso
-                  </button>
+                  <p className="text-xs mt-1" style={{ color: 'var(--muted-foreground)' }}>
+                    Los cursos se crean desde <strong style={{ color: 'var(--foreground)' }}>CEET</strong>. Aquí solo se asigna profesor, se arma el
+                    contenido y se revisan calificaciones.
+                  </p>
                 </div>
                 <div className="flex items-center gap-2 px-3 py-2 rounded-lg mb-4" style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', width: 260 }}>
                   <Search size={14} style={{ color: 'var(--muted-foreground)' }} />
@@ -911,14 +950,32 @@ export default function AdminDashboard({ theme, setTheme }) {
                           {lms.topicsByCourse(c.id).length} temas · {lms.lessonsByCourse(c.id).length} lecciones · {lms.assignmentsByCourse(c.id).length} tareas
                         </p>
                       </div>
-                      <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>{lms.teacherName(c.teacherId)}</p>
+                      <select
+                        value={c.teacherId ?? ''}
+                        onClick={e => e.stopPropagation()}
+                        onChange={e => {
+                          const teacherId = e.target.value || null
+                          lms.updateCourse(c.id, { teacherId })
+                          toast('success', teacherId ? 'Profesor asignado' : 'Profesor removido', teacherId ? lms.teacherName(teacherId) : c.name)
+                        }}
+                        className="text-sm px-2 py-1.5 rounded-lg outline-none w-fit max-w-full"
+                        style={{
+                          backgroundColor: c.teacherId ? 'transparent' : 'rgba(217,119,6,0.1)',
+                          color: c.teacherId ? 'var(--foreground)' : '#d97706',
+                          border: c.teacherId ? '1px solid transparent' : '1px solid rgba(217,119,6,0.3)',
+                        }}
+                      >
+                        <option value="">Sin asignar</option>
+                        {lms.directory.filter(u => u.role === 'profesor').map(t => (
+                          <option key={t.id} value={t.id}>{t.name}</option>
+                        ))}
+                      </select>
                       <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>{c.studentIds.length}</p>
-                      <button onClick={() => togglePublishLmsCourse(c)}
-                        className="text-xs px-2 py-0.5 rounded-full font-semibold w-fit transition-opacity hover:opacity-75"
-                        title={c.published ? 'Click para despublicar' : 'Click para publicar'}
+                      <span className="text-xs px-2 py-0.5 rounded-full font-semibold w-fit"
+                        title={c.published ? 'Publicado desde CEET' : 'Aún no se ha publicado desde CEET'}
                         style={{ backgroundColor: c.published ? 'rgba(22,163,74,0.12)' : 'rgba(217,119,6,0.12)', color: c.published ? '#16a34a' : '#d97706' }}>
                         {c.published ? '✓ Publicado' : '⏳ Borrador'}
-                      </button>
+                      </span>
                       <div className="flex gap-2 shrink-0">
                         <button onClick={() => openLmsCourseDetail(c.id)} title="Ver contenido"
                           className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors"
@@ -927,11 +984,6 @@ export default function AdminDashboard({ theme, setTheme }) {
                           onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--muted-foreground)' }}
                         >
                           <Eye size={13} />
-                        </button>
-                        <button onClick={() => setLmsCourseModal({ mode: 'edit', course: c })} title="Editar"
-                          className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors"
-                          style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: '#005187', border: '1px solid rgba(0,81,135,0.2)' }}>
-                          <Edit2 size={13} />
                         </button>
                         <button onClick={() => setDeleteConfirm({ type: 'lmsCourse', id: c.id, label: c.name })} title="Eliminar"
                           className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors"
@@ -1169,6 +1221,7 @@ export default function AdminDashboard({ theme, setTheme }) {
           topicsCount={lms.topicsByCourse(lmsPublishModal.id).length}
           lessonsCount={lms.lessonsByCourse(lmsPublishModal.id).length}
           assignmentsCount={lms.assignmentsByCourse(lmsPublishModal.id).length}
+          quizzesCount={lms.quizzesByCourse(lmsPublishModal.id).length}
           onConfirm={() => {
             lms.updateCourse(lmsPublishModal.id, { published: true })
             toast('success', 'Curso publicado', lmsPublishModal.name)
@@ -1209,6 +1262,7 @@ export default function AdminDashboard({ theme, setTheme }) {
       {catalogModal && (
         <CatalogCourseFormModal
           course={catalogModal.mode === 'edit' ? catalogModal.course : null}
+          categories={[...new Set(lms.courses.map(c => c.category).filter(Boolean))]}
           onSave={handleSaveCatalogCourse}
           onClose={() => setCatalogModal(null)}
         />
@@ -1229,7 +1283,7 @@ function AdminLmsCourseDetail({
   course, lms, toast, tab, setTab, participantsView, setParticipantsView, addStudentId, setAddStudentId,
   onBack, onPublish, onEditCourse,
   onAddTopic, onEditTopic, onDeleteTopic, onAddLesson, onEditLesson, onDeleteLesson, onAddAssignment, onEditAssignment, onDeleteAssignment,
-  onAddQuiz, onEditQuiz, onDeleteQuiz,
+  onAddQuiz, onEditQuiz, onDeleteQuiz, onPublishLesson, onPublishAssignment, onPublishQuiz,
 }) {
   const enrolledStudents = course.studentIds.map(id => lms.directoryById(id)).filter(Boolean)
   const availableStudents = lms.directory.filter(u => u.role === 'estudiante' && u.active && !course.studentIds.includes(u.id))
@@ -1299,6 +1353,9 @@ function AdminLmsCourseDetail({
           onAddQuiz={onAddQuiz}
           onEditQuiz={onEditQuiz}
           onDeleteQuiz={onDeleteQuiz}
+          onPublishLesson={onPublishLesson}
+          onPublishAssignment={onPublishAssignment}
+          onPublishQuiz={onPublishQuiz}
         />
       )}
 

@@ -5,9 +5,21 @@ import {
 } from '../data/seed'
 
 const LMSContext = createContext(null)
-// v3: agrega Cuestionarios (exámenes autocalificados) y adjuntos de archivo en lecciones.
-// Se cambia la clave para que las sesiones con datos de v1/v2 reseeden en vez de quedar con forma incompleta.
-const STORAGE_KEY = 'lidessa_lms_v3'
+// v6: calificaciones pasan de escala 0-100 a escala 0-10 (con decimales), y el
+// examen pesa el doble que una actividad en la nota final ponderada del curso.
+// Se cambia la clave para que las sesiones con datos de v1-v5 reseeden.
+const STORAGE_KEY = 'lidessa_lms_v6'
+
+function todayISO() {
+  return new Date().toISOString().slice(0, 10)
+}
+
+// Escala de calificación: 0-10 con un decimal. El examen pesa el doble que
+// una actividad en el promedio ponderado del curso; se aprueba con 8.0 o más.
+export const MAX_GRADE = 10
+export const PASS_THRESHOLD = 8
+export const ASSIGNMENT_WEIGHT = 1
+export const QUIZ_WEIGHT = 2
 
 const defaultState = {
   directory: seedDirectory,
@@ -147,7 +159,7 @@ export function LMSProvider({ children }) {
 
   // ── Assignments ──
   function addAssignment(courseId, data) {
-    const assignment = { id: `a${Date.now()}`, courseId, maxScore: 100, ...data }
+    const assignment = { id: `a${Date.now()}`, courseId, maxScore: MAX_GRADE, ...data }
     setState(s => ({ ...s, assignments: [...s.assignments, assignment] }))
     return assignment
   }
@@ -180,11 +192,19 @@ export function LMSProvider({ children }) {
   }
   function submitQuizAttempt({ quizId, studentId, answers }) {
     const quiz = quizzes.find(q => q.id === quizId)
-    const correct = quiz.questions.filter((q, i) => answers[i] === q.correctIndex).length
-    const score = quiz.questions.length ? Math.round((correct / quiz.questions.length) * 1000) / 10 : 0
+    // Las preguntas de respuesta abierta no se autocalifican — solo cuentan
+    // las de selección múltiple para la nota automática.
+    const gradable = quiz.questions.map((q, i) => ({ q, i })).filter(({ q }) => q.type !== 'open')
+    const correct = gradable.filter(({ q, i }) => answers[i] === q.correctIndex).length
+    const score = gradable.length ? Math.round((correct / gradable.length) * MAX_GRADE * 10) / 10 : 0
     setState(s => ({
       ...s,
-      quizAttempts: [...s.quizAttempts, { id: `qa${Date.now()}`, quizId, studentId, answers, score, submittedAt: new Date().toISOString() }],
+      // Un nuevo intento reemplaza el anterior — así un estudiante que reprobó
+      // puede reintentar sin dejar intentos viejos regados.
+      quizAttempts: [
+        ...s.quizAttempts.filter(a => !(a.quizId === quizId && a.studentId === studentId)),
+        { id: `qa${Date.now()}`, quizId, studentId, answers, score, submittedAt: new Date().toISOString() },
+      ],
     }))
     return score
   }
@@ -219,6 +239,9 @@ export function LMSProvider({ children }) {
   const studentName = id => directoryById(id)?.name ?? 'Estudiante'
   const coursesByTeacher = teacherId => courses.filter(c => c.teacherId === teacherId)
   const coursesByStudent = studentId => courses.filter(c => c.studentIds.includes(studentId))
+  const listedCourses = courses.filter(c => c.listed)
+  const publicCourses = courses.filter(c => c.listed && c.published)
+  const isPublished = item => !!item?.publishAt && item.publishAt <= todayISO()
   const lessonsByCourse = courseId => lessons.filter(l => l.courseId === courseId).sort((a, b) => a.order - b.order)
   const assignmentsByCourse = courseId => assignments.filter(a => a.courseId === courseId)
   const submissionFor = (assignmentId, studentId) => submissions.find(sub => sub.assignmentId === assignmentId && sub.studentId === studentId) ?? null
@@ -226,7 +249,7 @@ export function LMSProvider({ children }) {
   const attemptFor = (quizId, studentId) => quizAttempts.find(a => a.quizId === quizId && a.studentId === studentId) ?? null
 
   function progressForStudentCourse(studentId, courseId) {
-    const total = lessonsByCourse(courseId).length
+    const total = lessonsByCourse(courseId).filter(isPublished).length
     const completed = lessonProgress.filter(p => p.studentId === studentId && p.courseId === courseId).length
     return { completed, total, percent: total ? Math.round((completed / total) * 100) : 0 }
   }
@@ -254,9 +277,9 @@ export function LMSProvider({ children }) {
   }
 
   function courseCompletion(studentId, courseId) {
-    const courseLessons = lessonsByCourse(courseId)
-    const courseAssignments = assignmentsByCourse(courseId)
-    const courseQuizzes = quizzesByCourse(courseId)
+    const courseLessons = lessonsByCourse(courseId).filter(isPublished)
+    const courseAssignments = assignmentsByCourse(courseId).filter(isPublished)
+    const courseQuizzes = quizzesByCourse(courseId).filter(isPublished)
     const lessonStatus = courseLessons.map(l => ({
       kind: 'lesson', item: l,
       done: lessonProgress.some(p => p.studentId === studentId && p.lessonId === l.id),
@@ -299,6 +322,28 @@ export function LMSProvider({ children }) {
     })
   }
 
+  // Nota final ponderada: cada examen pesa el doble que una actividad.
+  // `allGraded` solo es true cuando el curso tiene contenido y todo está calificado —
+  // eso es lo que determina si ya se puede decidir si el estudiante aprobó o no.
+  function courseWeightedGrade(studentId, courseId) {
+    const asg = assignmentsByCourse(courseId).filter(isPublished)
+    const qz = quizzesByCourse(courseId).filter(isPublished)
+    const asgGrades = asg.map(a => {
+      const sub = submissionFor(a.id, studentId)
+      return sub?.status === 'graded' ? sub.grade : null
+    })
+    const qzGrades = qz.map(q => attemptFor(q.id, studentId)?.score ?? null)
+
+    let weightedSum = 0
+    let totalWeight = 0
+    asgGrades.forEach(g => { if (g != null) { weightedSum += g * ASSIGNMENT_WEIGHT; totalWeight += ASSIGNMENT_WEIGHT } })
+    qzGrades.forEach(g => { if (g != null) { weightedSum += g * QUIZ_WEIGHT; totalWeight += QUIZ_WEIGHT } })
+
+    const average = totalWeight > 0 ? Math.round((weightedSum / totalWeight) * 10) / 10 : null
+    const allGraded = asg.length > 0 && qz.length > 0 && asgGrades.every(g => g != null) && qzGrades.every(g => g != null)
+    return { average, allGraded, passed: allGraded && average != null && average >= PASS_THRESHOLD }
+  }
+
   const value = {
     directory, courses, topics, lessons, assignments, submissions, lessonProgress, quizzes, quizAttempts,
     addDirectoryUser, updateDirectoryUser, toggleDirectoryUserActive, deleteDirectoryUser,
@@ -309,11 +354,11 @@ export function LMSProvider({ children }) {
     addQuiz, updateQuiz, deleteQuiz, submitQuizAttempt,
     submitAssignment, gradeSubmission,
     directoryById, teacherName, studentName,
-    coursesByTeacher, coursesByStudent, lessonsByCourse, assignmentsByCourse, submissionFor,
+    coursesByTeacher, coursesByStudent, listedCourses, publicCourses, isPublished, lessonsByCourse, assignmentsByCourse, submissionFor,
     quizzesByCourse, attemptFor,
     progressForStudentCourse, isLessonUnlocked,
     topicsByCourse, topicById, itemsByTopic, courseCompletion,
-    submissionsPendingForTeacher, submissionsForTeacherCourse, gradesForStudent,
+    submissionsPendingForTeacher, submissionsForTeacherCourse, gradesForStudent, courseWeightedGrade,
   }
 
   return <LMSContext.Provider value={value}>{children}</LMSContext.Provider>

@@ -13,7 +13,7 @@ export function ToastProvider({ children }) {
     const id = Math.random().toString(36).slice(2)
     setToasts(prev => [...prev, { id, type, title, message }])
     if (type !== 'error') {
-      setTimeout(() => dismiss(id), 4500)
+      setTimeout(() => dismiss(id), 2500)
     }
   }, [dismiss])
 

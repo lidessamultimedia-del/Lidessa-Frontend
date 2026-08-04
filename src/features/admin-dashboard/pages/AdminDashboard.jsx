@@ -25,6 +25,7 @@ import CatalogCourseFormModal from '../components/CatalogCourseFormModal'
 import CategoriesManagerView from '../components/CategoriesManagerView'
 import AnimatedCounter from '@/shared/components/AnimatedCounter'
 import ThemeToggle from '@/shared/components/ThemeToggle'
+import { courseCardStyle } from '@/features/lms/utils/courseCard'
 import { BarChart2, Building, FileText, GraduationCap, Users, Clipboard, Sliders, Bell, User, AlertTriangle, Edit2, Plus, Send, BookOpen, Trash, Search, Eye, Lock, X } from '@/shared/components/Icons'
 
 const SETTINGS_KEY = 'lidessa_site_settings'
@@ -932,73 +933,83 @@ export default function AdminDashboard({ theme, setTheme }) {
                   <input value={lmsCoursesSearch} onChange={e => setLmsCoursesSearch(e.target.value)} placeholder="Buscar curso…"
                     className="text-sm outline-none bg-transparent flex-1" style={{ color: 'var(--foreground)' }} />
                 </div>
-                <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-                  <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.2fr 1fr 1fr auto', gap: '0 16px', padding: '10px 16px', backgroundColor: 'var(--muted)' }}>
-                    {['Nombre', 'Profesor', 'Estudiantes', 'Estado', ''].map(h => (
-                      <span key={h} className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--muted-foreground)' }}>{h}</span>
-                    ))}
-                  </div>
-                  {lms.courses.filter(c => c.name.toLowerCase().includes(lmsCoursesSearch.toLowerCase())).map((c, i) => (
-                    <div key={c.id} style={{
-                      display: 'grid', gridTemplateColumns: '2fr 1.2fr 1fr 1fr auto',
-                      gap: '0 16px', padding: '12px 16px', alignItems: 'center',
-                      borderTop: '1px solid var(--border)', backgroundColor: 'var(--card)',
-                    }}>
-                      <div className="cursor-pointer" onClick={() => openLmsCourseDetail(c.id)}>
-                        <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{c.name}</p>
-                        <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
-                          {lms.topicsByCourse(c.id).length} temas · {lms.lessonsByCourse(c.id).length} lecciones · {lms.assignmentsByCourse(c.id).length} tareas
+                {(() => {
+                  const filteredCourses = lms.courses.filter(c => c.name.toLowerCase().includes(lmsCoursesSearch.toLowerCase()))
+                  if (filteredCourses.length === 0) {
+                    return (
+                      <div className="rounded-xl" style={{ border: '1px solid var(--border)' }}>
+                        <p className="text-sm px-4 py-6 text-center" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)' }}>
+                          {lms.courses.length === 0 ? 'No hay cursos LMS todavía.' : 'Sin resultados para esa búsqueda.'}
                         </p>
                       </div>
-                      <select
-                        value={c.teacherId ?? ''}
-                        onClick={e => e.stopPropagation()}
-                        onChange={e => {
-                          const teacherId = e.target.value || null
-                          lms.updateCourse(c.id, { teacherId })
-                          toast('success', teacherId ? 'Profesor asignado' : 'Profesor removido', teacherId ? lms.teacherName(teacherId) : c.name)
-                        }}
-                        className="text-sm px-2 py-1.5 rounded-lg outline-none w-fit max-w-full"
-                        style={{
-                          backgroundColor: c.teacherId ? 'transparent' : 'rgba(217,119,6,0.1)',
-                          color: c.teacherId ? 'var(--foreground)' : '#d97706',
-                          border: c.teacherId ? '1px solid transparent' : '1px solid rgba(217,119,6,0.3)',
-                        }}
-                      >
-                        <option value="">Sin asignar</option>
-                        {lms.directory.filter(u => u.role === 'profesor').map(t => (
-                          <option key={t.id} value={t.id}>{t.name}</option>
-                        ))}
-                      </select>
-                      <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>{c.studentIds.length}</p>
-                      <span className="text-xs px-2 py-0.5 rounded-full font-semibold w-fit"
-                        title={c.published ? 'Publicado desde CEET' : 'Aún no se ha publicado desde CEET'}
-                        style={{ backgroundColor: c.published ? 'rgba(22,163,74,0.12)' : 'rgba(217,119,6,0.12)', color: c.published ? '#16a34a' : '#d97706' }}>
-                        {c.published ? '✓ Publicado' : '⏳ Borrador'}
-                      </span>
-                      <div className="flex gap-2 shrink-0">
-                        <button onClick={() => openLmsCourseDetail(c.id)} title="Ver contenido"
-                          className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors"
-                          style={{ border: '1px solid var(--border)', color: 'var(--muted-foreground)' }}
-                          onMouseEnter={e => { e.currentTarget.style.borderColor = '#4d82bc'; e.currentTarget.style.color = '#4d82bc' }}
-                          onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--muted-foreground)' }}
-                        >
-                          <Eye size={13} />
-                        </button>
-                        <button onClick={() => setDeleteConfirm({ type: 'lmsCourse', id: c.id, label: c.name })} title="Eliminar"
-                          className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors"
-                          style={{ border: '1px solid rgba(220,38,38,0.3)', color: '#dc2626' }}>
-                          <Trash size={13} />
-                        </button>
-                      </div>
+                    )
+                  }
+                  return (
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {filteredCourses.map((c, i) => (
+                        <div key={c.id} className="rounded-xl overflow-hidden transition-shadow hover:shadow-md" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
+                          <button onClick={() => openLmsCourseDetail(c.id)} className="block w-full text-left" style={{ height: 90, ...courseCardStyle(c, i) }} />
+                          <div className="p-4">
+                            <div className="flex items-start justify-between gap-2 mb-0.5">
+                              <button onClick={() => openLmsCourseDetail(c.id)}
+                                className="font-bold text-sm leading-snug text-left hover:underline"
+                                style={{ fontFamily: 'var(--font-display)', color: '#005187' }}>
+                                {c.name}
+                              </button>
+                              <span className="text-xs px-2 py-0.5 rounded-full font-semibold shrink-0"
+                                title={c.published ? 'Publicado desde CEET' : 'Aún no se ha publicado desde CEET'}
+                                style={{ backgroundColor: c.published ? 'rgba(22,163,74,0.12)' : 'rgba(217,119,6,0.12)', color: c.published ? '#16a34a' : '#d97706' }}>
+                                {c.published ? '✓ Publicado' : '⏳ Borrador'}
+                              </span>
+                            </div>
+                            <p className="text-xs mb-3" style={{ color: 'var(--muted-foreground)' }}>
+                              {lms.topicsByCourse(c.id).length} temas · {lms.lessonsByCourse(c.id).length} lecciones · {lms.assignmentsByCourse(c.id).length} tareas
+                            </p>
+                            <select
+                              value={c.teacherId ?? ''}
+                              onChange={e => {
+                                const teacherId = e.target.value || null
+                                lms.updateCourse(c.id, { teacherId })
+                                toast('success', teacherId ? 'Profesor asignado' : 'Profesor removido', teacherId ? lms.teacherName(teacherId) : c.name)
+                              }}
+                              className="text-sm px-2 py-1.5 rounded-lg outline-none w-full mb-3"
+                              style={{
+                                backgroundColor: c.teacherId ? 'var(--muted)' : 'rgba(217,119,6,0.1)',
+                                color: c.teacherId ? 'var(--foreground)' : '#d97706',
+                                border: c.teacherId ? '1px solid var(--border)' : '1px solid rgba(217,119,6,0.3)',
+                              }}
+                            >
+                              <option value="">Sin asignar</option>
+                              {lms.directory.filter(u => u.role === 'profesor').map(t => (
+                                <option key={t.id} value={t.id}>{t.name}</option>
+                              ))}
+                            </select>
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-medium flex items-center gap-1.5" style={{ color: 'var(--muted-foreground)' }}>
+                                <Users size={13} /> {c.studentIds.length} estudiante{c.studentIds.length === 1 ? '' : 's'}
+                              </span>
+                              <div className="flex gap-2 shrink-0">
+                                <button onClick={() => openLmsCourseDetail(c.id)} title="Ver contenido"
+                                  className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors"
+                                  style={{ border: '1px solid var(--border)', color: 'var(--muted-foreground)' }}
+                                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#4d82bc'; e.currentTarget.style.color = '#4d82bc' }}
+                                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--muted-foreground)' }}
+                                >
+                                  <Eye size={13} />
+                                </button>
+                                <button onClick={() => setDeleteConfirm({ type: 'lmsCourse', id: c.id, label: c.name })} title="Eliminar"
+                                  className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors"
+                                  style={{ border: '1px solid rgba(220,38,38,0.3)', color: '#dc2626' }}>
+                                  <Trash size={13} />
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                  {lms.courses.filter(c => c.name.toLowerCase().includes(lmsCoursesSearch.toLowerCase())).length === 0 && (
-                    <p className="text-sm px-4 py-6 text-center" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)' }}>
-                      {lms.courses.length === 0 ? 'No hay cursos LMS todavía.' : 'Sin resultados para esa búsqueda.'}
-                    </p>
-                  )}
-                </div>
+                  )
+                })()}
               </div>
             )
           )}

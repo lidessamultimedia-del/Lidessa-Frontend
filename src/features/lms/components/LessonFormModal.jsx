@@ -16,6 +16,7 @@ export default function LessonFormModal({ lesson, topics = [], initialTopicId, o
     fileName: lesson?.fileName ?? '',
     fileData: lesson?.fileData ?? '',
     fileSize: lesson?.fileSize ?? 0,
+    publishAt: lesson?.publishAt ?? '',
   })
   const [errors, setErrors] = useState({})
 

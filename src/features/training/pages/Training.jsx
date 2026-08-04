@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import { useCourses } from '../context/CoursesContext'
+import { useLMS } from '@/features/lms/context/LMSContext'
 import CourseModal from '../components/CourseModal'
 import { useScrollReveal } from '@/shared/hooks/useScrollReveal'
 
 export default function Training() {
-  const { courses } = useCourses()
+  const { publicCourses: courses } = useLMS()
   const [selectedCourse, setSelectedCourse] = useState(null)
   const pageRef = useScrollReveal('reveal')
   useScrollReveal('reveal-scale')
@@ -120,12 +120,16 @@ export default function Training() {
                     {course.description}
                   </p>
                   <div className="flex items-center gap-2 mb-4">
-                    <span className="text-xs font-medium px-2 py-0.5 rounded" style={{ backgroundColor: 'var(--muted)', color: 'var(--muted-foreground)' }}>
-                      {course.duration}
-                    </span>
-                    <span className="text-xs font-medium px-2 py-0.5 rounded" style={{ backgroundColor: 'var(--muted)', color: 'var(--muted-foreground)' }}>
-                      Certificado
-                    </span>
+                    {course.duration && (
+                      <span className="text-xs font-medium px-2 py-0.5 rounded" style={{ backgroundColor: 'var(--muted)', color: 'var(--muted-foreground)' }}>
+                        {course.duration}
+                      </span>
+                    )}
+                    {course.certified && (
+                      <span className="text-xs font-medium px-2 py-0.5 rounded" style={{ backgroundColor: 'var(--muted)', color: 'var(--muted-foreground)' }}>
+                        Certificado
+                      </span>
+                    )}
                   </div>
                   <button onClick={() => setSelectedCourse(course)}
                     className="w-full py-2 rounded-lg text-sm font-bold text-white transition-all hover:opacity-90"

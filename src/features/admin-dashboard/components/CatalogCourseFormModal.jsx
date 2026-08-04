@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import FormField, { errorInputStyle } from '@/shared/components/FormField'
-import { Plus } from '@/shared/components/Icons'
+import { Plus, Trash, X } from '@/shared/components/Icons'
 
 const MODALITIES = ['Virtual', 'Presencial', 'Semipresencial']
 
@@ -10,19 +10,21 @@ const MODALITIES = ['Virtual', 'Presencial', 'Semipresencial']
 const MAX_IMAGE_MB = 1.5
 const MAX_IMAGE_BYTES = MAX_IMAGE_MB * 1024 * 1024
 
-export default function CatalogCourseFormModal({ course, onSave, onClose }) {
+export default function CatalogCourseFormModal({ course, categories = [], onSave, onClose }) {
   const [form, setForm] = useState({
     name: course?.name ?? '',
     description: course?.description ?? '',
     intro: course?.intro ?? '',
     duration: course?.duration ?? '',
     modality: course?.modality ?? MODALITIES[0],
-    category: course?.category ?? '',
+    category: course?.category ?? categories[0] ?? '',
     image: course?.image ?? '',
-    objectives: (course?.objectives ?? []).join('\n'),
-    modules: (course?.modules ?? []).join('\n'),
+    certified: course?.certified ?? false,
+    objectives: course?.objectives?.length ? course.objectives : [''],
   })
   const [errors, setErrors] = useState({})
+  const [addingCategory, setAddingCategory] = useState(false)
+  const [newCategoryName, setNewCategoryName] = useState('')
 
   function validate() {
     const errs = {}
@@ -40,9 +42,25 @@ export default function CatalogCourseFormModal({ course, onSave, onClose }) {
     if (Object.keys(errs).length > 0) return
     onSave({
       ...form,
-      objectives: form.objectives.split('\n').map(s => s.trim()).filter(Boolean),
-      modules: form.modules.split('\n').map(s => s.trim()).filter(Boolean),
+      objectives: form.objectives.map(s => s.trim()).filter(Boolean),
     })
+  }
+
+  function updateObjective(idx, value) {
+    setForm(f => ({ ...f, objectives: f.objectives.map((o, i) => i === idx ? value : o) }))
+  }
+  function addObjective() {
+    setForm(f => ({ ...f, objectives: [...f.objectives, ''] }))
+  }
+  function removeObjective(idx) {
+    setForm(f => ({ ...f, objectives: f.objectives.filter((_, i) => i !== idx) }))
+  }
+
+  function confirmNewCategory() {
+    const name = newCategoryName.trim()
+    if (name) setForm(f => ({ ...f, category: name }))
+    setAddingCategory(false)
+    setNewCategoryName('')
   }
 
   return (
@@ -85,10 +103,36 @@ export default function CatalogCourseFormModal({ course, onSave, onClose }) {
               </select>
             </FormField>
             <FormField label="Categoría">
-              <input value={form.category} placeholder="Ej. Gestión"
-                onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
-                className="w-full px-3 py-2.5 rounded-lg text-sm outline-none"
-                style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }} />
+              {addingCategory ? (
+                <div className="flex items-center gap-1.5">
+                  <input autoFocus value={newCategoryName} placeholder="Nombre de la categoría"
+                    onChange={e => setNewCategoryName(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); confirmNewCategory() } if (e.key === 'Escape') setAddingCategory(false) }}
+                    className="w-full px-3 py-2.5 rounded-lg text-sm outline-none"
+                    style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }} />
+                  <button type="button" onClick={confirmNewCategory} title="Agregar categoría"
+                    className="shrink-0 px-2.5 py-2.5 rounded-lg text-xs font-bold text-white" style={{ backgroundColor: '#005187' }}>
+                    OK
+                  </button>
+                  <button type="button" onClick={() => setAddingCategory(false)} title="Cancelar"
+                    className="shrink-0 p-2.5 rounded-lg" style={{ color: 'var(--muted-foreground)' }}>
+                    <X size={14} />
+                  </button>
+                </div>
+              ) : (
+                <select value={form.category} onChange={e => {
+                  if (e.target.value === '__new__') { setAddingCategory(true); return }
+                  setForm(f => ({ ...f, category: e.target.value }))
+                }}
+                  className="w-full px-3 py-2.5 rounded-lg text-sm outline-none"
+                  style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }}>
+                  {!categories.includes(form.category) && form.category && (
+                    <option value={form.category}>{form.category}</option>
+                  )}
+                  {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                  <option value="__new__">+ Nueva categoría…</option>
+                </select>
+              )}
             </FormField>
           </div>
           <FormField label="Imagen del curso" required error={errors.image}>
@@ -121,15 +165,34 @@ export default function CatalogCourseFormModal({ course, onSave, onClose }) {
               </label>
             </div>
           </FormField>
-          <FormField label="Objetivos (uno por línea)">
-            <textarea rows={4} value={form.objectives} onChange={e => setForm(f => ({ ...f, objectives: e.target.value }))}
-              className="w-full px-3 py-2.5 rounded-lg text-sm outline-none resize-none"
-              style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }} />
-          </FormField>
-          <FormField label="Módulos (uno por línea)">
-            <textarea rows={4} value={form.modules} onChange={e => setForm(f => ({ ...f, modules: e.target.value }))}
-              className="w-full px-3 py-2.5 rounded-lg text-sm outline-none resize-none"
-              style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }} />
+          <label className="flex items-center gap-2 text-sm" style={{ color: 'var(--foreground)' }}>
+            <input type="checkbox" checked={form.certified} onChange={e => setForm(f => ({ ...f, certified: e.target.checked }))} />
+            Este curso otorga certificado
+          </label>
+          <FormField label="Objetivos del curso">
+            <div className="space-y-2">
+              {form.objectives.map((o, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'linear-gradient(135deg, #005187, #b8860b)', flexShrink: 0 }} />
+                  <input value={o} placeholder="Ej. Dominar los fundamentos de las Normas ISO"
+                    onChange={e => updateObjective(i, e.target.value)}
+                    className="flex-1 px-3 py-2 rounded-lg text-sm outline-none"
+                    style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }} />
+                  <button type="button" onClick={() => removeObjective(i)}
+                    className="shrink-0 p-1.5 rounded-lg transition-colors" style={{ color: '#dc2626' }}
+                    onMouseEnter={e => e.currentTarget.style.backgroundColor = 'rgba(220,38,38,0.1)'}
+                    onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
+                    aria-label="Eliminar objetivo">
+                    <Trash size={12} />
+                  </button>
+                </div>
+              ))}
+              <button type="button" onClick={addObjective}
+                className="text-xs px-2 py-1 rounded-lg font-semibold flex items-center gap-1 transition-opacity hover:opacity-70"
+                style={{ color: '#005187' }}>
+                <Plus size={11} /> Agregar objetivo
+              </button>
+            </div>
           </FormField>
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose}

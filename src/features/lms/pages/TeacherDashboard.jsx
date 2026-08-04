@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useAuth } from '@/features/auth/context/AuthContext'
-import { useLMS } from '@/features/lms/context/LMSContext'
+import { useLMS, MAX_GRADE, PASS_THRESHOLD } from '@/features/lms/context/LMSContext'
 import { useToast } from '@/shared/context/ToastContext'
 import DashboardShell from '@/features/lms/components/DashboardShell'
 import CourseFormModal from '@/features/lms/components/CourseFormModal'
@@ -9,17 +9,19 @@ import LessonFormModal from '@/features/lms/components/LessonFormModal'
 import AssignmentFormModal from '@/features/lms/components/AssignmentFormModal'
 import QuizFormModal from '@/features/lms/components/QuizFormModal'
 import ConfirmDeleteModal from '@/features/lms/components/ConfirmDeleteModal'
-import PublishCourseModal from '@/features/lms/components/PublishCourseModal'
 import GradebookReport from '@/features/lms/components/GradebookReport'
 import CompletionReport from '@/features/lms/components/CompletionReport'
 import CourseContentTab from '@/features/lms/components/CourseContentTab'
-import CourseSettingsForm from '@/features/lms/components/CourseSettingsForm'
 import AnimatedCounter from '@/shared/components/AnimatedCounter'
 import FormField, { errorInputStyle } from '@/shared/components/FormField'
 import {
-  BarChart2, GraduationCap, ClipboardCheck, Plus, Users, FileText,
-  BookOpen, Search, Edit2,
+  BarChart2, GraduationCap, ClipboardCheck, Plus, Users,
+  BookOpen, Search,
 } from '@/shared/components/Icons'
+
+function todayISO() {
+  return new Date().toISOString().slice(0, 10)
+}
 
 const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: BarChart2 },
@@ -56,8 +58,6 @@ export default function TeacherDashboard() {
   const [assignmentModal, setAssignmentModal] = useState(null)
   const [quizModal, setQuizModal] = useState(null)
   const [deleteConfirm, setDeleteConfirm] = useState(null)
-  const [publishModal, setPublishModal] = useState(null)
-  const [addStudentId, setAddStudentId] = useState('')
 
   const myCourses = lms.coursesByTeacher(teacherId)
   const selectedCourse = selectedCourseId ? lms.courses.find(c => c.id === selectedCourseId) : null
@@ -137,7 +137,6 @@ export default function TeacherDashboard() {
   }
 
   const enrolledStudents = selectedCourse ? selectedCourse.studentIds.map(id => lms.directoryById(id)).filter(Boolean) : []
-  const availableStudents = lms.directory.filter(u => u.role === 'estudiante' && u.active && !selectedCourse?.studentIds.includes(u.id))
 
   const gradingRows = allTeacherSubmissions
     .filter(s => gradingFilter === 'all' ? true : gradingFilter === 'pending' ? s.status !== 'graded' : s.status === 'graded')
@@ -309,27 +308,15 @@ export default function TeacherDashboard() {
                       <div style={{ width: `${courseAvgCompletion(c.id)}%`, height: '100%', backgroundColor: c.color ?? '#005187' }} />
                     </div>
                   </div>
-                  <div className="flex gap-2 mb-2">
+                  <div className="flex gap-2">
                     <button onClick={() => openCourseDetail(c.id)}
                       className="flex-1 py-1.5 rounded-lg text-xs font-bold text-white" style={{ backgroundColor: '#005187' }}>
                       Ver Detalle
                     </button>
-                    <button onClick={() => setCourseModal({ mode: 'edit', course: c })} title="Editar"
-                      className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>
-                      <Edit2 size={13} />
-                    </button>
-                  </div>
-                  <div className="flex gap-2">
                     <button onClick={() => openCourseDetail(c.id, 'grades')}
                       className="flex-1 py-1.5 rounded-lg text-xs font-bold" style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>
                       Reportes
                     </button>
-                    {!c.published && (
-                      <button onClick={() => setPublishModal(c)}
-                        className="flex-1 py-1.5 rounded-lg text-xs font-bold text-white" style={{ backgroundColor: '#16a34a' }}>
-                        Publicar
-                      </button>
-                    )}
                   </div>
                 </div>
               </div>
@@ -356,13 +343,10 @@ export default function TeacherDashboard() {
                   </span>
                 </div>
                 <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>{selectedCourse.description}</p>
+                <p className="text-xs mt-1" style={{ color: 'var(--muted-foreground)' }}>
+                  {selectedCourse.published ? 'El administrador ya publicó este curso para inscripción.' : 'El administrador aún no ha publicado este curso — el contenido que publiques ya queda listo para cuando lo haga.'}
+                </p>
               </div>
-              {!selectedCourse.published && (
-                <button onClick={() => setPublishModal(selectedCourse)}
-                  className="text-xs px-3 py-1.5 rounded-lg font-bold text-white shrink-0" style={{ backgroundColor: '#16a34a' }}>
-                  Publicar
-                </button>
-              )}
             </div>
           </div>
 
@@ -371,7 +355,6 @@ export default function TeacherDashboard() {
               { id: 'content', label: 'Contenido', icon: BookOpen },
               { id: 'grades', label: 'Calificaciones', icon: BarChart2 },
               { id: 'participants', label: 'Participantes', icon: Users },
-              { id: 'settings', label: 'Configuración', icon: FileText },
             ].map(t => (
               <button key={t.id} onClick={() => setCourseTab(t.id)}
                 className="px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5"
@@ -397,6 +380,21 @@ export default function TeacherDashboard() {
               onAddQuiz={topicId => setQuizModal({ mode: 'new', topicId })}
               onEditQuiz={quiz => setQuizModal({ mode: 'edit', quiz })}
               onDeleteQuiz={quiz => setDeleteConfirm({ type: 'quiz', id: quiz.id, label: quiz.title })}
+              onPublishLesson={lesson => {
+                const next = lesson.publishAt ? '' : todayISO()
+                lms.updateLesson(lesson.id, { publishAt: next })
+                toast(next ? 'success' : 'warning', next ? 'Material publicado' : 'Publicación cancelada', lesson.title)
+              }}
+              onPublishAssignment={assignment => {
+                const next = assignment.publishAt ? '' : todayISO()
+                lms.updateAssignment(assignment.id, { publishAt: next })
+                toast(next ? 'success' : 'warning', next ? 'Tarea publicada' : 'Publicación cancelada', assignment.title)
+              }}
+              onPublishQuiz={quiz => {
+                const next = quiz.publishAt ? '' : todayISO()
+                lms.updateQuiz(quiz.id, { publishAt: next })
+                toast(next ? 'success' : 'warning', next ? 'Examen publicado' : 'Publicación cancelada', quiz.title)
+              }}
             />
           )}
 
@@ -415,19 +413,7 @@ export default function TeacherDashboard() {
               </div>
               {participantsView === 'list' ? (
                 <div>
-                  <div className="flex gap-2 mb-4">
-                    <select value={addStudentId} onChange={e => setAddStudentId(e.target.value)}
-                      className="flex-1 px-3 py-2 rounded-lg text-sm outline-none"
-                      style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }}>
-                      <option value="">Seleccionar estudiante para inscribir…</option>
-                      {availableStudents.map(s => <option key={s.id} value={s.id}>{s.name} ({s.email})</option>)}
-                    </select>
-                    <button disabled={!addStudentId}
-                      onClick={() => { lms.enrollStudent(selectedCourse.id, addStudentId); toast('success', 'Estudiante inscrito', lms.studentName(addStudentId)); setAddStudentId('') }}
-                      className="px-4 py-2 rounded-lg text-sm font-bold text-white disabled:opacity-50" style={{ backgroundColor: '#005187' }}>
-                      Inscribir
-                    </button>
-                  </div>
+                  <p className="text-xs mb-3" style={{ color: 'var(--muted-foreground)' }}>Las inscripciones las gestiona el administrador — aquí puedes ver quién está inscrito.</p>
                   <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
                     {enrolledStudents.map((s, i, arr) => (
                       <div key={s.id} style={{ display: 'flex', gap: 12, padding: '12px 16px', alignItems: 'center', borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none', backgroundColor: 'var(--card)' }}>
@@ -435,10 +421,6 @@ export default function TeacherDashboard() {
                           <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{s.name}</p>
                           <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{s.email}</p>
                         </div>
-                        <button onClick={() => lms.unenrollStudent(selectedCourse.id, s.id)}
-                          className="text-xs px-3 py-1.5 rounded-lg font-medium shrink-0" style={{ border: '1px solid rgba(220,38,38,0.3)', color: '#dc2626' }}>
-                          Quitar
-                        </button>
                       </div>
                     ))}
                     {enrolledStudents.length === 0 && <p className="text-sm px-4 py-6 text-center" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)' }}>Sin estudiantes inscritos.</p>}
@@ -448,13 +430,6 @@ export default function TeacherDashboard() {
                 <CompletionReport courseId={selectedCourse.id} />
               )}
             </div>
-          )}
-
-          {courseTab === 'settings' && (
-            <CourseSettingsForm
-              course={selectedCourse}
-              onSave={data => { lms.updateCourse(selectedCourse.id, data); toast('success', 'Configuración guardada', selectedCourse.name) }}
-            />
           )}
         </div>
       )}
@@ -572,20 +547,6 @@ export default function TeacherDashboard() {
       {deleteConfirm && (
         <ConfirmDeleteModal label={deleteConfirm.label} onConfirm={handleDeleteConfirm} onClose={() => setDeleteConfirm(null)} />
       )}
-      {publishModal && (
-        <PublishCourseModal
-          course={publishModal}
-          topicsCount={lms.topicsByCourse(publishModal.id).length}
-          lessonsCount={lms.lessonsByCourse(publishModal.id).length}
-          assignmentsCount={lms.assignmentsByCourse(publishModal.id).length}
-          onConfirm={() => {
-            lms.updateCourse(publishModal.id, { published: true })
-            toast('success', 'Curso publicado', publishModal.name)
-            setPublishModal(null)
-          }}
-          onClose={() => setPublishModal(null)}
-        />
-      )}
     </DashboardShell>
   )
 }
@@ -594,7 +555,7 @@ function GradeSubmissionForm({ submission, assignment, course, studentName, onSa
   const [grade, setGrade] = useState(submission.grade ?? '')
   const [feedback, setFeedback] = useState(submission.feedback ?? '')
   const [gradeError, setGradeError] = useState('')
-  const maxScore = assignment?.maxScore ?? 100
+  const maxScore = assignment?.maxScore ?? MAX_GRADE
 
   return (
     <div style={{ animation: 'fadeUp 0.4s ease', maxWidth: 640 }}>
@@ -626,13 +587,14 @@ function GradeSubmissionForm({ submission, assignment, course, studentName, onSa
       <form onSubmit={e => {
         e.preventDefault()
         if (grade === '' || grade === null) { setGradeError('Ingrese una calificación.'); return }
-        const num = Number(grade)
+        const num = Math.round(Number(grade) * 10) / 10
         if (Number.isNaN(num) || num < 0 || num > maxScore) { setGradeError(`Debe estar entre 0 y ${maxScore}.`); return }
         setGradeError('')
         onSave(num, feedback)
       }} className="space-y-4" noValidate>
-        <FormField label={`Calificación (sobre ${maxScore})`} required error={gradeError}>
-          <input type="number" min={0} max={maxScore} value={grade}
+        <FormField label={`Calificación (sobre ${maxScore})`} required error={gradeError}
+          helperText={`Admite decimales, ej. 7.9. Se aprueba con ${PASS_THRESHOLD.toFixed(1)} o más.`}>
+          <input type="number" min={0} max={maxScore} step={0.1} value={grade}
             onChange={e => { setGrade(e.target.value); setGradeError('') }}
             className="w-40 px-3 py-2.5 rounded-lg text-sm outline-none"
             style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)', ...errorInputStyle(!!gradeError) }} />

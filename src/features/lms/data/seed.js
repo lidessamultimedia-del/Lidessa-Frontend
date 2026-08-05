@@ -31,7 +31,7 @@ export const seedCourses = [
     format: 'topics', completionTrackingEnabled: true,
     requiresPassword: false, password: '', selfEnrollment: false, guestAccess: false,
     capacity: 100, color: '#7c3aed',
-    listed: false, image: '', duration: '', modality: '', certified: false,
+    listed: true, image: '/assets/fundadores.png', duration: '40 horas', modality: 'Virtual', certified: false,
   },
   {
     id: 'c3', name: 'SG-SST Básico 50 Horas', shortName: 'SST-003',
@@ -108,7 +108,7 @@ export const seedCourses = [
     format: 'topics', completionTrackingEnabled: true,
     requiresPassword: false, password: '', selfEnrollment: true, guestAccess: false,
     capacity: 100, color: '#7c3aed',
-    listed: true, image: '/assets/fundadores.jpg', duration: '40 horas', modality: 'Virtual', certified: true,
+    listed: true, image: '/assets/fundadores.png', duration: '40 horas', modality: 'Virtual', certified: true,
     intro: 'Este curso le brinda las competencias necesarias para liderar procesos educativos innovadores y efectivos. Con una sólida base en pedagogía, andragogía y educación disruptiva, será capaz de diseñar programas formativos adaptados a las necesidades de los adultos, empleando metodologías modernas y herramientas tecnológicas avanzadas.',
     objectives: [
       'Comprender las diferencias y aplicaciones de pedagogía, andragogía y pedagogía para adultos.',

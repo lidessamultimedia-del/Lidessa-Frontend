@@ -3,6 +3,7 @@ import {
   seedDirectory, seedCourses, seedTopics, seedLessons, seedAssignments, seedSubmissions, seedLessonProgress,
   seedQuizzes, seedQuizAttempts,
 } from '../data/seed'
+import { useToast } from '@/shared/context/ToastContext'
 
 const LMSContext = createContext(null)
 // v6: calificaciones pasan de escala 0-100 a escala 0-10 (con decimales), y el
@@ -34,6 +35,7 @@ const defaultState = {
 }
 
 export function LMSProvider({ children }) {
+  const { toast } = useToast()
   const [state, setState] = useState(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY)
@@ -44,7 +46,12 @@ export function LMSProvider({ children }) {
   })
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+    } catch (err) {
+      console.error('No se pudo guardar el LMS en localStorage:', err)
+      toast('error', 'No se pudo guardar', 'El almacenamiento del navegador está lleno (probablemente por imágenes muy pesadas). El cambio se ve en pantalla pero no quedó guardado — usa una imagen más liviana o borra alguna existente.')
+    }
   }, [state])
 
   useEffect(() => {

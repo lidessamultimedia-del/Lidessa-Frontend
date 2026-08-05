@@ -98,6 +98,8 @@ export default function AdminDashboard({ theme, setTheme }) {
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
   const [lmsCoursesSearch, setLmsCoursesSearch] = useState('')
+  const [lmsCoursesSort, setLmsCoursesSort] = useState('name')
+  const [lmsCoursesFilter, setLmsCoursesFilter] = useState('all')
   const [directorySearch, setDirectorySearch] = useState('')
   const lmsSelectedCourse = lmsSelectedCourseId ? lms.courses.find(c => c.id === lmsSelectedCourseId) : null
   const [settings, setSettings] = useState(() => {
@@ -172,12 +174,26 @@ export default function AdminDashboard({ theme, setTheme }) {
     return new Date().toISOString().slice(0, 10)
   }
 
+  function lmsCourseAvgCompletion(courseId) {
+    const course = lms.courses.find(c => c.id === courseId)
+    if (!course || course.studentIds.length === 0) return 0
+    const pcts = course.studentIds.map(sid => {
+      const comp = lms.courseCompletion(sid, courseId)
+      return comp.total ? (comp.completed / comp.total) * 100 : 0
+    })
+    return Math.round(pcts.reduce((a, b) => a + b, 0) / pcts.length)
+  }
+
   function togglePublishLmsCourse(course) {
     lms.updateCourse(course.id, { published: !course.published })
     toast(course.published ? 'warning' : 'success', course.published ? 'Curso despublicado' : 'Curso publicado', course.name)
   }
 
   function handleOpenPublishModal(course) {
+    if (!course.teacherId) {
+      toast('warning', 'Falta asignar profesor', 'Asigna un profesor al curso antes de publicarlo.')
+      return
+    }
     setLmsPublishModal(course)
   }
 
@@ -890,6 +906,7 @@ export default function AdminDashboard({ theme, setTheme }) {
                 setAddStudentId={setLmsAddStudentId}
                 onBack={() => setLmsSelectedCourseId(null)}
                 onPublish={() => handleOpenPublishModal(lmsSelectedCourse)}
+                onUnpublish={() => togglePublishLmsCourse(lmsSelectedCourse)}
                 onEditCourse={() => setLmsCourseModal({ mode: 'edit', course: lmsSelectedCourse })}
                 onAddTopic={() => setLmsTopicModal({ mode: 'new' })}
                 onEditTopic={topic => setLmsTopicModal({ mode: 'edit', topic })}
@@ -928,13 +945,30 @@ export default function AdminDashboard({ theme, setTheme }) {
                     contenido y se revisan calificaciones.
                   </p>
                 </div>
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg mb-4" style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', width: 260 }}>
-                  <Search size={14} style={{ color: 'var(--muted-foreground)' }} />
-                  <input value={lmsCoursesSearch} onChange={e => setLmsCoursesSearch(e.target.value)} placeholder="Buscar curso…"
-                    className="text-sm outline-none bg-transparent flex-1" style={{ color: 'var(--foreground)' }} />
+                <div className="flex flex-wrap items-center gap-3 mb-4">
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', width: 260 }}>
+                    <Search size={14} style={{ color: 'var(--muted-foreground)' }} />
+                    <input value={lmsCoursesSearch} onChange={e => setLmsCoursesSearch(e.target.value)} placeholder="Buscar…"
+                      className="text-sm outline-none bg-transparent flex-1" style={{ color: 'var(--foreground)' }} />
+                  </div>
+                  <select value={lmsCoursesSort} onChange={e => setLmsCoursesSort(e.target.value)}
+                    className="text-xs px-3 py-2 rounded-lg outline-none"
+                    style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }}>
+                    <option value="name">Ordenar: Nombre</option>
+                    <option value="date">Ordenar: Más reciente</option>
+                  </select>
+                  <select value={lmsCoursesFilter} onChange={e => setLmsCoursesFilter(e.target.value)}
+                    className="text-xs px-3 py-2 rounded-lg outline-none"
+                    style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }}>
+                    <option value="all">Todos los estados</option>
+                    <option value="published">Publicados</option>
+                    <option value="draft">Borradores</option>
+                  </select>
                 </div>
                 {(() => {
-                  const filteredCourses = lms.courses.filter(c => c.name.toLowerCase().includes(lmsCoursesSearch.toLowerCase()))
+                  let filteredCourses = lms.courses.filter(c => c.name.toLowerCase().includes(lmsCoursesSearch.toLowerCase()))
+                  if (lmsCoursesFilter !== 'all') filteredCourses = filteredCourses.filter(c => lmsCoursesFilter === 'published' ? c.published : !c.published)
+                  filteredCourses = [...filteredCourses].sort((a, b) => lmsCoursesSort === 'name' ? a.name.localeCompare(b.name) : (b.createdAt ?? '').localeCompare(a.createdAt ?? ''))
                   if (filteredCourses.length === 0) {
                     return (
                       <div className="rounded-xl" style={{ border: '1px solid var(--border)' }}>
@@ -957,14 +991,22 @@ export default function AdminDashboard({ theme, setTheme }) {
                                 {c.name}
                               </button>
                               <span className="text-xs px-2 py-0.5 rounded-full font-semibold shrink-0"
-                                title={c.published ? 'Publicado desde CEET' : 'Aún no se ha publicado desde CEET'}
-                                style={{ backgroundColor: c.published ? 'rgba(22,163,74,0.12)' : 'rgba(217,119,6,0.12)', color: c.published ? '#16a34a' : '#d97706' }}>
-                                {c.published ? '✓ Publicado' : '⏳ Borrador'}
+                                title={c.published && c.listed ? 'Visible en la página pública de CEET' : 'Aún no aparece en la página pública de CEET'}
+                                style={{ backgroundColor: c.published && c.listed ? 'rgba(22,163,74,0.12)' : 'rgba(217,119,6,0.12)', color: c.published && c.listed ? '#16a34a' : '#d97706' }}>
+                                {c.published && c.listed ? '✓ Publicado' : '⏳ Borrador'}
                               </span>
                             </div>
                             <p className="text-xs mb-3" style={{ color: 'var(--muted-foreground)' }}>
                               {lms.topicsByCourse(c.id).length} temas · {lms.lessonsByCourse(c.id).length} lecciones · {lms.assignmentsByCourse(c.id).length} tareas
                             </p>
+                            <div className="mb-3">
+                              <div className="flex justify-between text-xs mb-1" style={{ color: 'var(--muted-foreground)' }}>
+                                <span>Progreso</span><span>{lmsCourseAvgCompletion(c.id)}%</span>
+                              </div>
+                              <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--muted)' }}>
+                                <div style={{ width: `${lmsCourseAvgCompletion(c.id)}%`, height: '100%', backgroundColor: c.color ?? '#005187' }} />
+                              </div>
+                            </div>
                             <select
                               value={c.teacherId ?? ''}
                               onChange={e => {
@@ -996,6 +1038,14 @@ export default function AdminDashboard({ theme, setTheme }) {
                                   onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--muted-foreground)' }}
                                 >
                                   <Eye size={13} />
+                                </button>
+                                <button onClick={() => openLmsCourseDetail(c.id, 'grades')} title="Reportes"
+                                  className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors"
+                                  style={{ border: '1px solid var(--border)', color: 'var(--muted-foreground)' }}
+                                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#4d82bc'; e.currentTarget.style.color = '#4d82bc' }}
+                                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.color = 'var(--muted-foreground)' }}
+                                >
+                                  <BarChart2 size={13} />
                                 </button>
                                 <button onClick={() => setDeleteConfirm({ type: 'lmsCourse', id: c.id, label: c.name })} title="Eliminar"
                                   className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors"
@@ -1234,8 +1284,8 @@ export default function AdminDashboard({ theme, setTheme }) {
           assignmentsCount={lms.assignmentsByCourse(lmsPublishModal.id).length}
           quizzesCount={lms.quizzesByCourse(lmsPublishModal.id).length}
           onConfirm={() => {
-            lms.updateCourse(lmsPublishModal.id, { published: true })
-            toast('success', 'Curso publicado', lmsPublishModal.name)
+            lms.updateCourse(lmsPublishModal.id, { published: true, listed: true })
+            toast('success', 'Curso publicado', `${lmsPublishModal.name} ya aparece en la página pública de CEET.`)
             setLmsPublishModal(null)
           }}
           onClose={() => setLmsPublishModal(null)}
@@ -1273,7 +1323,7 @@ export default function AdminDashboard({ theme, setTheme }) {
       {catalogModal && (
         <CatalogCourseFormModal
           course={catalogModal.mode === 'edit' ? catalogModal.course : null}
-          categories={[...new Set(lms.courses.map(c => c.category).filter(Boolean))]}
+          categories={serviceCategories.filter(c => c.active !== false).map(c => c.name)}
           onSave={handleSaveCatalogCourse}
           onClose={() => setCatalogModal(null)}
         />
@@ -1292,7 +1342,7 @@ export default function AdminDashboard({ theme, setTheme }) {
 
 function AdminLmsCourseDetail({
   course, lms, toast, tab, setTab, participantsView, setParticipantsView, addStudentId, setAddStudentId,
-  onBack, onPublish, onEditCourse,
+  onBack, onPublish, onUnpublish, onEditCourse,
   onAddTopic, onEditTopic, onDeleteTopic, onAddLesson, onEditLesson, onDeleteLesson, onAddAssignment, onEditAssignment, onDeleteAssignment,
   onAddQuiz, onEditQuiz, onDeleteQuiz, onPublishLesson, onPublishAssignment, onPublishQuiz,
 }) {
@@ -1310,8 +1360,8 @@ function AdminLmsCourseDetail({
             <div className="flex items-center gap-2 mb-1">
               <h2 className="text-xl font-black" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>{course.name}</h2>
               <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
-                style={{ backgroundColor: course.published ? 'rgba(22,163,74,0.12)' : 'rgba(217,119,6,0.12)', color: course.published ? '#16a34a' : '#d97706' }}>
-                {course.published ? '✓ Publicado' : '⏳ Borrador'}
+                style={{ backgroundColor: course.published && course.listed ? 'rgba(22,163,74,0.12)' : 'rgba(217,119,6,0.12)', color: course.published && course.listed ? '#16a34a' : '#d97706' }}>
+                {course.published && course.listed ? '✓ Publicado' : '⏳ Borrador'}
               </span>
             </div>
             <p className="text-sm mb-1" style={{ color: 'var(--muted-foreground)' }}>{course.description}</p>
@@ -1323,10 +1373,18 @@ function AdminLmsCourseDetail({
               style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>
               <Edit2 size={13} /> Editar curso
             </button>
-            {!course.published && (
-              <button onClick={onPublish}
-                className="text-xs px-3 py-1.5 rounded-lg font-bold text-white" style={{ backgroundColor: '#16a34a' }}>
+            {(!course.published || !course.listed) ? (
+              <button onClick={onPublish} disabled={!course.teacherId}
+                title={!course.teacherId ? 'Asigna un profesor antes de publicar' : undefined}
+                className="text-xs px-3 py-1.5 rounded-lg font-bold text-white"
+                style={{ backgroundColor: '#16a34a', opacity: course.teacherId ? 1 : 0.5, cursor: course.teacherId ? 'pointer' : 'not-allowed' }}>
                 Publicar
+              </button>
+            ) : (
+              <button onClick={onUnpublish} title="Quita el curso de la página pública de CEET"
+                className="text-xs px-3 py-1.5 rounded-lg font-bold"
+                style={{ border: '1px solid rgba(220,38,38,0.3)', color: '#dc2626' }}>
+                Despublicar
               </button>
             )}
           </div>

@@ -8,7 +8,7 @@ const COLORS = ['#005187', '#7c3aed', '#d97706', '#16a34a', '#dc2626', '#0891b2'
 // La imagen se guarda como base64 directo en el navegador (localStorage), que
 // tiene un límite total de unos 5-10 MB compartido entre todo el sitio — por
 // eso se limita el tamaño de cada foto individual.
-const MAX_IMAGE_MB = 1.5
+const MAX_IMAGE_MB = 3
 const MAX_IMAGE_BYTES = MAX_IMAGE_MB * 1024 * 1024
 
 export default function CourseFormModal({ course, teachers, showTeacherSelect = false, onSave, onClose }) {

@@ -152,8 +152,8 @@ function KindSection({ kind, label, addLabel, emptyText, rows, lms, onAdd, onEdi
                 <div>
                   <p className="text-xs truncate" style={{ color: 'var(--muted-foreground)', maxWidth: 480 }}>{item.content}</p>
                   {item.fileName && (
-                    <p className="text-xs flex items-center gap-1 mt-0.5" style={{ color }}>
-                      <Paperclip size={11} /> {item.fileName}
+                    <p className="text-xs flex items-start gap-1 mt-0.5" style={{ color }}>
+                      <Paperclip size={11} className="shrink-0 mt-0.5" /> <span className="wrap-break-word">{item.fileName}</span>
                     </p>
                   )}
                 </div>

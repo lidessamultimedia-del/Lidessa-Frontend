@@ -3,7 +3,6 @@ import { useAuth } from '@/features/auth/context/AuthContext'
 import { useLMS, MAX_GRADE, PASS_THRESHOLD } from '@/features/lms/context/LMSContext'
 import { useToast } from '@/shared/context/ToastContext'
 import DashboardShell from '@/features/lms/components/DashboardShell'
-import CourseFormModal from '@/features/lms/components/CourseFormModal'
 import TopicFormModal from '@/features/lms/components/TopicFormModal'
 import LessonFormModal from '@/features/lms/components/LessonFormModal'
 import AssignmentFormModal from '@/features/lms/components/AssignmentFormModal'
@@ -12,11 +11,12 @@ import ConfirmDeleteModal from '@/features/lms/components/ConfirmDeleteModal'
 import GradebookReport from '@/features/lms/components/GradebookReport'
 import CompletionReport from '@/features/lms/components/CompletionReport'
 import CourseContentTab from '@/features/lms/components/CourseContentTab'
+import ChatThread from '@/features/lms/components/ChatThread'
 import AnimatedCounter from '@/shared/components/AnimatedCounter'
 import FormField, { errorInputStyle } from '@/shared/components/FormField'
 import {
   BarChart2, GraduationCap, ClipboardCheck, Plus, Users,
-  BookOpen, Search,
+  BookOpen, Search, Paperclip, Mail,
 } from '@/shared/components/Icons'
 
 function todayISO() {
@@ -27,6 +27,7 @@ const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: BarChart2 },
   { id: 'courses', label: 'Mis Cursos', icon: GraduationCap },
   { id: 'grading', label: 'Tareas por Revisar', icon: ClipboardCheck },
+  { id: 'messages', label: 'Mensajes', icon: Mail },
 ]
 
 function formatDate(iso) {
@@ -34,7 +35,7 @@ function formatDate(iso) {
   return new Date(iso).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
-export default function TeacherDashboard() {
+export default function TeacherDashboard({ theme, setTheme }) {
   const { user } = useAuth()
   const teacherId = user.id
   const lms = useLMS()
@@ -46,13 +47,16 @@ export default function TeacherDashboard() {
   const [participantsView, setParticipantsView] = useState('list')
   const [gradingSubmissionId, setGradingSubmissionId] = useState(null)
   const [gradingFilter, setGradingFilter] = useState('pending')
+  const [quizGradingFilter, setQuizGradingFilter] = useState('all')
+  const [gradingAttemptId, setGradingAttemptId] = useState(null)
+  const [messageConversation, setMessageConversation] = useState(null)
+  const [messagesSearch, setMessagesSearch] = useState('')
 
   const [coursesSearch, setCoursesSearch] = useState('')
   const [coursesSort, setCoursesSort] = useState('name')
   const [coursesFilter, setCoursesFilter] = useState('all')
   const [openMenuId, setOpenMenuId] = useState(null)
 
-  const [courseModal, setCourseModal] = useState(null)
   const [topicModal, setTopicModal] = useState(null)
   const [lessonModal, setLessonModal] = useState(null)
   const [assignmentModal, setAssignmentModal] = useState(null)
@@ -106,16 +110,9 @@ export default function TeacherDashboard() {
     setSection('gradeSubmission')
   }
 
-  function handleSaveCourse(form) {
-    if (courseModal.mode === 'edit') {
-      lms.updateCourse(courseModal.course.id, form)
-      toast('success', 'Curso actualizado', form.name)
-    } else {
-      const created = lms.addCourse({ ...form, teacherId })
-      toast('success', 'Curso creado como borrador', form.name)
-      openCourseDetail(created.id)
-    }
-    setCourseModal(null)
+  function goGradeQuizAttempt(attemptId) {
+    setGradingAttemptId(attemptId)
+    setSection('gradeQuizAttempt')
   }
 
   function handleDeleteConfirm() {
@@ -148,6 +145,33 @@ export default function TeacherDashboard() {
   const gradingAssignment = gradingSubmission ? assignmentOf(gradingSubmission) : null
   const gradingCourse = gradingAssignment ? courseOf(gradingAssignment) : null
 
+  const pendingQuizReviews = lms.quizAttemptsPendingReview(teacherId)
+
+  const allTeacherQuizAttempts = useMemo(() => {
+    const courseIds = myCourses.map(c => c.id)
+    const quizIds = lms.quizzes.filter(q => courseIds.includes(q.courseId)).map(q => q.id)
+    return lms.quizAttempts.filter(a => quizIds.includes(a.quizId))
+  }, [myCourses, lms.quizzes, lms.quizAttempts])
+
+  function quizOf(attempt) { return lms.quizzes.find(q => q.id === attempt.quizId) }
+
+  const quizGradingRows = allTeacherQuizAttempts
+    .filter(a => quizGradingFilter === 'all' ? true : quizGradingFilter === 'pending' ? !a.reviewed : a.reviewed)
+    .map(a => ({ attempt: a, quiz: quizOf(a) }))
+    .map(row => ({ ...row, course: courseOf(row.quiz) }))
+    .sort((a, b) => (b.attempt.submittedAt ?? '').localeCompare(a.attempt.submittedAt ?? ''))
+
+  const conversations = lms.teacherConversations(teacherId)
+  const filteredConversations = conversations.filter(c => {
+    if (!messagesSearch.trim()) return true
+    const student = lms.directoryById(c.studentId)
+    const q = messagesSearch.trim().toLowerCase()
+    return student?.name?.toLowerCase().includes(q) || student?.email?.toLowerCase().includes(q)
+  })
+  const gradingAttempt = gradingAttemptId ? lms.quizAttempts.find(a => a.id === gradingAttemptId) : null
+  const gradingQuiz = gradingAttempt ? lms.quizzes.find(q => q.id === gradingAttempt.quizId) : null
+  const gradingQuizCourse = gradingQuiz ? lms.courses.find(c => c.id === gradingQuiz.courseId) : null
+
   const displayedCourses = useMemo(() => {
     let list = myCourses.filter(c => c.name.toLowerCase().includes(coursesSearch.toLowerCase()))
     if (coursesFilter !== 'all') list = list.filter(c => coursesFilter === 'published' ? c.published : !c.published)
@@ -166,17 +190,35 @@ export default function TeacherDashboard() {
   return (
     <DashboardShell
       roleLabel="PANEL DOCENTE"
+      theme={theme}
+      setTheme={setTheme}
       navItems={navItems}
-      activeSection={['dashboard', 'courses', 'grading'].includes(section) ? section : (section === 'grading' ? 'grading' : 'courses')}
+      activeSection={['dashboard', 'courses', 'grading', 'messages'].includes(section) ? section : 'courses'}
       onSectionChange={id => { setSection(id); setSelectedCourseId(null) }}
       title={sectionTitle}
-      notifications={pendingSubmissions.slice(0, 5).map(sub => ({
-        id: sub.id,
-        icon: ClipboardCheck,
-        text: `${lms.studentName(sub.studentId)} entregó "${assignmentOf(sub)?.title ?? 'una tarea'}"`,
-        time: formatDate(sub.submittedAt),
-        onClick: () => goGrade(sub.id),
-      }))}
+      notifications={[
+        ...pendingSubmissions.slice(0, 5).map(sub => ({
+          id: sub.id,
+          icon: ClipboardCheck,
+          text: `${lms.studentName(sub.studentId)} entregó "${assignmentOf(sub)?.title ?? 'una tarea'}"`,
+          time: formatDate(sub.submittedAt),
+          onClick: () => goGrade(sub.id),
+        })),
+        ...pendingQuizReviews.slice(0, 5).map(a => ({
+          id: a.id,
+          icon: ClipboardCheck,
+          text: `${lms.studentName(a.studentId)} presentó "${lms.quizzes.find(q => q.id === a.quizId)?.title ?? 'un examen'}" con respuesta abierta`,
+          time: formatDate(a.submittedAt),
+          onClick: () => goGradeQuizAttempt(a.id),
+        })),
+        ...conversations.filter(c => c.unreadCount > 0).slice(0, 5).map(c => ({
+          id: `conv_${c.courseId}_${c.studentId}`,
+          icon: Mail,
+          text: `${lms.studentName(c.studentId)} te escribió: "${c.lastMessage.body}"`,
+          time: formatDate(c.lastMessage.createdAt),
+          onClick: () => { setSection('messages'); setMessageConversation(c); lms.markThreadRead(c.courseId, teacherId, c.studentId) },
+        })),
+      ]}
     >
       {/* ── DASHBOARD ── */}
       {section === 'dashboard' && (
@@ -241,18 +283,42 @@ export default function TeacherDashboard() {
               )
             })}
           </div>
+
+          <h2 className="font-bold text-sm mb-3 mt-8" style={{ color: 'var(--foreground)', fontFamily: 'var(--font-display)' }}>Exámenes pendientes de revisar</h2>
+          <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+            {pendingQuizReviews.length === 0 && (
+              <p className="text-sm px-4 py-6 text-center" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)' }}>No hay exámenes pendientes por calificar.</p>
+            )}
+            {pendingQuizReviews.slice(0, 6).map((a, i, arr) => {
+              const quiz = lms.quizzes.find(q => q.id === a.quizId)
+              return (
+                <div key={a.id} style={{
+                  display: 'flex', gap: 12, padding: '14px 16px', alignItems: 'center',
+                  borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none', backgroundColor: 'var(--card)',
+                }}>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{lms.studentName(a.studentId)} — {quiz?.title}</p>
+                    <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{lms.courses.find(c => c.id === quiz?.courseId)?.name} · Presentado: {formatDate(a.submittedAt)}</p>
+                  </div>
+                  <button onClick={() => goGradeQuizAttempt(a.id)}
+                    className="text-xs px-3 py-1.5 rounded-lg font-bold text-white shrink-0" style={{ backgroundColor: '#005187' }}>
+                    Revisar
+                  </button>
+                </div>
+              )
+            })}
+          </div>
         </div>
       )}
 
       {/* ── MIS CURSOS ── */}
       {section === 'courses' && (
         <div style={{ animation: 'fadeUp 0.4s ease' }}>
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+          <div className="mb-5">
             <h2 className="text-xl font-black" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Mis cursos</h2>
-            <button onClick={() => setCourseModal({ mode: 'new' })}
-              className="px-4 py-2 rounded-lg text-sm font-bold text-white flex items-center gap-1.5" style={{ backgroundColor: '#005187' }}>
-              <Plus size={14} /> Crear Nuevo Curso
-            </button>
+            <p className="text-xs mt-1" style={{ color: 'var(--muted-foreground)' }}>
+              El administrador crea los cursos desde CEET y te los asigna — aquí armas el contenido y calificas.
+            </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3 mb-6">
@@ -460,6 +526,12 @@ export default function TeacherDashboard() {
                   style={{ backgroundColor: sub.status === 'graded' ? 'rgba(22,163,74,0.12)' : 'rgba(217,119,6,0.12)', color: sub.status === 'graded' ? '#16a34a' : '#d97706' }}>
                   {sub.status === 'graded' ? `Calificada · ${sub.grade}/${assignment?.maxScore}` : 'Pendiente'}
                 </span>
+                {sub.status === 'graded' && sub.grade < PASS_THRESHOLD && !sub.retryAllowed && (
+                  <button onClick={() => { lms.allowRetry('assignment', sub.id); toast('success', 'Reintento permitido', `${lms.studentName(sub.studentId)} — ${assignment?.title}`) }}
+                    className="text-xs px-3 py-1.5 rounded-lg font-bold shrink-0" style={{ border: '1px solid rgba(0,81,135,0.3)', color: '#005187' }}>
+                    Permitir reintento
+                  </button>
+                )}
                 <button onClick={() => goGrade(sub.id)}
                   className="text-xs px-3 py-1.5 rounded-lg font-bold text-white shrink-0" style={{ backgroundColor: '#005187' }}>
                   {sub.status === 'graded' ? 'Ver / Editar' : 'Calificar'}
@@ -467,6 +539,48 @@ export default function TeacherDashboard() {
               </div>
             ))}
             {gradingRows.length === 0 && <p className="text-sm px-4 py-6 text-center" style={{ color: 'var(--muted-foreground)' }}>No hay entregas para este filtro.</p>}
+          </div>
+
+          <div className="flex items-center justify-between mb-1 mt-8">
+            <h2 className="text-xl font-black" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Exámenes</h2>
+            <div className="flex gap-1 rounded-xl p-1" style={{ backgroundColor: 'var(--muted)' }}>
+              {[{ id: 'pending', label: 'Pendientes' }, { id: 'graded', label: 'Calificados' }, { id: 'all', label: 'Todos' }].map(f => (
+                <button key={f.id} onClick={() => setQuizGradingFilter(f.id)}
+                  className="px-3 py-1.5 rounded-lg text-xs font-bold"
+                  style={{ backgroundColor: quizGradingFilter === f.id ? 'var(--card)' : 'transparent', color: quizGradingFilter === f.id ? '#005187' : 'var(--muted-foreground)' }}>
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <p className="text-xs mb-4" style={{ color: 'var(--muted-foreground)' }}>Las de selección múltiple se califican solas; las de respuesta abierta hay que leerlas y ponerles nota.</p>
+          <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+            {quizGradingRows.map(({ attempt: a, quiz, course }, i, arr) => {
+              const failed = a.reviewed && a.score < PASS_THRESHOLD
+              return (
+                <div key={a.id} style={{ display: 'flex', gap: 12, padding: '14px 16px', alignItems: 'center', borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none', backgroundColor: 'var(--card)' }}>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{lms.studentName(a.studentId)} — {quiz?.title}</p>
+                    <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{course?.name} · Presentado: {formatDate(a.submittedAt)}</p>
+                  </div>
+                  <span className="text-xs px-2 py-1 rounded-full font-semibold shrink-0"
+                    style={{ backgroundColor: a.reviewed ? (failed ? 'rgba(220,38,38,0.12)' : 'rgba(22,163,74,0.12)') : 'rgba(217,119,6,0.12)', color: a.reviewed ? (failed ? '#dc2626' : '#16a34a') : '#d97706' }}>
+                    {a.reviewed ? `Calificado · ${a.score}/${MAX_GRADE}` : 'Pendiente de revisión'}
+                  </span>
+                  {failed && !a.retryAllowed && (
+                    <button onClick={() => { lms.allowRetry('quiz', a.id); toast('success', 'Reintento permitido', `${lms.studentName(a.studentId)} — ${quiz?.title}`) }}
+                      className="text-xs px-3 py-1.5 rounded-lg font-bold shrink-0" style={{ border: '1px solid rgba(0,81,135,0.3)', color: '#005187' }}>
+                      Permitir reintento
+                    </button>
+                  )}
+                  <button onClick={() => goGradeQuizAttempt(a.id)}
+                    className="text-xs px-3 py-1.5 rounded-lg font-bold text-white shrink-0" style={{ backgroundColor: '#005187' }}>
+                    {a.reviewed ? 'Ver / Editar' : 'Revisar'}
+                  </button>
+                </div>
+              )
+            })}
+            {quizGradingRows.length === 0 && <p className="text-sm px-4 py-6 text-center" style={{ color: 'var(--muted-foreground)' }}>No hay exámenes presentados para este filtro.</p>}
           </div>
         </div>
       )}
@@ -478,8 +592,8 @@ export default function TeacherDashboard() {
           assignment={gradingAssignment}
           course={gradingCourse}
           studentName={lms.studentName(gradingSubmission.studentId)}
-          onSave={(grade, feedback) => {
-            lms.gradeSubmission(gradingSubmission.id, grade, feedback)
+          onSave={(grade, feedback, retryAllowed) => {
+            lms.gradeSubmission(gradingSubmission.id, grade, feedback, retryAllowed)
             toast('success', 'Calificación guardada', `${lms.studentName(gradingSubmission.studentId)} — ${gradingAssignment?.title}`)
             setSection('grading')
           }}
@@ -487,13 +601,80 @@ export default function TeacherDashboard() {
         />
       )}
 
-      {courseModal && (
-        <CourseFormModal
-          course={courseModal.mode === 'edit' ? courseModal.course : null}
-          onSave={handleSaveCourse}
-          onClose={() => setCourseModal(null)}
+      {/* ── REVISAR EXAMEN (respuesta abierta) ── */}
+      {section === 'gradeQuizAttempt' && gradingAttempt && gradingQuiz && (
+        <ReviewQuizAttemptForm
+          attempt={gradingAttempt}
+          quiz={gradingQuiz}
+          course={gradingQuizCourse}
+          studentName={lms.studentName(gradingAttempt.studentId)}
+          onSave={(score, feedback, retryAllowed) => {
+            lms.reviewQuizAttempt(gradingAttempt.id, score, feedback, retryAllowed)
+            toast('success', 'Examen revisado', `${lms.studentName(gradingAttempt.studentId)} — ${gradingQuiz.title}`)
+            setSection('grading')
+          }}
+          onCancel={() => setSection('grading')}
         />
       )}
+
+      {/* ── MENSAJES ── */}
+      {section === 'messages' && (
+        <div style={{ animation: 'fadeUp 0.4s ease' }}>
+          {messageConversation ? (
+            <div style={{ maxWidth: 640 }}>
+              <button onClick={() => setMessageConversation(null)} className="text-xs font-semibold mb-3" style={{ color: '#005187' }}>← Volver a mensajes</button>
+              <h2 className="text-xl font-black mb-1" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
+                {lms.studentName(messageConversation.studentId)}
+              </h2>
+              <p className="text-sm mb-4" style={{ color: 'var(--muted-foreground)' }}>
+                {lms.courses.find(c => c.id === messageConversation.courseId)?.name}
+              </p>
+              <ChatThread
+                messages={lms.threadMessages(messageConversation.courseId, teacherId, messageConversation.studentId)}
+                currentUserId={teacherId}
+                onSend={body => lms.sendMessage({ courseId: messageConversation.courseId, fromId: teacherId, toId: messageConversation.studentId, body })}
+              />
+            </div>
+          ) : (
+            <>
+              <h2 className="text-xl font-black mb-3" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Mensajes</h2>
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg mb-4" style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', maxWidth: 320 }}>
+                <Search size={14} style={{ color: 'var(--muted-foreground)' }} />
+                <input value={messagesSearch} onChange={e => setMessagesSearch(e.target.value)}
+                  placeholder="Buscar por nombre o correo…"
+                  className="text-sm outline-none bg-transparent w-full" style={{ color: 'var(--foreground)' }} />
+              </div>
+              <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+                {filteredConversations.map((c, i, arr) => (
+                  <div key={`${c.courseId}_${c.studentId}`}
+                    onClick={() => {
+                      setMessageConversation(c)
+                      lms.markThreadRead(c.courseId, teacherId, c.studentId)
+                    }}
+                    className="cursor-pointer"
+                    style={{ display: 'flex', gap: 12, padding: '14px 16px', alignItems: 'center', borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none', backgroundColor: 'var(--card)' }}>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{lms.studentName(c.studentId)}</p>
+                      <p className="text-xs truncate" style={{ color: 'var(--muted-foreground)' }}>
+                        {lms.courses.find(course => course.id === c.courseId)?.name} · {c.lastMessage.body}
+                      </p>
+                    </div>
+                    {c.unreadCount > 0 && (
+                      <span className="text-xs font-bold text-white rounded-full px-2 py-0.5 shrink-0" style={{ backgroundColor: '#dc2626' }}>{c.unreadCount}</span>
+                    )}
+                  </div>
+                ))}
+                {filteredConversations.length === 0 && (
+                  <p className="text-sm px-4 py-6 text-center" style={{ color: 'var(--muted-foreground)' }}>
+                    {conversations.length === 0 ? 'Todavía no tienes mensajes de estudiantes.' : 'Ningún estudiante coincide con esa búsqueda.'}
+                  </p>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
       {topicModal && selectedCourse && (
         <TopicFormModal
           topic={topicModal.mode === 'edit' ? topicModal.topic : null}
@@ -554,6 +735,7 @@ export default function TeacherDashboard() {
 function GradeSubmissionForm({ submission, assignment, course, studentName, onSave, onCancel }) {
   const [grade, setGrade] = useState(submission.grade ?? '')
   const [feedback, setFeedback] = useState(submission.feedback ?? '')
+  const [retryAllowed, setRetryAllowed] = useState(submission.retryAllowed ?? false)
   const [gradeError, setGradeError] = useState('')
   const maxScore = assignment?.maxScore ?? MAX_GRADE
 
@@ -566,22 +748,40 @@ function GradeSubmissionForm({ submission, assignment, course, studentName, onSa
       <p className="text-sm mb-6" style={{ color: 'var(--muted-foreground)' }}>{course?.name}</p>
 
       <div className="rounded-xl p-5 mb-5" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
+        <p className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--muted-foreground)' }}>Lo que entregó el estudiante</p>
         {submission.fileName && (
-          <p className="text-sm mb-2" style={{ color: 'var(--foreground)' }}>Archivo: <strong>{submission.fileName}</strong></p>
+          <div className="mb-3">
+            {submission.fileData ? (
+              <a href={submission.fileData} download={submission.fileName}
+                className="flex items-start gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-colors max-w-full"
+                style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: '#005187', border: '1px solid rgba(0,81,135,0.2)' }}>
+                <Paperclip size={14} className="shrink-0 mt-0.5" />
+                <span className="wrap-break-word">
+                  {submission.fileName}{' '}
+                  <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>({(submission.fileSize / 1024).toFixed(0)} KB) — descargar</span>
+                </span>
+              </a>
+            ) : (
+              <p className="text-sm wrap-break-word" style={{ color: 'var(--foreground)' }}>Archivo: <strong>{submission.fileName}</strong> <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>(entrega antigua, sin archivo descargable)</span></p>
+            )}
+          </div>
         )}
         {submission.textResponse && (
-          <div className="mb-2">
+          <div className="mb-3">
             <p className="text-xs font-semibold mb-1" style={{ color: 'var(--muted-foreground)' }}>Respuesta escrita</p>
             <p className="text-sm whitespace-pre-wrap" style={{ color: 'var(--foreground)' }}>{submission.textResponse}</p>
           </div>
         )}
         {submission.notes && (
-          <div>
+          <div className="mb-3">
             <p className="text-xs font-semibold mb-1" style={{ color: 'var(--muted-foreground)' }}>Observaciones del estudiante</p>
             <p className="text-sm" style={{ color: 'var(--foreground)' }}>{submission.notes}</p>
           </div>
         )}
-        <p className="text-xs mt-3" style={{ color: 'var(--muted-foreground)' }}>Enviado: {submission.submittedAt ? new Date(submission.submittedAt).toLocaleString('es-CO') : '—'}</p>
+        {!submission.fileName && !submission.textResponse && (
+          <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>El estudiante no adjuntó archivo ni escribió una respuesta.</p>
+        )}
+        <p className="text-xs mt-1" style={{ color: 'var(--muted-foreground)' }}>Enviado: {submission.submittedAt ? new Date(submission.submittedAt).toLocaleString('es-CO') : '—'}</p>
       </div>
 
       <form onSubmit={e => {
@@ -590,7 +790,7 @@ function GradeSubmissionForm({ submission, assignment, course, studentName, onSa
         const num = Math.round(Number(grade) * 10) / 10
         if (Number.isNaN(num) || num < 0 || num > maxScore) { setGradeError(`Debe estar entre 0 y ${maxScore}.`); return }
         setGradeError('')
-        onSave(num, feedback)
+        onSave(num, feedback, retryAllowed)
       }} className="space-y-4" noValidate>
         <FormField label={`Calificación (sobre ${maxScore})`} required error={gradeError}
           helperText={`Admite decimales, ej. 7.9. Se aprueba con ${PASS_THRESHOLD.toFixed(1)} o más.`}>
@@ -605,9 +805,83 @@ function GradeSubmissionForm({ submission, assignment, course, studentName, onSa
             className="w-full px-3 py-2.5 rounded-lg text-sm outline-none resize-none"
             style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }} />
         </div>
+        <label className="flex items-center gap-2 text-sm" style={{ color: 'var(--foreground)' }}>
+          <input type="checkbox" checked={retryAllowed} onChange={e => setRetryAllowed(e.target.checked)} />
+          Permitir que el estudiante reintente esta actividad
+        </label>
         <div className="flex gap-3">
           <button type="button" onClick={onCancel} className="flex-1 py-2.5 rounded-lg text-sm font-bold" style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>Cancelar</button>
           <button type="submit" className="flex-1 py-2.5 rounded-lg text-sm font-bold text-white" style={{ backgroundColor: '#005187' }}>Guardar</button>
+        </div>
+      </form>
+    </div>
+  )
+}
+
+function ReviewQuizAttemptForm({ attempt, quiz, course, studentName, onSave, onCancel }) {
+  const [score, setScore] = useState(attempt.score ?? '')
+  const [feedback, setFeedback] = useState(attempt.feedback ?? '')
+  const [retryAllowed, setRetryAllowed] = useState(attempt.retryAllowed ?? false)
+  const [gradeError, setGradeError] = useState('')
+
+  return (
+    <div style={{ animation: 'fadeUp 0.4s ease', maxWidth: 640 }}>
+      <button onClick={onCancel} className="text-xs font-semibold mb-3" style={{ color: '#005187' }}>← Volver</button>
+      <h2 className="text-xl font-black mb-1" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
+        Revisar examen: {studentName} — {quiz.title}
+      </h2>
+      <p className="text-sm mb-6" style={{ color: 'var(--muted-foreground)' }}>{course?.name}</p>
+
+      <div className="rounded-xl p-5 mb-5" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
+        <p className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--muted-foreground)' }}>Respuestas del estudiante</p>
+        {quiz.questions.map((q, qi) => (
+          <div key={q.id} className="mb-3 pb-3" style={{ borderBottom: qi < quiz.questions.length - 1 ? '1px solid var(--border)' : 'none' }}>
+            <p className="text-sm font-semibold mb-1" style={{ color: 'var(--foreground)' }}>{qi + 1}. {q.text}</p>
+            {q.type === 'open' ? (
+              <p className="text-sm whitespace-pre-wrap px-3 py-2 rounded-lg" style={{ backgroundColor: 'var(--muted)', color: 'var(--foreground)' }}>
+                {attempt.answers[qi]?.trim() ? attempt.answers[qi] : '(sin respuesta)'}
+              </p>
+            ) : (
+              <p className="text-xs" style={{ color: attempt.answers[qi] === q.correctIndex ? '#16a34a' : '#dc2626' }}>
+                Respondió: {q.options[attempt.answers[qi]] ?? '(sin responder)'}
+                {attempt.answers[qi] === q.correctIndex ? ' ✓' : ` — correcta: ${q.options[q.correctIndex]}`}
+              </p>
+            )}
+          </div>
+        ))}
+        <p className="text-xs mt-1" style={{ color: 'var(--muted-foreground)' }}>
+          Nota automática de la parte de selección múltiple: {attempt.score}/{MAX_GRADE}. Ajusta la nota final abajo teniendo en cuenta las respuestas abiertas.
+        </p>
+      </div>
+
+      <form onSubmit={e => {
+        e.preventDefault()
+        if (score === '' || score === null) { setGradeError('Ingrese una calificación final.'); return }
+        const num = Math.round(Number(score) * 10) / 10
+        if (Number.isNaN(num) || num < 0 || num > MAX_GRADE) { setGradeError(`Debe estar entre 0 y ${MAX_GRADE}.`); return }
+        setGradeError('')
+        onSave(num, feedback, retryAllowed)
+      }} className="space-y-4" noValidate>
+        <FormField label={`Calificación final (sobre ${MAX_GRADE})`} required error={gradeError}
+          helperText={`Admite decimales, ej. 7.9. Se aprueba con ${PASS_THRESHOLD.toFixed(1)} o más.`}>
+          <input type="number" min={0} max={MAX_GRADE} step={0.1} value={score}
+            onChange={e => { setScore(e.target.value); setGradeError('') }}
+            className="w-40 px-3 py-2.5 rounded-lg text-sm outline-none"
+            style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)', ...errorInputStyle(!!gradeError) }} />
+        </FormField>
+        <div>
+          <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--foreground)' }}>Feedback</label>
+          <textarea rows={4} value={feedback} onChange={e => setFeedback(e.target.value)}
+            className="w-full px-3 py-2.5 rounded-lg text-sm outline-none resize-none"
+            style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }} />
+        </div>
+        <label className="flex items-center gap-2 text-sm" style={{ color: 'var(--foreground)' }}>
+          <input type="checkbox" checked={retryAllowed} onChange={e => setRetryAllowed(e.target.checked)} />
+          Permitir que el estudiante reintente este examen
+        </label>
+        <div className="flex gap-3">
+          <button type="button" onClick={onCancel} className="flex-1 py-2.5 rounded-lg text-sm font-bold" style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>Cancelar</button>
+          <button type="submit" className="flex-1 py-2.5 rounded-lg text-sm font-bold text-white" style={{ backgroundColor: '#005187' }}>Guardar calificación</button>
         </div>
       </form>
     </div>

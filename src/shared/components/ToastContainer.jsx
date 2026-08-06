@@ -86,6 +86,7 @@ export default function ToastContainer() {
   return (
     <div
       aria-label="Notificaciones"
+      className="no-print"
       style={{
         position: 'fixed',
         bottom: 20,

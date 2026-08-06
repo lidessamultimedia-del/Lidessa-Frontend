@@ -312,6 +312,21 @@ h1, h2, h3, h4, h5, h6 { font-family: var(--font-display); }
   transition-property: none;
 }
 
+/* ─── Impresión de paneles LMS: solo el contenido, sin sidebar/topbar ─── */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  .print-main {
+    overflow: visible !important;
+    height: auto !important;
+    padding: 0 !important;
+  }
+  body {
+    background: white !important;
+  }
+}
+
 /* ─── prefers-reduced-motion ─── */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

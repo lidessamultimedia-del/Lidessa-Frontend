@@ -3,18 +3,19 @@ import { useAuth } from '@/features/auth/context/AuthContext'
 import { useLMS, MAX_GRADE, PASS_THRESHOLD } from '@/features/lms/context/LMSContext'
 import { useToast } from '@/shared/context/ToastContext'
 import DashboardShell from '@/features/lms/components/DashboardShell'
+import ChatThread from '@/features/lms/components/ChatThread'
 import AnimatedCounter from '@/shared/components/AnimatedCounter'
-import { downloadCsv } from '@/features/lms/utils/csv'
 import { courseCardStyle } from '@/features/lms/utils/courseCard'
 import {
-  BarChart2, GraduationCap, ClipboardCheck, Check, Lock, BookOpen, FileText, Upload, Users, Download, MoreVertical,
-  HelpCircle, Paperclip,
+  BarChart2, GraduationCap, ClipboardCheck, Check, Lock, BookOpen, FileText, Upload, Users, MoreVertical,
+  HelpCircle, Paperclip, Mail, Search,
 } from '@/shared/components/Icons'
 
 const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: BarChart2 },
   { id: 'courses', label: 'Mis Cursos', icon: GraduationCap },
   { id: 'grades', label: 'Mis Calificaciones', icon: ClipboardCheck },
+  { id: 'messages', label: 'Mensajes', icon: Mail },
 ]
 
 function formatDate(iso) {
@@ -42,7 +43,7 @@ function daysUntil(dateStr) {
   return `Vence en ${diff} días`
 }
 
-export default function StudentDashboard() {
+export default function StudentDashboard({ theme, setTheme }) {
   const { user } = useAuth()
   const studentId = user.id
   const lms = useLMS()
@@ -54,6 +55,8 @@ export default function StudentDashboard() {
   const [submitAssignmentId, setSubmitAssignmentId] = useState(null)
   const [openQuizId, setOpenQuizId] = useState(null)
   const [openCourseMenuId, setOpenCourseMenuId] = useState(null)
+  const [messageModalOpen, setMessageModalOpen] = useState(false)
+  const [messagesSearch, setMessagesSearch] = useState('')
 
   useEffect(() => {
     function handleClick(e) {
@@ -73,7 +76,7 @@ export default function StudentDashboard() {
 
   const pendingAssignments = myAssignments.filter(a => new Date(a.dueDate) >= new Date()).filter(a => {
     const sub = lms.submissionFor(a.id, studentId)
-    return !sub || sub.status === 'draft' || (sub.status === 'graded' && sub.grade < PASS_THRESHOLD)
+    return !sub || sub.status === 'draft' || (sub.status === 'graded' && sub.grade < PASS_THRESHOLD && sub.retryAllowed)
   }).sort((a, b) => a.dueDate.localeCompare(b.dueDate))
 
   const myQuizzes = useMemo(() => {
@@ -83,13 +86,25 @@ export default function StudentDashboard() {
 
   const pendingQuizzes = myQuizzes.filter(q => new Date(q.dueDate) >= new Date()).filter(q => {
     const attempt = lms.attemptFor(q.id, studentId)
-    return !attempt || attempt.score < PASS_THRESHOLD
+    if (!attempt) return true
+    if (attempt.reviewed === false) return false
+    return attempt.score < PASS_THRESHOLD && attempt.retryAllowed
   }).sort((a, b) => a.dueDate.localeCompare(b.dueDate))
 
+  const unseenGrades = lms.unseenGradesForStudent(studentId)
+  const unreadMessages = lms.unreadMessagesForUser(studentId)
+  const conversations = lms.studentConversations(studentId)
+  const filteredConversations = conversations.filter(c => {
+    if (!messagesSearch.trim()) return true
+    const teacher = lms.directoryById(c.course.teacherId)
+    const q = messagesSearch.trim().toLowerCase()
+    return teacher?.name?.toLowerCase().includes(q) || teacher?.email?.toLowerCase().includes(q) || c.course.name?.toLowerCase().includes(q)
+  })
+
   const gradesByCourse = lms.gradesForStudent(studentId)
-  const overallGrades = gradesByCourse.flatMap(g => g.rows).filter(r => r.submission?.status === 'graded')
+  const overallGrades = gradesByCourse.flatMap(g => g.rows).filter(r => r.graded)
   const averageGrade = overallGrades.length
-    ? Math.round((overallGrades.reduce((sum, r) => sum + r.submission.grade, 0) / overallGrades.length) * 10) / 10
+    ? Math.round((overallGrades.reduce((sum, r) => sum + r.grade, 0) / overallGrades.length) * 10) / 10
     : 0
   const overallProgress = myCourses.length
     ? Math.round(myCourses.reduce((sum, c) => sum + lms.progressForStudentCourse(studentId, c.id).percent, 0) / myCourses.length)
@@ -130,46 +145,51 @@ export default function StudentDashboard() {
     submit: submitAssignment?.title ?? 'Entregar tarea',
     quiz: currentQuiz?.title ?? 'Examen',
     grades: 'Mis calificaciones',
+    messages: 'Mensajes',
   }[section]
-
-  function handleExportGrades() {
-    const headers = ['Curso', 'Tema', 'Actividad', 'Fecha', 'Nota']
-    const rows = gradesByCourse.flatMap(({ course, rows: r }) =>
-      r.map(({ assignment, submission }) => [
-        course.name,
-        lms.topicById(assignment.topicId)?.title ?? '—',
-        assignment.title,
-        submission?.status === 'graded' ? formatDate(submission.gradedAt) : '—',
-        submission?.status === 'graded' ? `${submission.grade}/${assignment.maxScore}` : 'Pendiente',
-      ]))
-    downloadCsv(`mis-calificaciones-${user.name.replace(/\s+/g, '_')}.csv`, headers, rows)
-  }
 
   return (
     <DashboardShell
       roleLabel="PANEL ESTUDIANTE"
+      theme={theme}
+      setTheme={setTheme}
       navItems={navItems}
-      activeSection={['dashboard', 'courses', 'grades'].includes(section) ? section : (section === 'grades' ? 'grades' : 'courses')}
+      activeSection={['dashboard', 'courses', 'grades', 'messages'].includes(section) ? section : 'courses'}
       onSectionChange={id => { setSection(id); setSelectedCourseId(null) }}
       title={sectionTitle}
       notifications={[
-        ...pendingAssignments.map(a => ({
+        ...unseenGrades.slice(0, 3).map(g => ({
+          id: `grade_${g.kind}_${g.id}`,
+          icon: g.grade >= PASS_THRESHOLD ? Check : ClipboardCheck,
+          text: `"${g.item.title}" fue calificada: ${g.grade}/${MAX_GRADE}`,
+          time: formatDate(g.gradedAt),
+          onClick: () => { lms.markGradeSeen(g.kind, g.id); setSection('grades') },
+        })),
+        ...unreadMessages.slice(0, 3).map(m => {
+          const course = lms.courses.find(c => c.id === m.courseId)
+          return {
+            id: `msg_${m.id}`,
+            icon: Mail,
+            text: `${lms.teacherName(m.fromId)}: "${m.body}"`,
+            time: course?.name ?? '',
+            onClick: () => { openCourseDetail(m.courseId); setMessageModalOpen(true); lms.markThreadRead(m.courseId, studentId, m.fromId) },
+          }
+        }),
+        ...pendingAssignments.slice(0, 2).map(a => ({
           id: a.id,
           icon: ClipboardCheck,
           text: `"${a.title}" — ${daysUntil(a.dueDate)}`,
           time: lms.courses.find(c => c.id === a.courseId)?.name ?? '',
           onClick: () => openSubmit(a.id),
-          dueDate: a.dueDate,
         })),
-        ...pendingQuizzes.map(q => ({
+        ...pendingQuizzes.slice(0, 2).map(q => ({
           id: q.id,
           icon: HelpCircle,
           text: `"${q.title}" — ${daysUntil(q.dueDate)}`,
           time: lms.courses.find(c => c.id === q.courseId)?.name ?? '',
           onClick: () => openQuiz(q.id),
-          dueDate: q.dueDate,
         })),
-      ].sort((a, b) => a.dueDate.localeCompare(b.dueDate)).slice(0, 5)}
+      ].slice(0, 5)}
     >
       {/* ── DASHBOARD ── */}
       {section === 'dashboard' && (
@@ -207,23 +227,45 @@ export default function StudentDashboard() {
             ))}
           </div>
 
-          <h2 className="font-bold text-sm mb-3" style={{ color: 'var(--foreground)', fontFamily: 'var(--font-display)' }}>Actividades próximas a vencer</h2>
-          <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-            {pendingAssignments.length === 0 && pendingQuizzes.length === 0 && (
-              <p className="text-sm px-4 py-6 text-center" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)' }}>¡Estás al día! No tienes actividades pendientes.</p>
+          <h2 className="font-bold text-sm mb-3" style={{ color: 'var(--foreground)', fontFamily: 'var(--font-display)' }}>Tareas próximas a vencer</h2>
+          <div className="rounded-xl overflow-hidden mb-8" style={{ border: '1px solid var(--border)' }}>
+            {pendingAssignments.length === 0 && (
+              <p className="text-sm px-4 py-6 text-center" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)' }}>¡Estás al día! No tienes tareas pendientes.</p>
             )}
-            {[
-              ...pendingAssignments.map(a => ({ kind: 'assignment', item: a })),
-              ...pendingQuizzes.map(q => ({ kind: 'quiz', item: q })),
-            ].sort((x, y) => x.item.dueDate.localeCompare(y.item.dueDate)).slice(0, 6).map(({ kind, item }, i, arr) => (
+            {pendingAssignments.slice(0, 6).map((item, i, arr) => (
               <div key={item.id} style={{ display: 'flex', gap: 12, padding: '14px 16px', alignItems: 'center', borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none', backgroundColor: 'var(--card)' }}>
-                <div className="flex-1">
+                <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{item.title}</p>
-                  <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{lms.courses.find(c => c.id === item.courseId)?.name} · {daysUntil(item.dueDate)}</p>
+                  <p className="text-xs mb-1" style={{ color: 'var(--muted-foreground)' }}>{lms.courses.find(c => c.id === item.courseId)?.name} · {daysUntil(item.dueDate)}</p>
+                  {item.description && (
+                    <p className="text-xs wrap-break-word" style={{ color: 'var(--muted-foreground)', opacity: 0.85 }}>{item.description}</p>
+                  )}
                 </div>
-                <button onClick={() => kind === 'assignment' ? openSubmit(item.id) : openQuiz(item.id)}
+                <button onClick={() => openSubmit(item.id)}
                   className="text-xs px-3 py-1.5 rounded-lg font-bold text-white shrink-0" style={{ backgroundColor: '#005187' }}>
-                  {kind === 'assignment' ? 'Entregar' : 'Responder'}
+                  Ver y entregar
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <h2 className="font-bold text-sm mb-3" style={{ color: 'var(--foreground)', fontFamily: 'var(--font-display)' }}>Exámenes próximos a vencer</h2>
+          <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+            {pendingQuizzes.length === 0 && (
+              <p className="text-sm px-4 py-6 text-center" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)' }}>¡Estás al día! No tienes exámenes pendientes.</p>
+            )}
+            {pendingQuizzes.slice(0, 6).map((item, i, arr) => (
+              <div key={item.id} style={{ display: 'flex', gap: 12, padding: '14px 16px', alignItems: 'center', borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none', backgroundColor: 'var(--card)' }}>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{item.title}</p>
+                  <p className="text-xs mb-1" style={{ color: 'var(--muted-foreground)' }}>{lms.courses.find(c => c.id === item.courseId)?.name} · {daysUntil(item.dueDate)}</p>
+                  {item.description && (
+                    <p className="text-xs wrap-break-word" style={{ color: 'var(--muted-foreground)', opacity: 0.85 }}>{item.description}</p>
+                  )}
+                </div>
+                <button onClick={() => openQuiz(item.id)}
+                  className="text-xs px-3 py-1.5 rounded-lg font-bold text-white shrink-0" style={{ backgroundColor: '#005187' }}>
+                  Ver y responder
                 </button>
               </div>
             ))}
@@ -297,9 +339,24 @@ export default function StudentDashboard() {
               <h2 className="text-xl font-black text-white" style={{ fontFamily: 'var(--font-display)' }}>{selectedCourse.name}</h2>
             </div>
             <div className="p-4" style={{ backgroundColor: 'var(--card)' }}>
-              <p className="text-sm mb-3" style={{ color: 'var(--muted-foreground)' }}>
-                Profesor: {lms.teacherName(selectedCourse.teacherId)} | Categoría: {selectedCourse.category}
-              </p>
+              <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+                <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
+                  Profesor: {lms.teacherName(selectedCourse.teacherId)} | Categoría: {selectedCourse.category}
+                </p>
+                {selectedCourse.teacherId && (
+                  <button onClick={() => {
+                    setMessageModalOpen(true)
+                    lms.markThreadRead(selectedCourse.id, studentId, selectedCourse.teacherId)
+                  }}
+                    className="text-xs px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 shrink-0 relative"
+                    style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: '#005187', border: '1px solid rgba(0,81,135,0.2)' }}>
+                    <Mail size={13} /> Mensaje al profesor
+                    {lms.threadMessages(selectedCourse.id, studentId, selectedCourse.teacherId).some(m => m.fromId === selectedCourse.teacherId && !m.read) && (
+                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: '#dc2626', position: 'absolute', top: -2, right: -2 }} />
+                    )}
+                  </button>
+                )}
+              </div>
               <div className="flex items-center gap-6">
                 <div className="flex-1">
                   <div className="flex justify-between text-xs mb-1" style={{ color: 'var(--muted-foreground)' }}>
@@ -352,39 +409,51 @@ export default function StudentDashboard() {
                 ))}
               </div>
 
-              <h3 className="text-sm font-bold mb-2" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Próximas actividades</h3>
-              <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-                {(() => {
-                  const notExpired = item => new Date(item.dueDate) >= new Date()
-                  const pendingCourseAssignments = lms.assignmentsByCourse(selectedCourse.id).filter(lms.isPublished).filter(notExpired).filter(a => {
-                    const sub = lms.submissionFor(a.id, studentId)
-                    return !sub || sub.status === 'draft' || (sub.status === 'graded' && sub.grade < PASS_THRESHOLD)
-                  })
-                  const pendingCourseQuizzes = lms.quizzesByCourse(selectedCourse.id).filter(lms.isPublished).filter(notExpired).filter(q => {
-                    const attempt = lms.attemptFor(q.id, studentId)
-                    return !attempt || attempt.score < PASS_THRESHOLD
-                  })
-                  const rows = [
-                    ...pendingCourseAssignments.map(a => ({ kind: 'assignment', item: a })),
-                    ...pendingCourseQuizzes.map(q => ({ kind: 'quiz', item: q })),
-                  ].sort((x, y) => x.item.dueDate.localeCompare(y.item.dueDate))
-                  if (rows.length === 0) {
-                    return <p className="text-sm px-4 py-4 text-center" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)' }}>No tienes actividades pendientes en este curso.</p>
-                  }
-                  return rows.map(({ kind, item }, i, arr) => (
-                    <div key={item.id} style={{ display: 'flex', gap: 12, padding: '12px 16px', alignItems: 'center', borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none', backgroundColor: 'var(--card)' }}>
-                      <div className="flex-1">
-                        <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{item.title}</p>
-                        <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{daysUntil(item.dueDate)}</p>
-                      </div>
-                      <button onClick={() => kind === 'assignment' ? openSubmit(item.id) : openQuiz(item.id)}
-                        className="text-xs px-3 py-1.5 rounded-lg font-bold text-white shrink-0" style={{ backgroundColor: '#005187' }}>
-                        {kind === 'assignment' ? 'Ir a la tarea →' : 'Ir al examen →'}
-                      </button>
+              {(() => {
+                const notExpired = item => new Date(item.dueDate) >= new Date()
+                const pendingCourseAssignments = lms.assignmentsByCourse(selectedCourse.id).filter(lms.isPublished).filter(notExpired).filter(a => {
+                  const sub = lms.submissionFor(a.id, studentId)
+                  return !sub || sub.status === 'draft' || (sub.status === 'graded' && sub.grade < PASS_THRESHOLD && sub.retryAllowed)
+                })
+                const pendingCourseQuizzes = lms.quizzesByCourse(selectedCourse.id).filter(lms.isPublished).filter(notExpired).filter(q => {
+                  const attempt = lms.attemptFor(q.id, studentId)
+                  if (!attempt) return true
+                  if (attempt.reviewed === false) return false
+                  return attempt.score < PASS_THRESHOLD && attempt.retryAllowed
+                })
+                const row = (item, kind, i, arr) => (
+                  <div key={item.id} style={{ display: 'flex', gap: 12, padding: '12px 16px', alignItems: 'center', borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none', backgroundColor: 'var(--card)' }}>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{item.title}</p>
+                      <p className="text-xs mb-1" style={{ color: 'var(--muted-foreground)' }}>{daysUntil(item.dueDate)}</p>
+                      {item.description && (
+                        <p className="text-xs wrap-break-word" style={{ color: 'var(--muted-foreground)', opacity: 0.85 }}>{item.description}</p>
+                      )}
                     </div>
-                  ))
-                })()}
-              </div>
+                    <button onClick={() => kind === 'assignment' ? openSubmit(item.id) : openQuiz(item.id)}
+                      className="text-xs px-3 py-1.5 rounded-lg font-bold text-white shrink-0" style={{ backgroundColor: '#005187' }}>
+                      {kind === 'assignment' ? 'Ir a la tarea →' : 'Ir al examen →'}
+                    </button>
+                  </div>
+                )
+                return (
+                  <>
+                    <h3 className="text-sm font-bold mb-2" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Tareas próximas</h3>
+                    <div className="rounded-xl overflow-hidden mb-5" style={{ border: '1px solid var(--border)' }}>
+                      {pendingCourseAssignments.length === 0
+                        ? <p className="text-sm px-4 py-4 text-center" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)' }}>No tienes tareas pendientes en este curso.</p>
+                        : pendingCourseAssignments.map((a, i, arr) => row(a, 'assignment', i, arr))}
+                    </div>
+
+                    <h3 className="text-sm font-bold mb-2" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Exámenes próximos</h3>
+                    <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+                      {pendingCourseQuizzes.length === 0
+                        ? <p className="text-sm px-4 py-4 text-center" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)' }}>No tienes exámenes pendientes en este curso.</p>
+                        : pendingCourseQuizzes.map((q, i, arr) => row(q, 'quiz', i, arr))}
+                    </div>
+                  </>
+                )
+              })()}
             </div>
           )}
 
@@ -477,46 +546,59 @@ export default function StudentDashboard() {
         <div style={{ animation: 'fadeUp 0.4s ease' }}>
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-black" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Mis calificaciones</h2>
-            <div className="flex gap-2">
-              <button onClick={handleExportGrades}
-                className="text-xs px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5" style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>
-                <Download size={13} /> Descargar CSV
-              </button>
+            <div className="flex gap-2 no-print">
               <button onClick={() => window.print()}
                 className="text-xs px-3 py-1.5 rounded-lg font-bold" style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>
                 Imprimir / PDF
               </button>
             </div>
           </div>
-          {gradesByCourse.map(({ course, rows, average }) => {
+          {gradesByCourse.map(({ course, rows, average, allGraded, passed }) => {
             const byTopic = {}
             rows.forEach(r => {
-              const key = r.assignment.topicId ?? 'none'
+              const key = r.topicId ?? 'none'
               if (!byTopic[key]) byTopic[key] = []
               byTopic[key].push(r)
             })
             return (
               <div key={course.id} className="mb-6">
-                <h3 className="font-bold text-sm mb-2" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
-                  {course.name} {average != null && <span style={{ color: '#005187' }}>(Promedio: {average})</span>}
-                </h3>
+                <div className="flex items-center gap-2 mb-2 flex-wrap">
+                  <h3 className="font-bold text-sm" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>{course.name}</h3>
+                  {average != null && (
+                    <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: '#005187' }}>
+                      Promedio ponderado: {average}/{MAX_GRADE}
+                    </span>
+                  )}
+                  {allGraded && (
+                    <span className="text-xs font-bold px-2 py-0.5 rounded-full"
+                      style={{ backgroundColor: passed ? 'rgba(22,163,74,0.12)' : 'rgba(220,38,38,0.12)', color: passed ? '#16a34a' : '#dc2626' }}>
+                      {passed ? '✓ Aprobado' : '✗ Reprobado'}
+                    </span>
+                  )}
+                </div>
+                {rows.length === 0 && (
+                  <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>Todavía no hay tareas ni exámenes publicados en este curso.</p>
+                )}
                 {Object.entries(byTopic).map(([topicId, topicRows]) => (
                   <div key={topicId} className="mb-3">
                     <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--muted-foreground)' }}>
                       {topicId === 'none' ? 'Sin tema' : lms.topicById(topicId)?.title}
                     </p>
                     <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-                      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', padding: '8px 16px', backgroundColor: 'var(--muted)' }}>
-                        {['Actividad', 'Fecha', 'Nota'].map(h => (
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr 1fr 1fr', padding: '8px 16px', backgroundColor: 'var(--muted)' }}>
+                        {['Tipo', 'Actividad', 'Fecha', 'Nota'].map(h => (
                           <span key={h} className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--muted-foreground)' }}>{h}</span>
                         ))}
                       </div>
-                      {topicRows.map(({ assignment, submission }) => (
-                        <div key={assignment.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', padding: '10px 16px', borderTop: '1px solid var(--border)', backgroundColor: 'var(--card)' }}>
-                          <span className="text-sm" style={{ color: 'var(--foreground)' }}>{assignment.title}</span>
-                          <span className="text-sm" style={{ color: 'var(--muted-foreground)' }}>{submission?.status === 'graded' ? formatDate(submission.gradedAt) : '—'}</span>
-                          <span className="text-sm font-bold" style={{ color: submission?.status === 'graded' ? '#16a34a' : 'var(--muted-foreground)' }}>
-                            {submission?.status === 'graded' ? `${submission.grade}/${assignment.maxScore}` : '⏳'}
+                      {topicRows.map(({ kind, item, graded, grade, maxScore, gradedAt }) => (
+                        <div key={item.id} style={{ display: 'grid', gridTemplateColumns: '1fr 2fr 1fr 1fr', padding: '10px 16px', borderTop: '1px solid var(--border)', backgroundColor: 'var(--card)' }}>
+                          <span className="text-xs font-semibold" style={{ color: kind === 'assignment' ? '#7c3aed' : '#d97706' }}>
+                            {kind === 'assignment' ? 'Tarea' : 'Examen'}
+                          </span>
+                          <span className="text-sm" style={{ color: 'var(--foreground)' }}>{item.title}</span>
+                          <span className="text-sm" style={{ color: 'var(--muted-foreground)' }}>{graded ? formatDate(gradedAt) : '—'}</span>
+                          <span className="text-sm font-bold" style={{ color: graded ? (grade >= PASS_THRESHOLD ? '#16a34a' : '#dc2626') : 'var(--muted-foreground)' }}>
+                            {graded ? `${grade}/${maxScore}` : '⏳'}
                           </span>
                         </div>
                       ))}
@@ -526,6 +608,67 @@ export default function StudentDashboard() {
               </div>
             )
           })}
+        </div>
+      )}
+
+      {/* ── MENSAJES ── */}
+      {section === 'messages' && (
+        <div style={{ animation: 'fadeUp 0.4s ease' }}>
+          <h2 className="text-xl font-black mb-3" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Mensajes</h2>
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg mb-4" style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', maxWidth: 320 }}>
+            <Search size={14} style={{ color: 'var(--muted-foreground)' }} />
+            <input value={messagesSearch} onChange={e => setMessagesSearch(e.target.value)}
+              placeholder="Buscar por profesor, correo o curso…"
+              className="text-sm outline-none bg-transparent w-full" style={{ color: 'var(--foreground)' }} />
+          </div>
+          <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+            {filteredConversations.map((c, i, arr) => (
+              <div key={c.course.id}
+                onClick={() => {
+                  setSelectedCourseId(c.course.id)
+                  setMessageModalOpen(true)
+                  if (c.course.teacherId) lms.markThreadRead(c.course.id, studentId, c.course.teacherId)
+                }}
+                className="cursor-pointer"
+                style={{ display: 'flex', gap: 12, padding: '14px 16px', alignItems: 'center', borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none', backgroundColor: 'var(--card)' }}>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{lms.teacherName(c.course.teacherId)}</p>
+                  <p className="text-xs truncate" style={{ color: 'var(--muted-foreground)' }}>
+                    {c.course.name}{c.lastMessage ? ` · ${c.lastMessage.body}` : ' · Sin mensajes todavía'}
+                  </p>
+                </div>
+                {c.unreadCount > 0 && (
+                  <span className="text-xs font-bold text-white rounded-full px-2 py-0.5 shrink-0" style={{ backgroundColor: '#dc2626' }}>{c.unreadCount}</span>
+                )}
+              </div>
+            ))}
+            {filteredConversations.length === 0 && (
+              <p className="text-sm px-4 py-6 text-center" style={{ color: 'var(--muted-foreground)' }}>
+                {conversations.length === 0 ? 'Inscríbete a un curso para poder escribirle a tu profesor.' : 'Ningún profesor coincide con esa búsqueda.'}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {messageModalOpen && selectedCourse && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4"
+          style={{ backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+          onClick={e => e.target === e.currentTarget && setMessageModalOpen(false)}>
+          <div className="rounded-2xl p-6 max-w-lg w-full shadow-2xl" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', animation: 'fadeUp 0.25s ease' }}>
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="text-lg font-black" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
+                {lms.teacherName(selectedCourse.teacherId)}
+              </h3>
+              <button onClick={() => setMessageModalOpen(false)} className="text-sm" style={{ color: 'var(--muted-foreground)' }}>✕</button>
+            </div>
+            <p className="text-xs mb-4" style={{ color: 'var(--muted-foreground)' }}>{selectedCourse.name}</p>
+            <ChatThread
+              messages={lms.threadMessages(selectedCourse.id, studentId, selectedCourse.teacherId)}
+              currentUserId={studentId}
+              onSend={body => lms.sendMessage({ courseId: selectedCourse.id, fromId: studentId, toId: selectedCourse.teacherId, body })}
+            />
+          </div>
         </div>
       )}
     </DashboardShell>
@@ -540,15 +683,15 @@ function LessonRow({ lms, studentId, course, lesson, onToast }) {
       <span style={{ color: done ? '#16a34a' : unlocked ? 'var(--muted-foreground)' : '#9ca3af' }}>
         {done ? <Check size={18} /> : unlocked ? <BookOpen size={18} /> : <Lock size={18} />}
       </span>
-      <div className="flex-1">
+      <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold" style={{ color: unlocked ? 'var(--foreground)' : 'var(--muted-foreground)' }}>{lesson.title}</p>
         {done && <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>Completada</p>}
         {!done && unlocked && <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{lesson.content}</p>}
         {!unlocked && <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>Bloqueada — completa la lección anterior</p>}
         {unlocked && lesson.fileName && (
           <a href={lesson.fileData} download={lesson.fileName}
-            className="text-xs flex items-center gap-1 mt-0.5 w-fit" style={{ color: '#005187' }}>
-            <Paperclip size={11} /> {lesson.fileName}
+            className="text-xs flex items-start gap-1 mt-0.5 max-w-full" style={{ color: '#005187' }}>
+            <Paperclip size={11} className="shrink-0 mt-0.5" /> <span className="wrap-break-word">{lesson.fileName}</span>
           </a>
         )}
       </div>
@@ -569,26 +712,31 @@ function AssignmentRow({ lms, studentId, assignment, onSubmit }) {
   return (
     <>
       <span style={{ color: '#7c3aed' }}><FileText size={18} /></span>
-      <div className="flex-1">
+      <div className="flex-1 min-w-0">
         <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{assignment.title}</p>
         <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>Vence: {formatDate(assignment.dueDate)}</p>
         {assignment.fileName && (
           <a href={assignment.fileData} download={assignment.fileName}
-            className="text-xs flex items-center gap-1 mt-0.5 w-fit" style={{ color: '#7c3aed' }}>
-            <Paperclip size={11} /> {assignment.fileName}
+            className="text-xs flex items-start gap-1 mt-0.5 max-w-full" style={{ color: '#7c3aed' }}>
+            <Paperclip size={11} className="shrink-0 mt-0.5" /> <span className="wrap-break-word">{assignment.fileName}</span>
           </a>
         )}
       </div>
       {sub?.status === 'graded' && (
-        <span className="text-xs px-3 py-1.5 rounded-full font-bold shrink-0"
-          style={{ backgroundColor: passed ? 'rgba(22,163,74,0.12)' : 'rgba(220,38,38,0.12)', color: passed ? '#16a34a' : '#dc2626' }}>
-          {passed ? 'Aprobada' : 'No aprobada'} · {sub.grade}/{assignment.maxScore}
-        </span>
+        <div className="flex flex-col items-end gap-1 shrink-0">
+          <span className="text-xs px-3 py-1.5 rounded-full font-bold"
+            style={{ backgroundColor: passed ? 'rgba(22,163,74,0.12)' : 'rgba(220,38,38,0.12)', color: passed ? '#16a34a' : '#dc2626' }}>
+            {passed ? 'Aprobada' : 'No aprobada'} · {sub.grade}/{assignment.maxScore}
+          </span>
+          {!passed && !expired && !sub.retryAllowed && (
+            <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>Pídele a tu profesor la opción de reintentar</span>
+          )}
+        </div>
       )}
       {sub?.status === 'submitted' && (
         <span className="text-xs px-3 py-1.5 rounded-full font-bold shrink-0" style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: '#005187' }}>Enviada</span>
       )}
-      {!passed && sub?.status !== 'submitted' && !expired && (
+      {!passed && sub?.status !== 'submitted' && !expired && (!sub || sub.status === 'draft' || sub.retryAllowed) && (
         <button onClick={() => onSubmit(assignment.id)} className="text-xs px-3 py-1.5 rounded-lg font-bold text-white shrink-0" style={{ backgroundColor: '#005187' }}>
           {sub?.status === 'draft' ? 'Continuar' : sub?.status === 'graded' ? 'Reintentar' : 'Entregar'}
         </button>
@@ -599,7 +747,8 @@ function AssignmentRow({ lms, studentId, assignment, onSubmit }) {
 
 function QuizRow({ lms, studentId, quiz, onOpen }) {
   const attempt = lms.attemptFor(quiz.id, studentId)
-  const passed = attempt && attempt.score >= PASS_THRESHOLD
+  const pendingReview = attempt && attempt.reviewed === false
+  const passed = attempt && !pendingReview && attempt.score >= PASS_THRESHOLD
   const expired = new Date(quiz.dueDate) < new Date()
   return (
     <>
@@ -610,13 +759,23 @@ function QuizRow({ lms, studentId, quiz, onOpen }) {
           Vence: {formatDate(quiz.dueDate)} · {quiz.questions?.length ?? 0} preguntas{quiz.timeLimitMinutes ? ` · ${quiz.timeLimitMinutes} min` : ''}
         </p>
       </div>
-      {attempt && (
-        <span className="text-xs px-3 py-1.5 rounded-full font-bold shrink-0"
-          style={{ backgroundColor: passed ? 'rgba(22,163,74,0.12)' : 'rgba(220,38,38,0.12)', color: passed ? '#16a34a' : '#dc2626' }}>
-          {passed ? 'Aprobado' : 'No aprobado'} · {attempt.score}/{MAX_GRADE}
+      {pendingReview && (
+        <span className="text-xs px-3 py-1.5 rounded-full font-bold shrink-0" style={{ backgroundColor: 'rgba(217,119,6,0.12)', color: '#d97706' }}>
+          Pendiente de revisión
         </span>
       )}
-      {!passed && !expired && (
+      {attempt && !pendingReview && (
+        <div className="flex flex-col items-end gap-1 shrink-0">
+          <span className="text-xs px-3 py-1.5 rounded-full font-bold"
+            style={{ backgroundColor: passed ? 'rgba(22,163,74,0.12)' : 'rgba(220,38,38,0.12)', color: passed ? '#16a34a' : '#dc2626' }}>
+            {passed ? 'Aprobado' : 'No aprobado'} · {attempt.score}/{MAX_GRADE}
+          </span>
+          {!passed && !expired && !attempt.retryAllowed && (
+            <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>Pídele a tu profesor la opción de reintentar</span>
+          )}
+        </div>
+      )}
+      {!passed && !pendingReview && !expired && (!attempt || attempt.retryAllowed) && (
         <button onClick={() => onOpen(quiz.id)} className="text-xs px-3 py-1.5 rounded-lg font-bold text-white shrink-0" style={{ backgroundColor: '#005187' }}>
           {attempt ? 'Reintentar' : 'Responder'}
         </button>
@@ -633,7 +792,8 @@ function formatCountdown(ms) {
 }
 
 function QuizAttemptForm({ quiz, course, existingAttempt, studentId, onSubmit, onCancel, onTimeUp }) {
-  const locked = existingAttempt && existingAttempt.score >= PASS_THRESHOLD
+  const pendingReview = existingAttempt && existingAttempt.reviewed === false
+  const locked = existingAttempt && (pendingReview || existingAttempt.score >= PASS_THRESHOLD || !existingAttempt.retryAllowed)
   const [answers, setAnswers] = useState(() => quiz.questions.map(q => q.type === 'open' ? '' : null))
   const [error, setError] = useState('')
   const answersRef = useRef(answers)
@@ -682,8 +842,23 @@ function QuizAttemptForm({ quiz, course, existingAttempt, studentId, onSubmit, o
         <h2 className="text-xl font-black mb-1" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>{quiz.title}</h2>
         <p className="text-sm mb-4" style={{ color: 'var(--muted-foreground)' }}>{course?.name}</p>
         <div className="rounded-xl p-5" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
-          <p className="text-sm font-bold mb-1" style={{ color: '#16a34a' }}>Ya aprobaste este examen</p>
-          <p className="text-sm" style={{ color: 'var(--foreground)' }}>Tu calificación: <strong>{existingAttempt.score}/{MAX_GRADE}</strong></p>
+          {pendingReview ? (
+            <>
+              <p className="text-sm font-bold mb-1" style={{ color: '#d97706' }}>Tu examen está pendiente de revisión</p>
+              <p className="text-sm" style={{ color: 'var(--foreground)' }}>Tiene preguntas de respuesta abierta — el profesor las lee y te pone la nota final.</p>
+            </>
+          ) : existingAttempt.score >= PASS_THRESHOLD ? (
+            <>
+              <p className="text-sm font-bold mb-1" style={{ color: '#16a34a' }}>Ya aprobaste este examen</p>
+              <p className="text-sm" style={{ color: 'var(--foreground)' }}>Tu calificación: <strong>{existingAttempt.score}/{MAX_GRADE}</strong></p>
+            </>
+          ) : (
+            <>
+              <p className="text-sm font-bold mb-1" style={{ color: '#dc2626' }}>No aprobaste este examen</p>
+              <p className="text-sm" style={{ color: 'var(--foreground)' }}>Tu calificación: <strong>{existingAttempt.score}/{MAX_GRADE}</strong></p>
+              <p className="text-xs mt-1" style={{ color: 'var(--muted-foreground)' }}>Pídele a tu profesor la opción de reintentar.</p>
+            </>
+          )}
           <p className="text-xs mt-1" style={{ color: 'var(--muted-foreground)' }}>Entregado: {formatDate(existingAttempt.submittedAt)}</p>
         </div>
       </div>
@@ -769,13 +944,27 @@ function QuizAttemptForm({ quiz, course, existingAttempt, studentId, onSubmit, o
 }
 
 function SubmitAssignmentForm({ assignment, course, existing, onSubmit, onCancel }) {
-  const [file, setFile] = useState(null)
+  const [fileName, setFileName] = useState(existing?.fileName ?? '')
+  const [fileData, setFileData] = useState(existing?.fileData ?? '')
+  const [fileSize, setFileSize] = useState(existing?.fileSize ?? 0)
   const [textResponse, setTextResponse] = useState(existing?.textResponse ?? '')
   const [notes, setNotes] = useState(existing?.notes ?? '')
   const [confirmed, setConfirmed] = useState(false)
   const [submitError, setSubmitError] = useState('')
 
-  const hasFile = !!(file || existing?.fileName)
+  const hasFile = !!fileName
+
+  function handleFileChange(e) {
+    const f = e.target.files?.[0]
+    e.target.value = ''
+    if (!f) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      setFileName(f.name); setFileData(reader.result); setFileSize(f.size)
+      setConfirmed(false); setSubmitError('')
+    }
+    reader.readAsDataURL(f)
+  }
 
   function handle(draft) {
     if (!draft && !hasFile && !textResponse.trim()) {
@@ -783,11 +972,7 @@ function SubmitAssignmentForm({ assignment, course, existing, onSubmit, onCancel
       return
     }
     setSubmitError('')
-    onSubmit({
-      fileName: file?.name ?? existing?.fileName ?? '',
-      fileSize: file?.size ?? existing?.fileSize ?? 0,
-      textResponse, notes,
-    }, draft)
+    onSubmit({ fileName, fileData, fileSize, textResponse, notes }, draft)
   }
 
   return (
@@ -796,19 +981,29 @@ function SubmitAssignmentForm({ assignment, course, existing, onSubmit, onCancel
       <h2 className="text-xl font-black mb-1" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Enviar: {assignment.title}</h2>
       <p className="text-sm mb-4" style={{ color: 'var(--muted-foreground)' }}>{course?.name}</p>
 
+      <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--muted-foreground)' }}>La actividad</p>
       <div className="rounded-xl p-4 mb-5" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
-        <p className="text-sm mb-2" style={{ color: 'var(--foreground)' }}>{assignment.description}</p>
+        <p className="text-sm mb-2 wrap-break-word" style={{ color: 'var(--foreground)' }}>{assignment.description}</p>
+        {assignment.fileName && (
+          <a href={assignment.fileData} download={assignment.fileName}
+            className="flex items-start gap-2 px-3 py-2 mb-2 rounded-lg text-sm font-semibold max-w-full"
+            style={{ backgroundColor: 'rgba(124,58,237,0.1)', color: '#7c3aed', border: '1px solid rgba(124,58,237,0.2)' }}>
+            <Paperclip size={14} className="shrink-0 mt-0.5" />
+            <span className="wrap-break-word">{assignment.fileName} — descargar</span>
+          </a>
+        )}
         <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>Fecha límite: {formatDate(assignment.dueDate)} · {daysUntil(assignment.dueDate)} · Calificación máxima: {assignment.maxScore} pts</p>
       </div>
 
+      <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--muted-foreground)' }}>Tu entrega</p>
       <div className="space-y-4">
         <div>
           <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--foreground)' }}>Cargar archivo (PDF, DOC, DOCX)</label>
           <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg" style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)' }}>
             <Upload size={16} style={{ color: 'var(--muted-foreground)' }} />
-            <input type="file" accept=".pdf,.doc,.docx" onChange={e => { setFile(e.target.files?.[0] ?? null); setConfirmed(false); setSubmitError('') }} className="text-sm" style={{ color: 'var(--foreground)' }} />
+            <input type="file" accept=".pdf,.doc,.docx" onChange={handleFileChange} className="text-sm" style={{ color: 'var(--foreground)' }} />
           </div>
-          {hasFile && <p className="text-xs mt-1" style={{ color: 'var(--muted-foreground)' }}>Archivo actual: {file?.name ?? existing?.fileName}</p>}
+          {hasFile && <p className="text-xs mt-1" style={{ color: 'var(--muted-foreground)' }}>Archivo actual: {fileName} ({(fileSize / 1024).toFixed(0)} KB)</p>}
         </div>
         <div>
           <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--foreground)' }}>O escribir respuesta</label>

@@ -85,12 +85,12 @@ export default function AppRoutes() {
       } />
       <Route path="/profesor" element={
         <ProtectedRoute roles={['profesor']}>
-          <TeacherDashboard />
+          <TeacherDashboard theme={theme} setTheme={setTheme} />
         </ProtectedRoute>
       } />
       <Route path="/estudiante" element={
         <ProtectedRoute roles={['estudiante']}>
-          <StudentDashboard />
+          <StudentDashboard theme={theme} setTheme={setTheme} />
         </ProtectedRoute>
       } />
       <Route path="/*" element={<PublicLayout theme={theme} setTheme={setTheme} />} />

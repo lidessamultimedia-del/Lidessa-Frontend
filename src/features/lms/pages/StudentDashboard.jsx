@@ -5,10 +5,11 @@ import { useToast } from '@/shared/context/ToastContext'
 import DashboardShell from '@/features/lms/components/DashboardShell'
 import ChatThread from '@/features/lms/components/ChatThread'
 import AnimatedCounter from '@/shared/components/AnimatedCounter'
+import AccountSettings from '@/shared/components/AccountSettings'
 import { courseCardStyle } from '@/features/lms/utils/courseCard'
 import {
   BarChart2, GraduationCap, ClipboardCheck, Check, Lock, BookOpen, FileText, Upload, Users, MoreVertical,
-  HelpCircle, Paperclip, Mail, Search,
+  HelpCircle, Paperclip, Mail, Search, UserCog,
 } from '@/shared/components/Icons'
 
 const navItems = [
@@ -16,6 +17,7 @@ const navItems = [
   { id: 'courses', label: 'Mis Cursos', icon: GraduationCap },
   { id: 'grades', label: 'Mis Calificaciones', icon: ClipboardCheck },
   { id: 'messages', label: 'Mensajes', icon: Mail },
+  { id: 'settings', label: 'Configuración', icon: UserCog },
 ]
 
 function formatDate(iso) {
@@ -57,6 +59,7 @@ export default function StudentDashboard({ theme, setTheme }) {
   const [openCourseMenuId, setOpenCourseMenuId] = useState(null)
   const [messageModalOpen, setMessageModalOpen] = useState(false)
   const [messagesSearch, setMessagesSearch] = useState('')
+  const [lessonViewModal, setLessonViewModal] = useState(null)
 
   useEffect(() => {
     function handleClick(e) {
@@ -106,9 +109,6 @@ export default function StudentDashboard({ theme, setTheme }) {
   const averageGrade = overallGrades.length
     ? Math.round((overallGrades.reduce((sum, r) => sum + r.grade, 0) / overallGrades.length) * 10) / 10
     : 0
-  const overallProgress = myCourses.length
-    ? Math.round(myCourses.reduce((sum, c) => sum + lms.progressForStudentCourse(studentId, c.id).percent, 0) / myCourses.length)
-    : 0
 
   function openCourseDetail(courseId, tab = 'general') {
     setSelectedCourseId(courseId)
@@ -146,6 +146,7 @@ export default function StudentDashboard({ theme, setTheme }) {
     quiz: currentQuiz?.title ?? 'Examen',
     grades: 'Mis calificaciones',
     messages: 'Mensajes',
+    settings: 'Configuración',
   }[section]
 
   return (
@@ -154,7 +155,7 @@ export default function StudentDashboard({ theme, setTheme }) {
       theme={theme}
       setTheme={setTheme}
       navItems={navItems}
-      activeSection={['dashboard', 'courses', 'grades', 'messages'].includes(section) ? section : 'courses'}
+      activeSection={['dashboard', 'courses', 'grades', 'messages', 'settings'].includes(section) ? section : 'courses'}
       onSectionChange={id => { setSection(id); setSelectedCourseId(null) }}
       title={sectionTitle}
       notifications={[
@@ -199,17 +200,20 @@ export default function StudentDashboard({ theme, setTheme }) {
           </p>
           <p className="text-sm mb-6" style={{ color: 'var(--muted-foreground)' }}>Este es tu progreso en Lidessa Formación.</p>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
             {[
               { label: 'Mis Cursos', value: myCourses.length, icon: GraduationCap, color: '#005187' },
               { label: 'Actividades Pendientes', value: pendingAssignments.length + pendingQuizzes.length, icon: ClipboardCheck, color: '#d97706' },
-              { label: 'Calificación Promedio', value: averageGrade, icon: BarChart2, color: '#7c3aed' },
-              { label: 'Progreso General', value: overallProgress, suffix: '%', icon: Check, color: '#16a34a' },
+              { label: 'Calificación Promedio', value: averageGrade, empty: overallGrades.length === 0, icon: BarChart2, color: '#7c3aed' },
             ].map(s => (
               <div key={s.label} className="rounded-xl p-5" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
                 <div className="flex items-center justify-between mb-3">
                   <span style={{ color: s.color }}><s.icon size={26} /></span>
-                  <AnimatedCounter target={s.value} suffix={s.suffix ?? ''} style={{ fontSize: 32, fontFamily: 'var(--font-display)', color: s.color, fontWeight: 900 }} />
+                  {s.empty ? (
+                    <span className="text-sm font-bold text-right" style={{ color: 'var(--muted-foreground)' }}>Sin calificaciones</span>
+                  ) : (
+                    <AnimatedCounter target={s.value} suffix={s.suffix ?? ''} style={{ fontSize: 32, fontFamily: 'var(--font-display)', color: s.color, fontWeight: 900 }} />
+                  )}
                 </div>
                 <p className="text-xs font-medium" style={{ color: 'var(--muted-foreground)' }}>{s.label}</p>
               </div>
@@ -225,6 +229,7 @@ export default function StudentDashboard({ theme, setTheme }) {
                 {c.name}
               </button>
             ))}
+            {myCourses.length === 0 && <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>No tiene cursos por el momento.</p>}
           </div>
 
           <h2 className="font-bold text-sm mb-3" style={{ color: 'var(--foreground)', fontFamily: 'var(--font-display)' }}>Tareas próximas a vencer</h2>
@@ -326,6 +331,11 @@ export default function StudentDashboard({ theme, setTheme }) {
               )
             })}
           </div>
+          {myCourses.length === 0 && (
+            <p className="text-sm px-4 py-6 text-center rounded-xl" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
+              No tiene cursos por el momento.
+            </p>
+          )}
         </div>
       )}
 
@@ -472,7 +482,7 @@ export default function StudentDashboard({ theme, setTheme }) {
                     {publishedItems.map(({ kind, item }, i, arr) => (
                       <div key={item.id} style={{ display: 'flex', gap: 12, padding: '12px 16px', alignItems: 'center', borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none', backgroundColor: 'var(--card)' }}>
                         {kind === 'lesson' ? (
-                          <LessonRow lms={lms} studentId={studentId} course={selectedCourse} lesson={item} onToast={toast} />
+                          <LessonRow lms={lms} studentId={studentId} course={selectedCourse} lesson={item} onOpen={() => setLessonViewModal(item)} />
                         ) : kind === 'assignment' ? (
                           <AssignmentRow lms={lms} studentId={studentId} assignment={item} onSubmit={openSubmit} />
                         ) : (
@@ -553,6 +563,11 @@ export default function StudentDashboard({ theme, setTheme }) {
               </button>
             </div>
           </div>
+          {gradesByCourse.length === 0 && (
+            <p className="text-sm px-4 py-6 text-center rounded-xl" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
+              No tiene calificaciones por el momento.
+            </p>
+          )}
           {gradesByCourse.map(({ course, rows, average, allGraded, passed }) => {
             const byTopic = {}
             rows.forEach(r => {
@@ -651,6 +666,9 @@ export default function StudentDashboard({ theme, setTheme }) {
         </div>
       )}
 
+      {/* ── CONFIGURACIÓN ── */}
+      {section === 'settings' && <AccountSettings />}
+
       {messageModalOpen && selectedCourse && (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4"
           style={{ backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
@@ -671,11 +689,103 @@ export default function StudentDashboard({ theme, setTheme }) {
           </div>
         </div>
       )}
+
+      {lessonViewModal && selectedCourse && (
+        <LessonViewModal
+          lesson={lessonViewModal}
+          studentId={studentId}
+          course={selectedCourse}
+          lms={lms}
+          onToast={toast}
+          onClose={() => setLessonViewModal(null)}
+        />
+      )}
     </DashboardShell>
   )
 }
 
-function LessonRow({ lms, studentId, course, lesson, onToast }) {
+function isImageFile(name) {
+  return /\.(png|jpe?g|gif|webp|svg)$/i.test(name ?? '')
+}
+function isPdfFile(name) {
+  return /\.pdf$/i.test(name ?? '')
+}
+
+function LessonViewModal({ lesson, studentId, course, lms, onToast, onClose }) {
+  const done = lms.lessonProgress.some(p => p.studentId === studentId && p.lessonId === lesson.id)
+
+  function handleComplete() {
+    lms.markLessonComplete(studentId, course.id, lesson.id)
+    onToast('success', 'Lección completada', lesson.title)
+    onClose()
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4"
+      style={{ backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+      onClick={e => e.target === e.currentTarget && onClose()}>
+      <div className="rounded-2xl p-6 max-w-lg w-full shadow-2xl"
+        style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', animation: 'fadeUp 0.25s ease', maxHeight: '85vh', overflowY: 'auto' }}>
+        <div className="flex items-start justify-between gap-3 mb-1">
+          <h3 className="text-lg font-black" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
+            {lesson.title}
+          </h3>
+          <button onClick={onClose} className="text-sm shrink-0" style={{ color: 'var(--muted-foreground)' }}>✕</button>
+        </div>
+        {done && (
+          <span className="text-xs font-bold px-2 py-0.5 rounded-full inline-block mt-2 mb-1" style={{ backgroundColor: 'rgba(22,163,74,0.12)', color: '#16a34a' }}>
+            ✓ Completada
+          </span>
+        )}
+
+        {lesson.content && (
+          <p className="text-sm whitespace-pre-wrap mt-3 mb-4" style={{ color: 'var(--foreground)' }}>{lesson.content}</p>
+        )}
+
+        {lesson.fileName && (
+          <div className="mb-4">
+            <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--muted-foreground)' }}>Material adjunto</p>
+            {isImageFile(lesson.fileName) ? (
+              <img src={lesson.fileData} alt={lesson.fileName} className="w-full rounded-lg mb-2"
+                style={{ maxHeight: 360, objectFit: 'contain', backgroundColor: 'var(--muted)' }} />
+            ) : isPdfFile(lesson.fileName) ? (
+              <iframe src={lesson.fileData} title={lesson.fileName} className="w-full rounded-lg mb-2"
+                style={{ height: 360, border: '1px solid var(--border)' }} />
+            ) : null}
+            <a href={lesson.fileData} download={lesson.fileName}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-colors max-w-full"
+              style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: '#005187', border: '1px solid rgba(0,81,135,0.2)' }}>
+              <Paperclip size={14} className="shrink-0" />
+              <span className="wrap-break-word flex-1">{lesson.fileName}</span>
+              {lesson.fileSize > 0 && (
+                <span className="text-xs shrink-0" style={{ color: 'var(--muted-foreground)' }}>({(lesson.fileSize / 1024).toFixed(0)} KB)</span>
+              )}
+            </a>
+          </div>
+        )}
+
+        {!lesson.content && !lesson.fileName && (
+          <p className="text-sm mb-4" style={{ color: 'var(--muted-foreground)' }}>Esta lección no tiene contenido adicional.</p>
+        )}
+
+        <div className="flex gap-3 mt-2">
+          <button type="button" onClick={onClose}
+            className="flex-1 py-2.5 rounded-lg text-sm font-bold" style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>
+            Cerrar
+          </button>
+          {!done && (
+            <button type="button" onClick={handleComplete}
+              className="flex-1 py-2.5 rounded-lg text-sm font-bold text-white" style={{ backgroundColor: '#005187' }}>
+              Marcar como completada
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function LessonRow({ lms, studentId, course, lesson, onOpen }) {
   const done = lms.lessonProgress.some(p => p.studentId === studentId && p.lessonId === lesson.id)
   const unlocked = lms.isLessonUnlocked(studentId, course.id, lesson.id)
   return (
@@ -696,7 +806,7 @@ function LessonRow({ lms, studentId, course, lesson, onToast }) {
         )}
       </div>
       {unlocked && !done && (
-        <button onClick={() => { lms.markLessonComplete(studentId, course.id, lesson.id); onToast('success', 'Lección completada', lesson.title) }}
+        <button onClick={onOpen}
           className="text-xs px-3 py-1.5 rounded-lg font-bold text-white shrink-0" style={{ backgroundColor: '#005187' }}>
           Empezar Lección
         </button>

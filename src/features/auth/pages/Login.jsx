@@ -105,9 +105,9 @@ export default function Login() {
               value={form.password} error={fieldErrors.password}
               onChange={v => { setForm(f => ({ ...f, password: v })); setFieldErrors(f => ({ ...f, password: null })) }} />
             <div className="text-right">
-              <button type="button" className="text-xs font-medium" style={{ color: 'var(--accent)' }}>
+              <Link to="/recuperar-contrasena" className="text-xs font-medium" style={{ color: 'var(--accent)' }}>
                 ¿Olvidó su contraseña?
-              </button>
+              </Link>
             </div>
             {error && (
               <p className="text-xs px-3 py-2 rounded-lg" style={{ backgroundColor: 'rgba(220,38,38,0.1)', color: '#dc2626', border: '1px solid rgba(220,38,38,0.2)' }}>

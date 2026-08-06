@@ -26,7 +26,10 @@ import CategoriesManagerView from '../components/CategoriesManagerView'
 import AnimatedCounter from '@/shared/components/AnimatedCounter'
 import ThemeToggle from '@/shared/components/ThemeToggle'
 import { courseCardStyle } from '@/features/lms/utils/courseCard'
-import { BarChart2, Building, FileText, GraduationCap, Users, Clipboard, Sliders, Bell, User, AlertTriangle, Edit2, Plus, Send, BookOpen, Trash, Search, Eye, Lock, X } from '@/shared/components/Icons'
+import { BarChart2, Building, FileText, GraduationCap, Users, Clipboard, Sliders, Bell, User, AlertTriangle, Edit2, Plus, Send, BookOpen, Trash, Search, Eye, Lock, X, UserCog, ShieldCheck } from '@/shared/components/Icons'
+import AccountSettings from '@/shared/components/AccountSettings'
+import Avatar from '@/shared/components/Avatar'
+import Toggle from '@/shared/components/Toggle'
 
 const SETTINGS_KEY = 'lidessa_site_settings'
 
@@ -43,6 +46,8 @@ const statusColor = {
   'Revisando': '#005187',
 }
 
+const ROLE_LABELS = { admin: 'Administrador', profesor: 'Profesor', estudiante: 'Estudiante' }
+
 const ADMIN_NOTIFICATIONS = [
   { id: 'n1', icon: Clipboard, text: 'Nueva PQRSF de María García', time: 'Hace 1 hora', section: 'pqrsf' },
   { id: 'n2', icon: User, text: 'Nuevo cliente registrado: Ana Martínez', time: 'Hace 3 horas', section: 'students' },
@@ -52,7 +57,7 @@ const ADMIN_NOTIFICATIONS = [
 ]
 
 export default function AdminDashboard({ theme, setTheme }) {
-  const { user, logout, updateProfile } = useAuth()
+  const { user, logout, updateProfile, allUsers, updateUserRole } = useAuth()
   const { toast } = useToast()
   const navigate = useNavigate()
   const { posts: blogPosts, addPost, updatePost, deletePost } = useBlog()
@@ -101,6 +106,8 @@ export default function AdminDashboard({ theme, setTheme }) {
   const [lmsCoursesSort, setLmsCoursesSort] = useState('name')
   const [lmsCoursesFilter, setLmsCoursesFilter] = useState('all')
   const [directorySearch, setDirectorySearch] = useState('')
+  const [rolesSearch, setRolesSearch] = useState('')
+  const [settingsTab, setSettingsTab] = useState('site')
   const lmsSelectedCourse = lmsSelectedCourseId ? lms.courses.find(c => c.id === lmsSelectedCourseId) : null
   const [settings, setSettings] = useState(() => {
     try {
@@ -270,6 +277,19 @@ export default function AdminDashboard({ theme, setTheme }) {
       toast('success', `${form.role === 'profesor' ? 'Profesor' : 'Estudiante'} creado`, form.name)
     }
     setDirectoryModal(null)
+  }
+
+  function handleRoleChange(target, newRole) {
+    if (newRole === target.role) return
+    updateUserRole(target.id, newRole)
+    // Mantiene sincronizado el directorio del LMS si esta persona ya tenía
+    // una ficha ahí (para que Profesores/Estudiantes y los cursos reflejen
+    // el rol nuevo en vez de quedarse con el viejo).
+    const dirEntry = lms.directory.find(d => d.id === target.id)
+    if (dirEntry && dirEntry.role !== newRole && (newRole === 'profesor' || newRole === 'estudiante')) {
+      lms.updateDirectoryUser(target.id, { role: newRole })
+    }
+    toast('success', 'Rol actualizado', `${target.name} ahora es ${ROLE_LABELS[newRole]}.`)
   }
 
   function handleSaveBlogPost(form) {
@@ -482,10 +502,7 @@ export default function AdminDashboard({ theme, setTheme }) {
               )}
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
-                style={{ background: 'linear-gradient(135deg, #005187, #4d82bc)' }}>
-                {user?.name?.charAt(0)}
-              </div>
+              <Avatar user={user} size={32} />
               <span className="text-sm font-medium hidden sm:block" style={{ color: 'var(--foreground)' }}>{user?.name}</span>
             </div>
             <button onClick={handleLogout}
@@ -1107,11 +1124,13 @@ export default function AdminDashboard({ theme, setTheme }) {
                         )}
                       </div>
                       <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>{u.joined}</p>
-                      <button onClick={() => lms.toggleDirectoryUserActive(u.id)}
-                        className="text-xs px-2 py-1 rounded-full font-semibold w-fit"
-                        style={{ backgroundColor: u.active ? 'rgba(22,163,74,0.12)' : 'var(--muted)', color: u.active ? '#16a34a' : 'var(--muted-foreground)' }}>
-                        {u.active ? 'Activo' : 'Inactivo'}
-                      </button>
+                      <div className="flex items-center gap-2 w-fit">
+                        <Toggle checked={u.active} onChange={() => lms.toggleDirectoryUserActive(u.id)}
+                          label={u.active ? 'Desactivar' : 'Activar'} />
+                        <span className="text-xs font-semibold" style={{ color: u.active ? '#16a34a' : 'var(--muted-foreground)' }}>
+                          {u.active ? 'Activo' : 'Inactivo'}
+                        </span>
+                      </div>
                       <div className="flex gap-2 shrink-0">
                         <button onClick={() => setDirectoryDetailModal({ role, user: u })} title="Ver detalle"
                           className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
@@ -1144,36 +1163,115 @@ export default function AdminDashboard({ theme, setTheme }) {
             )
           })()}
 
-          {/* ── SETTINGS ── */}
+          {/* ── CONFIGURACIÓN ── */}
           {section === 'settings' && (
-            <div style={{ animation: 'fadeUp 0.4s ease', maxWidth: 560 }}>
-              <h2 className="text-xl font-black mb-6" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Configuración del sitio</h2>
-              <div className="rounded-xl p-6" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
-                <form onSubmit={handleSettingsSave} className="space-y-4">
-                  {[
-                    { key: 'phone', label: 'Teléfono principal', placeholder: '+57 300 123 4567' },
-                    { key: 'email', label: 'Correo de contacto', placeholder: 'info@lidessa.co' },
-                    { key: 'address', label: 'Dirección', placeholder: 'Calle 100 # 19-61, Bogotá D.C.' },
-                    { key: 'schedule', label: 'Horario de atención', placeholder: 'Lunes a viernes: 7:30 am – 5:30 pm' },
-                  ].map(f => (
-                    <div key={f.key}>
-                      <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--foreground)' }}>{f.label}</label>
-                      <input value={settings[f.key]} placeholder={f.placeholder}
-                        onChange={e => setSettings(prev => ({ ...prev, [f.key]: e.target.value }))}
-                        className="w-full px-3 py-2.5 rounded-lg text-sm outline-none"
-                        style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
-                        onFocus={e => e.target.style.borderColor = '#005187'}
-                        onBlur={e => e.target.style.borderColor = 'var(--border)'}
-                      />
-                    </div>
-                  ))}
-                  <button type="submit"
-                    className="w-full py-2.5 rounded-lg text-sm font-bold text-white mt-2"
-                    style={{ backgroundColor: '#005187' }}>
-                    Guardar configuración
+            <div style={{ animation: 'fadeUp 0.4s ease' }}>
+              <div className="flex gap-1 mb-6 rounded-xl p-1" style={{ backgroundColor: 'var(--muted)', width: 'fit-content' }}>
+                {[
+                  { id: 'site', label: 'Sitio', icon: Sliders },
+                  { id: 'roles', label: 'Usuarios y Roles', icon: ShieldCheck },
+                  { id: 'account', label: 'Mi cuenta', icon: UserCog },
+                ].map(t => (
+                  <button key={t.id} onClick={() => setSettingsTab(t.id)}
+                    className="px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5"
+                    style={{ backgroundColor: settingsTab === t.id ? 'var(--card)' : 'transparent', color: settingsTab === t.id ? '#005187' : 'var(--muted-foreground)' }}>
+                    <t.icon size={14} /> {t.label}
                   </button>
-                </form>
+                ))}
               </div>
+
+              {settingsTab === 'site' && (
+                <div style={{ maxWidth: 560 }}>
+                  <h2 className="text-xl font-black mb-6" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Configuración del sitio</h2>
+                  <div className="rounded-xl p-6" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
+                    <form onSubmit={handleSettingsSave} className="space-y-4">
+                      {[
+                        { key: 'phone', label: 'Teléfono principal', placeholder: '+57 300 123 4567' },
+                        { key: 'email', label: 'Correo de contacto', placeholder: 'info@lidessa.co' },
+                        { key: 'address', label: 'Dirección', placeholder: 'Calle 100 # 19-61, Bogotá D.C.' },
+                        { key: 'schedule', label: 'Horario de atención', placeholder: 'Lunes a viernes: 7:30 am – 5:30 pm' },
+                      ].map(f => (
+                        <div key={f.key}>
+                          <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--foreground)' }}>{f.label}</label>
+                          <input value={settings[f.key]} placeholder={f.placeholder}
+                            onChange={e => setSettings(prev => ({ ...prev, [f.key]: e.target.value }))}
+                            className="w-full px-3 py-2.5 rounded-lg text-sm outline-none"
+                            style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
+                            onFocus={e => e.target.style.borderColor = '#005187'}
+                            onBlur={e => e.target.style.borderColor = 'var(--border)'}
+                          />
+                        </div>
+                      ))}
+                      <button type="submit"
+                        className="w-full py-2.5 rounded-lg text-sm font-bold text-white mt-2"
+                        style={{ backgroundColor: '#005187' }}>
+                        Guardar configuración
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              )}
+
+              {settingsTab === 'roles' && (() => {
+                const rows = allUsers
+                  .filter(u => u.name.toLowerCase().includes(rolesSearch.toLowerCase()) || u.email.toLowerCase().includes(rolesSearch.toLowerCase()))
+                  .sort((a, b) => a.name.localeCompare(b.name))
+                return (
+                  <div>
+                    <h2 className="text-xl font-black mb-1" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Usuarios y Roles</h2>
+                    <p className="text-xs mb-6" style={{ color: 'var(--muted-foreground)' }}>
+                      Cambie el rol de cualquier cuenta (admin, profesor o estudiante). El acceso al panel correspondiente se ajusta de inmediato.
+                    </p>
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg mb-4" style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', width: 260 }}>
+                      <Search size={14} style={{ color: 'var(--muted-foreground)' }} />
+                      <input value={rolesSearch} onChange={e => setRolesSearch(e.target.value)} placeholder="Buscar usuario…"
+                        className="text-sm outline-none bg-transparent flex-1" style={{ color: 'var(--foreground)' }} />
+                    </div>
+                    <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '0 16px', padding: '10px 16px', backgroundColor: 'var(--muted)' }}>
+                        {['Nombre', 'Rol'].map(h => (
+                          <span key={h} className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--muted-foreground)' }}>{h}</span>
+                        ))}
+                      </div>
+                      {rows.map(u => {
+                        const isSelf = u.id === user.id
+                        return (
+                          <div key={u.id} style={{
+                            display: 'grid', gridTemplateColumns: '2fr 1fr',
+                            gap: '0 16px', padding: '12px 16px', alignItems: 'center',
+                            borderTop: '1px solid var(--border)', backgroundColor: 'var(--card)',
+                          }}>
+                            <div className="flex items-center gap-2 min-w-0">
+                              <div className="min-w-0">
+                                <p className="text-sm font-semibold truncate" style={{ color: 'var(--foreground)' }}>{u.name}</p>
+                                <p className="text-xs truncate" style={{ color: 'var(--muted-foreground)' }}>{u.email}</p>
+                              </div>
+                              {isSelf && (
+                                <span className="text-xs font-bold px-1.5 py-0.5 rounded-full shrink-0" style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: '#005187' }}>Tú</span>
+                              )}
+                            </div>
+                            <select value={u.role} disabled={isSelf} title={isSelf ? 'No puedes cambiar tu propio rol' : undefined}
+                              onChange={e => handleRoleChange(u, e.target.value)}
+                              className="text-sm px-3 py-2 rounded-lg outline-none w-fit disabled:opacity-50 disabled:cursor-not-allowed"
+                              style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }}>
+                              {Object.entries(ROLE_LABELS).map(([value, label]) => (
+                                <option key={value} value={value}>{label}</option>
+                              ))}
+                            </select>
+                          </div>
+                        )
+                      })}
+                      {rows.length === 0 && (
+                        <p className="text-sm px-4 py-6 text-center" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)' }}>
+                          Sin resultados para esa búsqueda.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )
+              })()}
+
+              {settingsTab === 'account' && <AccountSettings />}
             </div>
           )}
 

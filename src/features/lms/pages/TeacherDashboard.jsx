@@ -14,9 +14,10 @@ import CourseContentTab from '@/features/lms/components/CourseContentTab'
 import ChatThread from '@/features/lms/components/ChatThread'
 import AnimatedCounter from '@/shared/components/AnimatedCounter'
 import FormField, { errorInputStyle } from '@/shared/components/FormField'
+import AccountSettings from '@/shared/components/AccountSettings'
 import {
   BarChart2, GraduationCap, ClipboardCheck, Plus, Users,
-  BookOpen, Search, Paperclip, Mail,
+  BookOpen, Search, Paperclip, Mail, UserCog,
 } from '@/shared/components/Icons'
 
 function todayISO() {
@@ -28,6 +29,7 @@ const navItems = [
   { id: 'courses', label: 'Mis Cursos', icon: GraduationCap },
   { id: 'grading', label: 'Tareas por Revisar', icon: ClipboardCheck },
   { id: 'messages', label: 'Mensajes', icon: Mail },
+  { id: 'settings', label: 'Configuración', icon: UserCog },
 ]
 
 function formatDate(iso) {
@@ -185,6 +187,7 @@ export default function TeacherDashboard({ theme, setTheme }) {
     courseDetail: selectedCourse?.name ?? 'Curso',
     grading: 'Tareas por revisar',
     gradeSubmission: 'Calificar tarea',
+    settings: 'Configuración',
   }[section]
 
   return (
@@ -193,7 +196,7 @@ export default function TeacherDashboard({ theme, setTheme }) {
       theme={theme}
       setTheme={setTheme}
       navItems={navItems}
-      activeSection={['dashboard', 'courses', 'grading', 'messages'].includes(section) ? section : 'courses'}
+      activeSection={['dashboard', 'courses', 'grading', 'messages', 'settings'].includes(section) ? section : 'courses'}
       onSectionChange={id => { setSection(id); setSelectedCourseId(null) }}
       title={sectionTitle}
       notifications={[
@@ -233,12 +236,16 @@ export default function TeacherDashboard({ theme, setTheme }) {
               { label: 'Mis Cursos', value: myCourses.length, icon: GraduationCap, color: '#005187' },
               { label: 'Estudiantes Totales', value: totalStudents, icon: Users, color: '#16a34a' },
               { label: 'Tareas por Revisar', value: pendingSubmissions.length, icon: ClipboardCheck, color: '#d97706' },
-              { label: 'Promedio de Calificación', value: averageGrade, icon: BarChart2, color: '#7c3aed' },
+              { label: 'Promedio de Calificación', value: averageGrade, empty: gradedSubmissions.length === 0, icon: BarChart2, color: '#7c3aed' },
             ].map(s => (
               <div key={s.label} className="rounded-xl p-5" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
                 <div className="flex items-center justify-between mb-3">
                   <span style={{ color: s.color }}><s.icon size={26} /></span>
-                  <AnimatedCounter target={s.value} style={{ fontSize: 32, fontFamily: 'var(--font-display)', color: s.color, fontWeight: 900 }} />
+                  {s.empty ? (
+                    <span className="text-sm font-bold text-right" style={{ color: 'var(--muted-foreground)' }}>Sin calificaciones</span>
+                  ) : (
+                    <AnimatedCounter target={s.value} style={{ fontSize: 32, fontFamily: 'var(--font-display)', color: s.color, fontWeight: 900 }} />
+                  )}
                 </div>
                 <p className="text-xs font-medium" style={{ color: 'var(--muted-foreground)' }}>{s.label}</p>
               </div>
@@ -674,6 +681,9 @@ export default function TeacherDashboard({ theme, setTheme }) {
           )}
         </div>
       )}
+
+      {/* ── CONFIGURACIÓN ── */}
+      {section === 'settings' && <AccountSettings />}
 
       {topicModal && selectedCourse && (
         <TopicFormModal

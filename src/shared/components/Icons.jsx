@@ -21,6 +21,7 @@ import {
   Edit2 as LucideEdit2,
   Plus as LucidePlus,
   Send as LucideSend,
+  Smile as LucideSmile,
   AlertTriangle as LucideAlertTriangle,
   BarChart2 as LucideBarChart2,
   Building2 as LucideBuilding2,
@@ -66,6 +67,7 @@ export const Bell = withDefaultSize(LucideBell)
 export const Edit2 = withDefaultSize(LucideEdit2)
 export const Plus = withDefaultSize(LucidePlus)
 export const Send = withDefaultSize(LucideSend)
+export const Smile = withDefaultSize(LucideSmile)
 export const AlertTriangle = withDefaultSize(LucideAlertTriangle)
 export const BarChart2 = withDefaultSize(LucideBarChart2)
 export const Building = withDefaultSize(LucideBuilding2)

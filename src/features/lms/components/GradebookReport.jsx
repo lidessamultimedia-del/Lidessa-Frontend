@@ -32,6 +32,12 @@ export default function GradebookReport({ courseId }) {
     }
     return lms.attemptFor(itemId, studentId)?.score ?? null
   }
+  function retryRecordFor(studentId, kind, itemId) {
+    return kind === 'assignment' ? lms.submissionFor(itemId, studentId) : lms.attemptFor(itemId, studentId)
+  }
+  function handleAllowRetry(kind, record) {
+    lms.allowRetry(kind, record.id)
+  }
 
   const filtered = students
     .filter(s => s.name.toLowerCase().includes(query.toLowerCase()))
@@ -143,10 +149,21 @@ export default function GradebookReport({ courseId }) {
                   </td>
                   {topicGroups.flatMap(g => g.items).map(({ kind, item }) => {
                     const g = gradeFor(s.id, kind, item.id)
+                    const failed = g != null && g < PASS_THRESHOLD
+                    const record = failed ? retryRecordFor(s.id, kind, item.id) : null
                     return (
                       <td key={item.id} className="px-3 py-2.5 text-sm whitespace-nowrap"
-                        style={{ color: g != null ? '#16a34a' : 'var(--muted-foreground)', fontWeight: g != null ? 700 : 400, borderLeft: '1px solid var(--border)' }}>
-                        {g != null ? `${g.toFixed(1)} ✓` : '—'}
+                        style={{ color: g == null ? 'var(--muted-foreground)' : failed ? '#dc2626' : '#16a34a', fontWeight: g != null ? 700 : 400, borderLeft: '1px solid var(--border)' }}>
+                        {g != null ? `${g.toFixed(1)} ${failed ? '✗' : '✓'}` : '—'}
+                        {failed && record && !record.retryAllowed && (
+                          <button onClick={() => handleAllowRetry(kind, record)} title="Permitir que reintente"
+                            className="ml-1.5 text-xs font-bold" style={{ color: '#005187' }}>
+                            🔓
+                          </button>
+                        )}
+                        {failed && record?.retryAllowed && (
+                          <span className="ml-1.5 text-xs" style={{ color: 'var(--muted-foreground)' }} title="Ya puede reintentar">🔓✓</span>
+                        )}
                       </td>
                     )
                   })}

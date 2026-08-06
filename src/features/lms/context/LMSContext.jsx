@@ -32,6 +32,7 @@ const defaultState = {
   lessonProgress: seedLessonProgress,
   quizzes: seedQuizzes,
   quizAttempts: seedQuizAttempts,
+  messages: [],
 }
 
 export function LMSProvider({ children }) {
@@ -39,7 +40,10 @@ export function LMSProvider({ children }) {
   const [state, setState] = useState(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY)
-      return stored ? JSON.parse(stored) : defaultState
+      // Se fusiona con defaultState para que, si se agrega una clave nueva más
+      // adelante (como `messages`), las sesiones ya guardadas no se rompan por
+      // no tenerla — simplemente arrancan con el valor por defecto de esa clave.
+      return stored ? { ...defaultState, ...JSON.parse(stored) } : defaultState
     } catch {
       return defaultState
     }
@@ -67,7 +71,7 @@ export function LMSProvider({ children }) {
     return () => window.removeEventListener('storage', onStorage)
   }, [])
 
-  const { directory, courses, topics, lessons, assignments, submissions, lessonProgress, quizzes, quizAttempts } = state
+  const { directory, courses, topics, lessons, assignments, submissions, lessonProgress, quizzes, quizAttempts, messages } = state
 
   // ── Directory (profesores / estudiantes) ──
   function addDirectoryUser(data) {
@@ -200,44 +204,143 @@ export function LMSProvider({ children }) {
   function submitQuizAttempt({ quizId, studentId, answers }) {
     const quiz = quizzes.find(q => q.id === quizId)
     // Las preguntas de respuesta abierta no se autocalifican — solo cuentan
-    // las de selección múltiple para la nota automática.
+    // las de selección múltiple para la nota automática. Si el examen tiene
+    // alguna pregunta abierta, el intento queda pendiente de revisión manual
+    // hasta que el profesor la lea y ajuste la nota final.
+    const hasOpen = quiz.questions.some(q => q.type === 'open')
     const gradable = quiz.questions.map((q, i) => ({ q, i })).filter(({ q }) => q.type !== 'open')
     const correct = gradable.filter(({ q, i }) => answers[i] === q.correctIndex).length
     const score = gradable.length ? Math.round((correct / gradable.length) * MAX_GRADE * 10) / 10 : 0
     setState(s => ({
       ...s,
       // Un nuevo intento reemplaza el anterior — así un estudiante que reprobó
-      // puede reintentar sin dejar intentos viejos regados.
+      // puede reintentar sin dejar intentos viejos regados. `retryAllowed` se
+      // resetea: cada reintento hay que volver a autorizarlo.
       quizAttempts: [
         ...s.quizAttempts.filter(a => !(a.quizId === quizId && a.studentId === studentId)),
-        { id: `qa${Date.now()}`, quizId, studentId, answers, score, submittedAt: new Date().toISOString() },
+        { id: `qa${Date.now()}`, quizId, studentId, answers, score, feedback: '', reviewed: !hasOpen, retryAllowed: false, submittedAt: new Date().toISOString() },
       ],
     }))
     return score
   }
 
+  // El profesor lee las respuestas abiertas y ajusta la nota final del intento.
+  function reviewQuizAttempt(attemptId, score, feedback, retryAllowed = false) {
+    setState(s => ({
+      ...s,
+      quizAttempts: s.quizAttempts.map(a => a.id === attemptId ? { ...a, score, feedback, reviewed: true, seen: false, retryAllowed } : a),
+    }))
+  }
+  // El profesor autoriza puntualmente que el estudiante reintente una
+  // actividad o examen ya reprobado, sin tener que volver a calificarlo.
+  function allowRetry(kind, id) {
+    setState(s => (
+      kind === 'assignment'
+        ? { ...s, submissions: s.submissions.map(sub => sub.id === id ? { ...sub, retryAllowed: true } : sub) }
+        : { ...s, quizAttempts: s.quizAttempts.map(a => a.id === id ? { ...a, retryAllowed: true } : a) }
+    ))
+  }
+
+  // ── Mensajes (estudiante ↔ profesor, por curso) ──
+  function sendMessage({ courseId, fromId, toId, body }) {
+    const msg = { id: `msg${Date.now()}`, courseId, fromId, toId, body, createdAt: new Date().toISOString(), read: false }
+    setState(s => ({ ...s, messages: [...s.messages, msg] }))
+    return msg
+  }
+  function threadMessages(courseId, userA, userB) {
+    return messages
+      .filter(m => m.courseId === courseId && (
+        (m.fromId === userA && m.toId === userB) || (m.fromId === userB && m.toId === userA)
+      ))
+      .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+  }
+  function markThreadRead(courseId, readerId, otherId) {
+    setState(s => ({
+      ...s,
+      messages: s.messages.map(m => (m.courseId === courseId && m.toId === readerId && m.fromId === otherId && !m.read) ? { ...m, read: true } : m),
+    }))
+  }
+  function unreadMessageCount(userId) {
+    return messages.filter(m => m.toId === userId && !m.read).length
+  }
+  // Agrupa los mensajes del profesor en conversaciones (una por curso+estudiante).
+  function teacherConversations(teacherId) {
+    const teacherCourseIds = coursesByTeacher(teacherId).map(c => c.id)
+    const relevant = messages.filter(m => teacherCourseIds.includes(m.courseId) && (m.fromId === teacherId || m.toId === teacherId))
+    const byKey = {}
+    relevant.forEach(m => {
+      const studentId = m.fromId === teacherId ? m.toId : m.fromId
+      const key = `${m.courseId}_${studentId}`
+      if (!byKey[key] || m.createdAt > byKey[key].lastMessage.createdAt) {
+        byKey[key] = { courseId: m.courseId, studentId, lastMessage: m }
+      }
+    })
+    return Object.values(byKey)
+      .map(c => ({ ...c, unreadCount: relevant.filter(m => m.courseId === c.courseId && m.fromId === c.studentId && m.toId === teacherId && !m.read).length }))
+      .sort((a, b) => b.lastMessage.createdAt.localeCompare(a.lastMessage.createdAt))
+  }
+  // Una conversación por curso inscrito (con su profesor) — así el estudiante
+  // tiene un solo lugar donde revisar todos sus cursos en vez de entrar uno
+  // por uno a ver si le escribieron.
+  function studentConversations(studentId) {
+    return coursesByStudent(studentId).map(course => {
+      const thread = threadMessages(course.id, studentId, course.teacherId)
+      const lastMessage = thread.length ? thread[thread.length - 1] : null
+      const unreadCount = thread.filter(m => m.toId === studentId && !m.read).length
+      return { course, lastMessage, unreadCount }
+    }).sort((a, b) => {
+      if (a.unreadCount !== b.unreadCount) return b.unreadCount - a.unreadCount
+      const at = a.lastMessage?.createdAt ?? ''
+      const bt = b.lastMessage?.createdAt ?? ''
+      return bt.localeCompare(at)
+    })
+  }
+  function unreadMessagesForUser(userId) {
+    return messages.filter(m => m.toId === userId && !m.read)
+  }
+  // Calificaciones que el estudiante todavía no ha visto (para la campanita).
+  function unseenGradesForStudent(studentId) {
+    const subs = submissions
+      .filter(sub => sub.studentId === studentId && sub.status === 'graded' && sub.seen === false)
+      .map(sub => ({ kind: 'assignment', id: sub.id, item: assignments.find(a => a.id === sub.assignmentId), grade: sub.grade, gradedAt: sub.gradedAt }))
+    const atts = quizAttempts
+      .filter(a => a.studentId === studentId && a.reviewed && a.seen === false)
+      .map(a => ({ kind: 'quiz', id: a.id, item: quizzes.find(q => q.id === a.quizId), grade: a.score, gradedAt: a.submittedAt }))
+    return [...subs, ...atts].filter(x => x.item)
+  }
+
   // ── Submissions ──
-  function submitAssignment({ assignmentId, studentId, fileName = '', fileSize = 0, textResponse = '', notes = '', draft = false }) {
+  function submitAssignment({ assignmentId, studentId, fileName = '', fileData = '', fileSize = 0, textResponse = '', notes = '', draft = false }) {
     setState(s => {
       const existing = s.submissions.find(sub => sub.assignmentId === assignmentId && sub.studentId === studentId)
       const payload = {
-        fileName, fileSize, textResponse, notes,
+        fileName, fileData, fileSize, textResponse, notes,
         status: draft ? 'draft' : 'submitted',
         submittedAt: draft ? (existing?.submittedAt ?? null) : new Date().toISOString(),
+        // Cada envío consume el permiso de reintento — para volver a
+        // intentarlo el profesor tiene que autorizarlo de nuevo.
+        ...(draft ? {} : { retryAllowed: false }),
       }
       if (existing) {
         return { ...s, submissions: s.submissions.map(sub => sub.id === existing.id ? { ...sub, ...payload } : sub) }
       }
-      const submission = { id: `sub${Date.now()}`, assignmentId, studentId, grade: null, feedback: '', gradedAt: null, ...payload }
+      const submission = { id: `sub${Date.now()}`, assignmentId, studentId, grade: null, feedback: '', gradedAt: null, retryAllowed: false, ...payload }
       return { ...s, submissions: [...s.submissions, submission] }
     })
   }
-  function gradeSubmission(id, grade, feedback) {
+  function gradeSubmission(id, grade, feedback, retryAllowed = false) {
     setState(s => ({
       ...s,
       submissions: s.submissions.map(sub => sub.id === id
-        ? { ...sub, grade, feedback, status: 'graded', gradedAt: new Date().toISOString() } : sub),
+        ? { ...sub, grade, feedback, status: 'graded', gradedAt: new Date().toISOString(), seen: false, retryAllowed } : sub),
     }))
+  }
+  function markGradeSeen(kind, id) {
+    setState(s => (
+      kind === 'assignment'
+        ? { ...s, submissions: s.submissions.map(sub => sub.id === id ? { ...sub, seen: true } : sub) }
+        : { ...s, quizAttempts: s.quizAttempts.map(a => a.id === id ? { ...a, seen: true } : a) }
+    ))
   }
 
   // ── Selectores (funciones simples, dataset pequeño así que no hace falta memoizar) ──
@@ -255,9 +358,25 @@ export function LMSProvider({ children }) {
   const quizzesByCourse = courseId => quizzes.filter(q => q.courseId === courseId)
   const attemptFor = (quizId, studentId) => quizAttempts.find(a => a.quizId === quizId && a.studentId === studentId) ?? null
 
+  // El progreso suma tareas y exámenes — el material de apoyo (lecciones)
+  // no cuenta, porque es solo contenido de referencia para el estudiante,
+  // no algo que se aprueba. Una tarea/examen solo cuenta como avance cuando
+  // está aprobado (nota >= PASS_THRESHOLD), así que el progreso es
+  // individual por estudiante y no todos avanzan igual aunque hayan
+  // entregado lo mismo.
   function progressForStudentCourse(studentId, courseId) {
-    const total = lessonsByCourse(courseId).filter(isPublished).length
-    const completed = lessonProgress.filter(p => p.studentId === studentId && p.courseId === courseId).length
+    const courseAssignments = assignmentsByCourse(courseId).filter(isPublished)
+    const courseQuizzes = quizzesByCourse(courseId).filter(isPublished)
+    const assignmentsDone = courseAssignments.filter(a => {
+      const sub = submissionFor(a.id, studentId)
+      return sub?.status === 'graded' && sub.grade >= PASS_THRESHOLD
+    }).length
+    const quizzesDone = courseQuizzes.filter(q => {
+      const attempt = attemptFor(q.id, studentId)
+      return !!attempt && attempt.reviewed !== false && attempt.score >= PASS_THRESHOLD
+    }).length
+    const completed = assignmentsDone + quizzesDone
+    const total = courseAssignments.length + courseQuizzes.length
     return { completed, total, percent: total ? Math.round((completed / total) * 100) : 0 }
   }
 
@@ -314,18 +433,39 @@ export function LMSProvider({ children }) {
     return submissions.filter(sub => courseAssignmentIds.includes(sub.assignmentId))
   }
 
+  // Intentos de examen con al menos una pregunta de respuesta abierta que el
+  // profesor todavía no ha leído/calificado manualmente.
+  function quizAttemptsPendingReview(teacherId) {
+    const teacherCourseIds = coursesByTeacher(teacherId).map(c => c.id)
+    const openQuizIds = quizzes
+      .filter(q => teacherCourseIds.includes(q.courseId) && q.questions.some(qq => qq.type === 'open'))
+      .map(q => q.id)
+    return quizAttempts.filter(a => openQuizIds.includes(a.quizId) && !a.reviewed)
+  }
+
+  // Incluye tareas Y exámenes (antes solo mostraba tareas), y el promedio ya
+  // usa la misma fórmula ponderada que ve el profesor (examen pesa el doble).
   function gradesForStudent(studentId) {
     return coursesByStudent(studentId).map(course => {
-      const courseAssignments = assignmentsByCourse(course.id)
-      const rows = courseAssignments.map(a => ({
-        assignment: a,
-        submission: submissionFor(a.id, studentId),
-      }))
-      const graded = rows.filter(r => r.submission?.status === 'graded')
-      const average = graded.length
-        ? Math.round((graded.reduce((sum, r) => sum + r.submission.grade, 0) / graded.length) * 10) / 10
-        : null
-      return { course, rows, average }
+      const assignmentRows = assignmentsByCourse(course.id).filter(isPublished).map(a => {
+        const sub = submissionFor(a.id, studentId)
+        return {
+          kind: 'assignment', item: a, topicId: a.topicId,
+          graded: sub?.status === 'graded', grade: sub?.status === 'graded' ? sub.grade : null,
+          maxScore: a.maxScore, gradedAt: sub?.gradedAt ?? null,
+        }
+      })
+      const quizRows = quizzesByCourse(course.id).filter(isPublished).map(q => {
+        const attempt = attemptFor(q.id, studentId)
+        return {
+          kind: 'quiz', item: q, topicId: q.topicId,
+          graded: !!attempt, grade: attempt?.score ?? null,
+          maxScore: MAX_GRADE, gradedAt: attempt?.submittedAt ?? null,
+        }
+      })
+      const rows = [...assignmentRows, ...quizRows]
+      const wg = courseWeightedGrade(studentId, course.id)
+      return { course, rows, average: wg.average, allGraded: wg.allGraded, passed: wg.passed }
     })
   }
 
@@ -339,7 +479,12 @@ export function LMSProvider({ children }) {
       const sub = submissionFor(a.id, studentId)
       return sub?.status === 'graded' ? sub.grade : null
     })
-    const qzGrades = qz.map(q => attemptFor(q.id, studentId)?.score ?? null)
+    // Si el examen tiene preguntas abiertas sin revisar todavía, no cuenta
+    // como calificado — la nota podría cambiar cuando el profesor la revise.
+    const qzGrades = qz.map(q => {
+      const attempt = attemptFor(q.id, studentId)
+      return attempt && attempt.reviewed !== false ? attempt.score : null
+    })
 
     let weightedSum = 0
     let totalWeight = 0
@@ -366,6 +511,9 @@ export function LMSProvider({ children }) {
     progressForStudentCourse, isLessonUnlocked,
     topicsByCourse, topicById, itemsByTopic, courseCompletion,
     submissionsPendingForTeacher, submissionsForTeacherCourse, gradesForStudent, courseWeightedGrade,
+    reviewQuizAttempt, quizAttemptsPendingReview, allowRetry,
+    sendMessage, threadMessages, markThreadRead, unreadMessageCount, teacherConversations,
+    studentConversations, unreadMessagesForUser, unseenGradesForStudent, markGradeSeen,
   }
 
   return <LMSContext.Provider value={value}>{children}</LMSContext.Provider>

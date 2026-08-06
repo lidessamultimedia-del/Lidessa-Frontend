@@ -3,11 +3,12 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/features/auth/context/AuthContext'
 import { useToast } from '@/shared/context/ToastContext'
 import { Bell } from '@/shared/components/Icons'
+import ThemeToggle from '@/shared/components/ThemeToggle'
 
 // Shell compartido por los paneles de Profesor y Estudiante: sidebar
 // colapsable + topbar. Mismo patrón estructural que AdminDashboard.jsx,
-// pero con la paleta azul institucional en vez del navy/gold del admin.
-export default function DashboardShell({ roleLabel, navItems, activeSection, onSectionChange, title, notifications = [], children }) {
+// con el degradado navy/dorado institucional en el sidebar.
+export default function DashboardShell({ roleLabel, navItems, activeSection, onSectionChange, title, notifications = [], theme, setTheme, children }) {
   const { user, logout } = useAuth()
   const { toast } = useToast()
   const navigate = useNavigate()
@@ -42,10 +43,10 @@ export default function DashboardShell({ roleLabel, navItems, activeSection, onS
   return (
     <div className="min-h-screen flex" style={{ backgroundColor: 'var(--background)' }}>
       {/* Sidebar */}
-      <aside style={{
+      <aside className="no-print" style={{
         width: sidebarOpen ? 232 : 68,
         minHeight: '100vh',
-        background: 'linear-gradient(180deg, #0a2540 0%, #071e33 55%, #051422 100%)',
+        background: 'linear-gradient(165deg, #0a2540 0%, #071e33 50%, #2d2308 85%, #4a3a0f 100%)',
         transition: 'width 0.25s ease',
         flexShrink: 0,
         display: 'flex',
@@ -151,9 +152,9 @@ export default function DashboardShell({ roleLabel, navItems, activeSection, onS
       </aside>
 
       {/* Main */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden print-main">
         {/* Top bar */}
-        <header style={{
+        <header className="no-print" style={{
           height: 60, borderBottom: '1px solid var(--border)',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           padding: '0 24px', backgroundColor: 'var(--card)', flexShrink: 0,
@@ -162,6 +163,7 @@ export default function DashboardShell({ roleLabel, navItems, activeSection, onS
             {title}
           </h1>
           <div className="flex items-center gap-4">
+            <ThemeToggle theme={theme} setTheme={setTheme} />
             <div style={{ position: 'relative' }}>
               <button onClick={() => {
                 const next = !bellOpen
@@ -247,7 +249,7 @@ export default function DashboardShell({ roleLabel, navItems, activeSection, onS
         </header>
 
         {/* Content */}
-        <main style={{ flex: 1, overflowY: 'auto', padding: 24 }}>
+        <main className="print-main" style={{ flex: 1, overflowY: 'auto', padding: 24 }}>
           {children}
         </main>
       </div>

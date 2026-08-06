@@ -51,6 +51,7 @@ export function AuthProvider({ children }) {
   })
   const [user, setUser] = useState(null)
   const [initialized, setInitialized] = useState(false)
+  const [resetCodes, setResetCodes] = useState({})
 
   useEffect(() => {
     const stored = localStorage.getItem('lidessa_user')
@@ -88,6 +89,45 @@ export function AuthProvider({ children }) {
     return safe
   }
 
+  // No hay servicio de correo real (backend pendiente): el código se genera
+  // aquí mismo y se devuelve al llamador para mostrarlo en la UI a modo de demo.
+  async function requestPasswordReset(email) {
+    await new Promise(r => setTimeout(r, 900))
+    const found = users.find(u => u.email.toLowerCase() === email.toLowerCase())
+    if (!found) throw new Error('No existe una cuenta registrada con ese correo.')
+    const code = String(Math.floor(100000 + Math.random() * 900000))
+    const expiresAt = Date.now() + 10 * 60 * 1000
+    setResetCodes(prev => ({ ...prev, [email.toLowerCase()]: { code, expiresAt } }))
+    return code
+  }
+
+  function verifyResetCode(email, code) {
+    const entry = resetCodes[email.toLowerCase()]
+    if (!entry) throw new Error('Solicite un nuevo código de verificación.')
+    if (Date.now() > entry.expiresAt) throw new Error('El código expiró. Solicite uno nuevo.')
+    if (entry.code !== code) throw new Error('El código ingresado es incorrecto.')
+  }
+
+  async function resetPassword(email, code, newPassword) {
+    await new Promise(r => setTimeout(r, 900))
+    verifyResetCode(email, code)
+    setUsers(prev => prev.map(u =>
+      u.email.toLowerCase() === email.toLowerCase() ? { ...u, password: newPassword } : u
+    ))
+    setResetCodes(prev => {
+      const next = { ...prev }
+      delete next[email.toLowerCase()]
+      return next
+    })
+  }
+
+  async function changePassword(currentPassword, newPassword) {
+    await new Promise(r => setTimeout(r, 700))
+    const found = users.find(u => u.id === user?.id)
+    if (!found || found.password !== currentPassword) throw new Error('La contraseña actual es incorrecta.')
+    setUsers(prev => prev.map(u => u.id === user.id ? { ...u, password: newPassword } : u))
+  }
+
   function logout() {
     setUser(null)
     localStorage.removeItem('lidessa_user')
@@ -98,10 +138,27 @@ export function AuthProvider({ children }) {
     const updated = { ...user, ...data }
     setUser(updated)
     localStorage.setItem('lidessa_user', JSON.stringify(updated))
+    setUsers(prev => prev.map(u => u.id === user.id ? { ...u, ...data } : u))
   }
 
+  function updateUserRole(id, role) {
+    setUsers(prev => prev.map(u => u.id === id ? { ...u, role } : u))
+    if (user?.id === id) {
+      const updated = { ...user, role }
+      setUser(updated)
+      localStorage.setItem('lidessa_user', JSON.stringify(updated))
+    }
+  }
+
+  // Lista de estudiantes registrados (sin contraseña) para que LMSContext pueda
+  // reconciliar su directorio — ver comentario en LMSContext sobre por qué
+  // esto no puede depender únicamente de la llamada puntual a addDirectoryUser.
+  const registeredStudents = users.filter(u => u.role === 'estudiante').map(({ password: _pw, ...safe }) => safe)
+  // Todas las cuentas (sin contraseña), para la vista de Usuarios y Roles del admin.
+  const allUsers = users.map(({ password: _pw, ...safe }) => safe)
+
   return (
-    <AuthContext.Provider value={{ user, initialized, login, register, logout, updateProfile }}>
+    <AuthContext.Provider value={{ user, initialized, login, register, logout, updateProfile, changePassword, requestPasswordReset, verifyResetCode, resetPassword, registeredStudents, allUsers, updateUserRole }}>
       {children}
     </AuthContext.Provider>
   )

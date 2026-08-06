@@ -4,6 +4,7 @@ import { useAuth } from '@/features/auth/context/AuthContext'
 import { useToast } from '@/shared/context/ToastContext'
 import { Bell } from '@/shared/components/Icons'
 import ThemeToggle from '@/shared/components/ThemeToggle'
+import Avatar from '@/shared/components/Avatar'
 
 // Shell compartido por los paneles de Profesor y Estudiante: sidebar
 // colapsable + topbar. Mismo patrón estructural que AdminDashboard.jsx,
@@ -41,11 +42,11 @@ export default function DashboardShell({ roleLabel, navItems, activeSection, onS
   }
 
   return (
-    <div className="min-h-screen flex" style={{ backgroundColor: 'var(--background)' }}>
+    <div className="h-screen flex overflow-hidden" style={{ backgroundColor: 'var(--background)' }}>
       {/* Sidebar */}
       <aside className="no-print" style={{
         width: sidebarOpen ? 232 : 68,
-        minHeight: '100vh',
+        height: '100%',
         background: 'linear-gradient(165deg, #0a2540 0%, #071e33 50%, #2d2308 85%, #4a3a0f 100%)',
         transition: 'width 0.25s ease',
         flexShrink: 0,
@@ -66,7 +67,7 @@ export default function DashboardShell({ roleLabel, navItems, activeSection, onS
             )}
           </div>
         </div>
-        <nav className="flex-1 py-4 px-3">
+        <nav className="flex-1 py-4 px-3 overflow-y-auto min-h-0">
           {sidebarOpen && (
             <p className="text-[10px] font-bold px-3 mb-2" style={{ color: 'rgba(255,255,255,0.3)', letterSpacing: '0.12em' }}>
               NAVEGACIÓN
@@ -122,10 +123,7 @@ export default function DashboardShell({ roleLabel, navItems, activeSection, onS
             backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(132,182,244,0.12)',
             justifyContent: sidebarOpen ? 'flex-start' : 'center',
           }}>
-            <div className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
-              style={{ background: 'linear-gradient(135deg, #4d82bc, #005187)', color: 'white' }}>
-              {user?.name?.charAt(0) ?? 'U'}
-            </div>
+            <Avatar user={user} size={32} />
             {sidebarOpen && (
               <div className="min-w-0">
                 <p className="text-xs font-bold truncate" style={{ color: 'white' }}>{user?.name ?? roleLabel}</p>
@@ -231,10 +229,7 @@ export default function DashboardShell({ roleLabel, navItems, activeSection, onS
               )}
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold"
-                style={{ background: 'linear-gradient(135deg, #005187, #4d82bc)' }}>
-                {user?.name?.charAt(0)}
-              </div>
+              <Avatar user={user} size={32} />
               <span className="text-sm font-medium hidden sm:block" style={{ color: 'var(--foreground)' }}>{user?.name}</span>
             </div>
             <button onClick={handleLogout}

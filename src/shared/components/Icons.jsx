@@ -41,6 +41,8 @@ import {
   EllipsisVertical as LucideEllipsisVertical,
   HelpCircle as LucideHelpCircle,
   Paperclip as LucidePaperclip,
+  UserCog as LucideUserCog,
+  ShieldCheck as LucideShieldCheck,
 } from 'lucide-react'
 
 function withDefaultSize(LucideIcon) {
@@ -87,3 +89,5 @@ export const ClipboardCheck = withDefaultSize(LucideClipboardCheck)
 export const MoreVertical = withDefaultSize(LucideEllipsisVertical)
 export const HelpCircle = withDefaultSize(LucideHelpCircle)
 export const Paperclip = withDefaultSize(LucidePaperclip)
+export const UserCog = withDefaultSize(LucideUserCog)
+export const ShieldCheck = withDefaultSize(LucideShieldCheck)

@@ -4,6 +4,7 @@ import {
   seedQuizzes, seedQuizAttempts,
 } from '../data/seed'
 import { useToast } from '@/shared/context/ToastContext'
+import { useAuth } from '@/features/auth/context/AuthContext'
 
 const LMSContext = createContext(null)
 // v6: calificaciones pasan de escala 0-100 a escala 0-10 (con decimales), y el
@@ -37,6 +38,7 @@ const defaultState = {
 
 export function LMSProvider({ children }) {
   const { toast } = useToast()
+  const { registeredStudents } = useAuth()
   const [state, setState] = useState(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY)
@@ -72,6 +74,29 @@ export function LMSProvider({ children }) {
   }, [])
 
   const { directory, courses, topics, lessons, assignments, submissions, lessonProgress, quizzes, quizAttempts, messages } = state
+
+  // Red de seguridad: el registro público (Register.jsx) agrega al estudiante
+  // aquí en el mismo paso en que crea su cuenta, pero si esa llamada puntual
+  // se pierde por cualquier motivo (recarga a mitad de camino, HMR, etc.), la
+  // cuenta queda "huérfana" — existe para iniciar sesión pero es invisible
+  // para el admin (no aparece en Estudiantes ni se puede inscribir en cursos).
+  // Esto reconcilia automáticamente: cualquier cuenta con rol estudiante que
+  // no esté todavía en el directorio se agrega sola.
+  useEffect(() => {
+    const directoryEmails = new Set(directory.map(u => u.email.toLowerCase()))
+    const missing = registeredStudents.filter(s => !directoryEmails.has(s.email.toLowerCase()))
+    if (missing.length === 0) return
+    setState(s => ({
+      ...s,
+      directory: [
+        ...missing.map(s => ({
+          id: s.id, name: s.name, email: s.email, phone: s.phone ?? '',
+          role: 'estudiante', active: true, joined: todayISO(),
+        })),
+        ...s.directory,
+      ],
+    }))
+  }, [registeredStudents, directory])
 
   // ── Directory (profesores / estudiantes) ──
   function addDirectoryUser(data) {

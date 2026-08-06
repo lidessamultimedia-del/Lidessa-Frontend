@@ -15,6 +15,7 @@ import TeacherDashboard from '@/features/lms/pages/TeacherDashboard'
 import StudentDashboard from '@/features/lms/pages/StudentDashboard'
 import Login from '@/features/auth/pages/Login'
 import Register from '@/features/auth/pages/Register'
+import ForgotPassword from '@/features/auth/pages/ForgotPassword'
 import { useAuth } from '@/features/auth/context/AuthContext'
 
 function PublicLayout({ theme, setTheme }) {
@@ -78,6 +79,7 @@ export default function AppRoutes() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/registro" element={<Register />} />
+      <Route path="/recuperar-contrasena" element={<ForgotPassword />} />
       <Route path="/admin" element={
         <ProtectedRoute roles={['admin']}>
           <AdminDashboard theme={theme} setTheme={setTheme} />

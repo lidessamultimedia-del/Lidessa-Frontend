@@ -32,6 +32,7 @@ import {
   BookOpen as LucideBookOpen,
   Trash2 as LucideTrash2,
   Eye as LucideEye,
+  EyeOff as LucideEyeOff,
   Lock as LucideLock,
   Upload as LucideUpload,
   ChevronDown as LucideChevronDown,
@@ -43,6 +44,7 @@ import {
   Paperclip as LucidePaperclip,
   UserCog as LucideUserCog,
   ShieldCheck as LucideShieldCheck,
+  IdCard as LucideIdCard,
 } from 'lucide-react'
 
 function withDefaultSize(LucideIcon) {
@@ -80,6 +82,7 @@ export const FileText = withDefaultSize(LucideFileText)
 export const BookOpen = withDefaultSize(LucideBookOpen)
 export const Trash = withDefaultSize(LucideTrash2)
 export const Eye = withDefaultSize(LucideEye)
+export const EyeOff = withDefaultSize(LucideEyeOff)
 export const Lock = withDefaultSize(LucideLock)
 export const Upload = withDefaultSize(LucideUpload)
 export const ChevronDown = withDefaultSize(LucideChevronDown)
@@ -91,3 +94,4 @@ export const HelpCircle = withDefaultSize(LucideHelpCircle)
 export const Paperclip = withDefaultSize(LucidePaperclip)
 export const UserCog = withDefaultSize(LucideUserCog)
 export const ShieldCheck = withDefaultSize(LucideShieldCheck)
+export const IdCard = withDefaultSize(LucideIdCard)

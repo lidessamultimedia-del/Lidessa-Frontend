@@ -23,6 +23,13 @@ export const PASS_THRESHOLD = 8
 export const ASSIGNMENT_WEIGHT = 1
 export const QUIZ_WEIGHT = 2
 
+const defaultDocumentTypes = [
+  { name: 'Cédula de ciudadanía' },
+  { name: 'Cédula de extranjería' },
+  { name: 'Pasaporte' },
+  { name: 'Tarjeta de identidad' },
+]
+
 const defaultState = {
   directory: seedDirectory,
   courses: seedCourses,
@@ -33,6 +40,7 @@ const defaultState = {
   lessonProgress: seedLessonProgress,
   quizzes: seedQuizzes,
   quizAttempts: seedQuizAttempts,
+  documentTypes: defaultDocumentTypes,
   messages: [],
 }
 
@@ -73,7 +81,7 @@ export function LMSProvider({ children }) {
     return () => window.removeEventListener('storage', onStorage)
   }, [])
 
-  const { directory, courses, topics, lessons, assignments, submissions, lessonProgress, quizzes, quizAttempts, messages } = state
+  const { directory, courses, topics, lessons, assignments, submissions, lessonProgress, quizzes, quizAttempts, documentTypes, messages } = state
 
   // Red de seguridad: el registro público (Register.jsx) agrega al estudiante
   // aquí en el mismo paso en que crea su cuenta, pero si esa llamada puntual
@@ -112,6 +120,30 @@ export function LMSProvider({ children }) {
   }
   function deleteDirectoryUser(id) {
     setState(s => ({ ...s, directory: s.directory.filter(u => u.id !== id) }))
+  }
+
+  // ── Tipos de documento (configurables desde Configuración) ──
+  function addDocumentType(name) {
+    const clean = name.trim()
+    if (!clean) return
+    setState(s => s.documentTypes.some(d => d.name.toLowerCase() === clean.toLowerCase())
+      ? s
+      : { ...s, documentTypes: [...s.documentTypes, { name: clean }] })
+  }
+  function updateDocumentType(oldName, newName) {
+    const clean = newName.trim()
+    if (!clean || clean === oldName) return
+    setState(s => {
+      if (s.documentTypes.some(d => d.name.toLowerCase() === clean.toLowerCase() && d.name !== oldName)) return s
+      return {
+        ...s,
+        documentTypes: s.documentTypes.map(d => d.name === oldName ? { name: clean } : d),
+        directory: s.directory.map(u => u.documentType === oldName ? { ...u, documentType: clean } : u),
+      }
+    })
+  }
+  function deleteDocumentType(name) {
+    setState(s => ({ ...s, documentTypes: s.documentTypes.filter(d => d.name !== name) }))
   }
 
   // ── Courses ──
@@ -522,8 +554,9 @@ export function LMSProvider({ children }) {
   }
 
   const value = {
-    directory, courses, topics, lessons, assignments, submissions, lessonProgress, quizzes, quizAttempts,
+    directory, courses, topics, lessons, assignments, submissions, lessonProgress, quizzes, quizAttempts, documentTypes,
     addDirectoryUser, updateDirectoryUser, toggleDirectoryUserActive, deleteDirectoryUser,
+    addDocumentType, updateDocumentType, deleteDocumentType,
     addCourse, updateCourse, deleteCourse, enrollStudent, unenrollStudent,
     addTopic, updateTopic, deleteTopic,
     addLesson, updateLesson, deleteLesson, markLessonComplete,

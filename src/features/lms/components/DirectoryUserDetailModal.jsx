@@ -42,6 +42,12 @@ export default function DirectoryUserDetailModal({ user, role, lms, onClose }) {
           <div className="grid grid-cols-2 gap-3">
             <Info label="Correo" value={user.email} />
             <Info label="Teléfono" value={user.phone || '—'} />
+            {!isStudent && (
+              <>
+                <Info label="Tipo de documento" value={user.documentType || '—'} />
+                <Info label="Número de documento" value={user.documentNumber || '—'} />
+              </>
+            )}
             <Info label="Rol" value={isStudent ? 'Estudiante' : 'Profesor'} />
             <Info label="Fecha de ingreso" value={user.joined} />
           </div>

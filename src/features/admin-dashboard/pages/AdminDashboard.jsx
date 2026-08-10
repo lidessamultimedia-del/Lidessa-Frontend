@@ -23,10 +23,11 @@ import PQRSFReplyModal from '@/features/pqrsf/components/PQRSFReplyModal'
 import ServiceFormModal from '../components/ServiceFormModal'
 import CatalogCourseFormModal from '../components/CatalogCourseFormModal'
 import CategoriesManagerView from '../components/CategoriesManagerView'
+import DocumentTypesManagerView from '../components/DocumentTypesManagerView'
 import AnimatedCounter from '@/shared/components/AnimatedCounter'
 import ThemeToggle from '@/shared/components/ThemeToggle'
 import { courseCardStyle } from '@/features/lms/utils/courseCard'
-import { BarChart2, Building, FileText, GraduationCap, Users, Clipboard, Sliders, Bell, User, AlertTriangle, Edit2, Plus, Send, BookOpen, Trash, Search, Eye, Lock, X, UserCog, ShieldCheck, MessageCircle, Sparkle, Check, Inbox } from '@/shared/components/Icons'
+import { BarChart2, Building, FileText, GraduationCap, Users, Clipboard, Sliders, Bell, User, AlertTriangle, Edit2, Plus, Send, BookOpen, Trash, Search, Eye, Lock, X, UserCog, ShieldCheck, IdCard, MessageCircle, Sparkle, Check, Inbox } from '@/shared/components/Icons'
 import AccountSettings from '@/shared/components/AccountSettings'
 import Avatar from '@/shared/components/Avatar'
 import Toggle from '@/shared/components/Toggle'
@@ -171,6 +172,19 @@ export default function AdminDashboard({ theme, setTheme }) {
     setDeleteConfirm({ type: 'category', id: name, label: name })
   }
 
+  function handleAddDocumentType(name) {
+    lms.addDocumentType(name)
+    toast('success', 'Tipo de documento creado', name)
+  }
+
+  function handleRequestDeleteDocumentType(name, inUse) {
+    if (inUse > 0) {
+      toast('warning', 'No se puede eliminar', `${inUse} profesor(es) todavía usan "${name}". Cámbieles el tipo de documento primero.`)
+      return
+    }
+    setDeleteConfirm({ type: 'documentType', id: name, label: name })
+  }
+
   function handleSaveCatalogCourse(form) {
     if (catalogModal.mode === 'edit') {
       lms.updateCourse(catalogModal.course.id, form)
@@ -269,6 +283,9 @@ export default function AdminDashboard({ theme, setTheme }) {
       deleteCategory(deleteConfirm.id)
       if (servicesCategoryFilter === deleteConfirm.id) setServicesCategoryFilter('all')
       toast('success', 'Categoría eliminada', deleteConfirm.label)
+    } else if (deleteConfirm.type === 'documentType') {
+      lms.deleteDocumentType(deleteConfirm.id)
+      toast('success', 'Tipo de documento eliminado', deleteConfirm.label)
     } else {
       toast('success', 'Elemento eliminado', 'El registro fue eliminado correctamente.')
     }
@@ -1323,6 +1340,7 @@ export default function AdminDashboard({ theme, setTheme }) {
                 {[
                   { id: 'site', label: 'Sitio', icon: Sliders },
                   { id: 'roles', label: 'Usuarios y Roles', icon: ShieldCheck },
+                  { id: 'documentTypes', label: 'Tipos de documento', icon: IdCard },
                   { id: 'account', label: 'Mi cuenta', icon: UserCog },
                 ].map(t => (
                   <button key={t.id} onClick={() => setSettingsTab(t.id)}
@@ -1423,6 +1441,22 @@ export default function AdminDashboard({ theme, setTheme }) {
                   </div>
                 )
               })()}
+
+              {settingsTab === 'documentTypes' && (
+                <div>
+                  <h2 className="text-xl font-black mb-1" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Tipos de documento</h2>
+                  <p className="text-xs mb-6" style={{ color: 'var(--muted-foreground)' }}>
+                    Estas opciones aparecen en el campo "Tipo de documento" al crear o editar un profesor.
+                  </p>
+                  <DocumentTypesManagerView
+                    documentTypes={lms.documentTypes}
+                    directory={lms.directory}
+                    onAdd={handleAddDocumentType}
+                    onUpdate={lms.updateDocumentType}
+                    onRequestDelete={handleRequestDeleteDocumentType}
+                  />
+                </div>
+              )}
 
               {settingsTab === 'account' && <AccountSettings />}
             </div>
@@ -1547,6 +1581,7 @@ export default function AdminDashboard({ theme, setTheme }) {
         <DirectoryUserFormModal
           user={directoryModal.mode === 'edit' ? directoryModal.user : null}
           role={directoryModal.role}
+          documentTypes={lms.documentTypes}
           onSave={handleSaveDirectoryUser}
           onClose={() => setDirectoryModal(null)}
         />

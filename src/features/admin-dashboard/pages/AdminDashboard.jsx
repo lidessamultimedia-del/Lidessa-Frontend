@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/features/auth/context/AuthContext'
 import { useToast } from '@/shared/context/ToastContext'
 import { useBlog } from '@/features/blog/context/BlogContext'
-import { usePQRSF } from '@/features/pqrsf/context/PQRSFContext'
+import { usePQRSF, isIdentified } from '@/features/pqrsf/context/PQRSFContext'
 import { useLMS } from '@/features/lms/context/LMSContext'
 import { useServicesData } from '@/features/services/context/ServicesDataContext'
 import BlogPostFormModal from '@/features/blog/components/BlogPostFormModal'
@@ -26,7 +26,7 @@ import CategoriesManagerView from '../components/CategoriesManagerView'
 import AnimatedCounter from '@/shared/components/AnimatedCounter'
 import ThemeToggle from '@/shared/components/ThemeToggle'
 import { courseCardStyle } from '@/features/lms/utils/courseCard'
-import { BarChart2, Building, FileText, GraduationCap, Users, Clipboard, Sliders, Bell, User, AlertTriangle, Edit2, Plus, Send, BookOpen, Trash, Search, Eye, Lock, X, UserCog, ShieldCheck } from '@/shared/components/Icons'
+import { BarChart2, Building, FileText, GraduationCap, Users, Clipboard, Sliders, Bell, User, AlertTriangle, Edit2, Plus, Send, BookOpen, Trash, Search, Eye, Lock, X, UserCog, ShieldCheck, MessageCircle, Sparkle, Check, Inbox } from '@/shared/components/Icons'
 import AccountSettings from '@/shared/components/AccountSettings'
 import Avatar from '@/shared/components/Avatar'
 import Toggle from '@/shared/components/Toggle'
@@ -46,6 +46,16 @@ const statusColor = {
   'Revisando': '#005187',
 }
 
+const PQRSF_TYPE_STYLES = {
+  'Petición': { color: '#005187', icon: MessageCircle },
+  'Solicitud': { color: '#005187', icon: MessageCircle },
+  'Queja': { color: '#dc2626', icon: AlertTriangle },
+  'Reclamo': { color: '#d97706', icon: AlertTriangle },
+  'Sugerencia': { color: '#7c3aed', icon: Sparkle },
+  'Felicitación': { color: '#16a34a', icon: Check },
+}
+const BRAND_GRADIENT = 'linear-gradient(135deg, #005187 0%, #4d82bc 55%, #b8860b 100%)'
+
 const ROLE_LABELS = { admin: 'Administrador', profesor: 'Profesor', estudiante: 'Estudiante' }
 
 const ADMIN_NOTIFICATIONS = [
@@ -61,7 +71,7 @@ export default function AdminDashboard({ theme, setTheme }) {
   const { toast } = useToast()
   const navigate = useNavigate()
   const { posts: blogPosts, addPost, updatePost, deletePost } = useBlog()
-  const { tickets: pqrsfTickets, updateTicket: updatePQRSF } = usePQRSF()
+  const { tickets: pqrsfTickets, updateTicket: updatePQRSF, markRead: markPQRSFRead, respondTicket: respondPQRSF } = usePQRSF()
   const lms = useLMS()
   const catalogCourses = lms.listedCourses
   const { services, addService, updateService, deleteService, toggleServiceActive, categories: serviceCategories, addCategory, updateCategory, toggleCategoryActive, deleteCategory } = useServicesData()
@@ -90,6 +100,7 @@ export default function AdminDashboard({ theme, setTheme }) {
   const [catalogModal, setCatalogModal] = useState(null)
   const [servicesTab, setServicesTab] = useState('list')
   const [pqrsfReplyModal, setPqrsfReplyModal] = useState(null)
+  const [pqrsfSearch, setPqrsfSearch] = useState('')
   const [servicesSearch, setServicesSearch] = useState('')
   const [servicesCategoryFilter, setServicesCategoryFilter] = useState('all')
   const [categoryFilterOpen, setCategoryFilterOpen] = useState(false)
@@ -210,10 +221,18 @@ export default function AdminDashboard({ theme, setTheme }) {
     setLmsParticipantsView('list')
   }
 
-  function handleReplyPQRSF(response) {
-    updatePQRSF(pqrsfReplyModal.id, { status: 'Respondida', response })
-    toast('success', 'Respuesta enviada', `Se respondió a ${pqrsfReplyModal.from}`)
+  async function handleReplyPQRSF(response) {
+    const { emailSent } = await respondPQRSF(pqrsfReplyModal.id, response)
+    toast('success', 'Respuesta guardada',
+      emailSent
+        ? `Se notificará a ${pqrsfReplyModal.email} por correo (simulado — falta conectar el backend de envío).`
+        : `Se guardó la respuesta para ${pqrsfReplyModal.from}.`)
     setPqrsfReplyModal(null)
+  }
+
+  function handlePQRSFMarkRead(ticket) {
+    markPQRSFRead(ticket.id)
+    toast('info', 'Marcado como leído', ticket.subject)
   }
 
   function handleDeleteConfirm() {
@@ -871,42 +890,176 @@ export default function AdminDashboard({ theme, setTheme }) {
           )}
 
           {/* ── PQRSF ── */}
-          {section === 'pqrsf' && (
-            <div style={{ animation: 'fadeUp 0.4s ease' }}>
-              <h2 className="text-xl font-black mb-6" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Bandeja PQRSF</h2>
-              <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-                {pqrsfTickets.map((p, i) => (
-                  <div key={p.id} style={{
-                    display: 'flex', gap: 12, padding: '16px', alignItems: 'flex-start',
-                    borderBottom: i < pqrsfTickets.length - 1 ? '1px solid var(--border)' : 'none',
-                    backgroundColor: p.status === 'Pendiente' ? 'rgba(217,119,6,0.05)' : 'var(--card)',
-                  }}>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-bold" style={{ color: 'var(--muted-foreground)' }}>{p.id}</span>
-                        <span className="text-xs px-2 py-0.5 rounded-full font-semibold"
-                          style={{ backgroundColor: `${statusColor[p.status]}22`, color: statusColor[p.status] }}>
-                          {p.status}
-                        </span>
-                      </div>
-                      <p className="text-sm font-semibold mb-0.5" style={{ color: 'var(--foreground)' }}>{p.subject}</p>
-                      <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{p.from} · {p.type} · {p.date}</p>
-                      {p.response && (
-                        <p className="text-xs mt-2 p-2 rounded-lg" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--muted)' }}>
-                          <strong style={{ color: 'var(--foreground)' }}>Respuesta:</strong> {p.response}
-                        </p>
-                      )}
-                    </div>
-                    <button onClick={() => setPqrsfReplyModal(p)}
-                      className="text-xs px-3 py-1.5 rounded-lg font-bold text-white shrink-0"
-                      style={{ backgroundColor: '#005187' }}>
-                      {p.status === 'Respondida' ? 'Editar respuesta' : 'Responder'}
-                    </button>
+          {section === 'pqrsf' && (() => {
+            const q = pqrsfSearch.trim().toLowerCase()
+            const matches = p => !q || [p.id, p.from, p.subject, p.email, p.type].some(v => v?.toLowerCase().includes(q))
+            const identifiedTickets = pqrsfTickets
+              .filter(isIdentified)
+              .filter(matches)
+              .sort((a, b) => (a.status === 'Pendiente') === (b.status === 'Pendiente') ? b.date.localeCompare(a.date) : a.status === 'Pendiente' ? -1 : 1)
+            const anonymousTickets = pqrsfTickets
+              .filter(p => !isIdentified(p))
+              .filter(matches)
+              .sort((a, b) => b.date.localeCompare(a.date))
+            const pendingCount = pqrsfTickets.filter(p => isIdentified(p) && p.status === 'Pendiente').length
+            const respondedCount = pqrsfTickets.filter(p => p.status === 'Respondida').length
+            const unreadAnonCount = pqrsfTickets.filter(p => !isIdentified(p) && !p.read).length
+
+            return (
+              <div style={{ animation: 'fadeUp 0.4s ease' }}>
+                <div className="flex items-center justify-between flex-wrap gap-3 mb-5">
+                  <h2 className="text-xl font-black" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Bandeja PQRSF</h2>
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)' }}>
+                    <Search size={14} style={{ color: 'var(--muted-foreground)' }} />
+                    <input value={pqrsfSearch} onChange={e => setPqrsfSearch(e.target.value)}
+                      placeholder="Buscar por nombre, correo, asunto…"
+                      className="text-sm outline-none bg-transparent" style={{ color: 'var(--foreground)', width: 220 }} />
                   </div>
-                ))}
+                </div>
+
+                <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
+                  {[
+                    { label: 'Total recibidos', value: pqrsfTickets.length, icon: Inbox, color: '#005187' },
+                    { label: 'Prioritarios pendientes', value: pendingCount, icon: ShieldCheck, color: '#d97706' },
+                    { label: 'Respondidos', value: respondedCount, icon: Check, color: '#16a34a' },
+                    { label: 'Anónimos sin leer', value: unreadAnonCount, icon: Eye, color: '#7c3aed' },
+                  ].map(s => (
+                    <div key={s.label} className="rounded-xl p-4" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
+                      <div className="flex items-center justify-between mb-2">
+                        <span style={{ color: s.color }}><s.icon size={20} /></span>
+                        <AnimatedCounter target={s.value} style={{ fontSize: 24, fontFamily: 'var(--font-display)', color: s.color, fontWeight: 900 }} />
+                      </div>
+                      <p className="text-xs font-medium" style={{ color: 'var(--muted-foreground)' }}>{s.label}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex items-center gap-2 mb-1">
+                  <span style={{ color: '#005187' }}><ShieldCheck size={16} /></span>
+                  <h3 className="text-sm font-bold" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Prioritarios — con datos de contacto</h3>
+                  <span className="text-xs font-bold rounded-full px-1.5" style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: '#005187' }}>{identifiedTickets.length}</span>
+                </div>
+                <p className="text-xs mb-3" style={{ color: 'var(--muted-foreground)' }}>
+                  Vienen de una cuenta real o dejaron un correo válido — se les puede responder y, al hacerlo, se avisa a la persona por correo.
+                </p>
+                <div className="rounded-xl overflow-hidden mb-8 shadow-sm" style={{ border: '1px solid var(--border)' }}>
+                  {identifiedTickets.map((p, i, arr) => {
+                    const typeStyle = PQRSF_TYPE_STYLES[p.type] ?? { color: '#005187', icon: MessageCircle }
+                    return (
+                    <div key={p.id} style={{
+                      display: 'flex', gap: 12, padding: '16px', alignItems: 'flex-start',
+                      borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none',
+                      borderLeft: `3px solid ${statusColor[p.status]}`,
+                      backgroundColor: p.status === 'Pendiente' ? 'rgba(217,119,6,0.05)' : 'var(--card)',
+                    }}>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                          <span className="text-xs font-bold" style={{ color: 'var(--muted-foreground)' }}>{p.id}</span>
+                          <span className="text-xs px-2 py-0.5 rounded-full font-bold"
+                            style={{ backgroundColor: `${statusColor[p.status]}1a`, color: statusColor[p.status] }}>
+                            {p.status}
+                          </span>
+                          <span className="text-xs px-2 py-0.5 rounded-full font-semibold flex items-center gap-1" style={{ backgroundColor: `${typeStyle.color}1a`, color: typeStyle.color }}>
+                            <typeStyle.icon size={11} /> {p.type}
+                          </span>
+                          {p.accountId && (
+                            <span className="text-xs px-2 py-0.5 rounded-full font-semibold flex items-center gap-1" style={{ backgroundColor: 'rgba(22,163,74,0.12)', color: '#16a34a' }}>
+                              <ShieldCheck size={11} /> Cuenta verificada
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-sm font-bold mb-0.5" style={{ color: 'var(--foreground)', fontFamily: 'var(--font-display)' }}>{p.subject}</p>
+                        <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{p.from} · {p.email} · {p.date}</p>
+                        {p.message && (
+                          <p className="text-xs mt-2 wrap-break-word" style={{ color: 'var(--muted-foreground)' }}>{p.message}</p>
+                        )}
+                        {p.response && (
+                          <p className="text-xs mt-2 p-2.5 rounded-lg wrap-break-word" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--muted)', borderLeft: '3px solid #16a34a' }}>
+                            <strong style={{ color: 'var(--foreground)' }}>Respuesta:</strong> {p.response}
+                            {p.emailSent && <span style={{ color: '#16a34a' }}> · Correo simulado enviado</span>}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex flex-col gap-2 shrink-0">
+                        {p.status === 'Pendiente' && (
+                          <button onClick={() => { updatePQRSF(p.id, { status: 'Revisando' }); toast('info', 'Marcado en revisión', p.subject) }}
+                            className="text-xs px-3 py-1.5 rounded-lg font-bold transition-opacity hover:opacity-80"
+                            style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>
+                            Marcar en revisión
+                          </button>
+                        )}
+                        <button onClick={() => setPqrsfReplyModal(p)}
+                          className="text-xs px-3 py-1.5 rounded-lg font-bold text-white transition-opacity hover:opacity-90"
+                          style={{ background: BRAND_GRADIENT, boxShadow: '0 2px 8px rgba(0,81,135,0.25)' }}>
+                          {p.status === 'Respondida' ? 'Editar respuesta' : 'Responder'}
+                        </button>
+                      </div>
+                    </div>
+                    )
+                  })}
+                  {identifiedTickets.length === 0 && (
+                    <p className="text-sm px-4 py-6 text-center" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)' }}>
+                      {pqrsfSearch ? 'Nada coincide con esa búsqueda.' : 'No hay PQRSF con datos de contacto todavía.'}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2 mb-1">
+                  <span style={{ color: 'var(--muted-foreground)' }}><Inbox size={16} /></span>
+                  <h3 className="text-sm font-bold" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Anónimos — solo para conocimiento</h3>
+                  <span className="text-xs font-bold rounded-full px-1.5" style={{ backgroundColor: 'var(--muted)', color: 'var(--muted-foreground)' }}>{anonymousTickets.length}</span>
+                </div>
+                <p className="text-xs mb-3" style={{ color: 'var(--muted-foreground)' }}>
+                  No dejaron cuenta ni correo real — no hay forma de responderles, pero quedan aquí para que los tenga en cuenta.
+                </p>
+                <div className="rounded-xl overflow-hidden" style={{ border: '1px dashed var(--border)' }}>
+                  {anonymousTickets.map((p, i, arr) => (
+                    <div key={p.id} style={{
+                      display: 'flex', gap: 12, padding: '16px', alignItems: 'flex-start',
+                      borderBottom: i < arr.length - 1 ? '1px dashed var(--border)' : 'none',
+                      backgroundColor: 'var(--muted)', opacity: p.read ? 0.6 : 1,
+                    }}>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <span className="text-xs font-bold" style={{ color: 'var(--muted-foreground)' }}>{p.id}</span>
+                          <span className="text-xs px-2 py-0.5 rounded-full font-semibold flex items-center gap-1" style={{ backgroundColor: 'var(--card)', color: 'var(--muted-foreground)', border: '1px solid var(--border)' }}>
+                            <Eye size={11} /> Anónimo
+                          </span>
+                          {!p.read && (
+                            <span className="text-xs px-2 py-0.5 rounded-full font-semibold" style={{ backgroundColor: 'rgba(217,119,6,0.12)', color: '#d97706' }}>Sin leer</span>
+                          )}
+                        </div>
+                        <p className="text-sm font-semibold mb-0.5" style={{ color: 'var(--foreground)' }}>{p.subject}</p>
+                        <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{p.from} · {p.type} · {p.date}</p>
+                        {p.message && (
+                          <p className="text-xs mt-2 wrap-break-word" style={{ color: 'var(--muted-foreground)' }}>{p.message}</p>
+                        )}
+                      </div>
+                      <div className="flex flex-col gap-2 shrink-0">
+                        <button onClick={() => { setPqrsfReplyModal(p); if (!p.read) markPQRSFRead(p.id) }}
+                          className="text-xs px-3 py-1.5 rounded-lg font-bold transition-opacity hover:opacity-80"
+                          style={{ border: '1px solid var(--border)', color: 'var(--foreground)', backgroundColor: 'var(--card)' }}>
+                          Ver completo
+                        </button>
+                        {!p.read && (
+                          <button onClick={() => handlePQRSFMarkRead(p)}
+                            className="text-xs px-3 py-1.5 rounded-lg font-semibold"
+                            style={{ color: 'var(--muted-foreground)' }}>
+                            Marcar como leído
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  {anonymousTickets.length === 0 && (
+                    <p className="text-sm px-4 py-6 text-center" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)' }}>
+                      {pqrsfSearch ? 'Nada coincide con esa búsqueda.' : 'No hay comentarios anónimos por ahora.'}
+                    </p>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            )
+          })()}
 
           {/* ── LMS: CURSOS ── */}
           {section === 'lms-courses' && (
@@ -1430,6 +1583,7 @@ export default function AdminDashboard({ theme, setTheme }) {
       {pqrsfReplyModal && (
         <PQRSFReplyModal
           ticket={pqrsfReplyModal}
+          readOnly={!isIdentified(pqrsfReplyModal)}
           onSave={handleReplyPQRSF}
           onClose={() => setPqrsfReplyModal(null)}
         />

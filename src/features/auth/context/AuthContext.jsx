@@ -89,6 +89,23 @@ export function AuthProvider({ children }) {
     return safe
   }
 
+  // Crea una cuenta con acceso real (login) desde el panel de admin — a
+  // diferencia del directorio del LMS, que solo guarda una ficha informativa.
+  function createUser({ id, name, email, password, phone, role }) {
+    if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
+      throw new Error('Ya existe una cuenta registrada con ese correo.')
+    }
+    const newUser = { id: id ?? `u${Date.now()}`, name, email, password, role, phone: phone ?? '', unreadNotifications: 0 }
+    setUsers(prev => [...prev, newUser])
+    const { password: _pw, ...safe } = newUser
+    return safe
+  }
+
+  // Actualiza la cuenta de acceso (login) vinculada a un usuario del directorio.
+  function updateUserCredentials(id, data) {
+    setUsers(prev => prev.map(u => u.id === id ? { ...u, ...data } : u))
+  }
+
   // No hay servicio de correo real (backend pendiente): el código se genera
   // aquí mismo y se devuelve al llamador para mostrarlo en la UI a modo de demo.
   async function requestPasswordReset(email) {
@@ -158,7 +175,7 @@ export function AuthProvider({ children }) {
   const allUsers = users.map(({ password: _pw, ...safe }) => safe)
 
   return (
-    <AuthContext.Provider value={{ user, initialized, login, register, logout, updateProfile, changePassword, requestPasswordReset, verifyResetCode, resetPassword, registeredStudents, allUsers, updateUserRole }}>
+    <AuthContext.Provider value={{ user, initialized, login, register, logout, updateProfile, changePassword, requestPasswordReset, verifyResetCode, resetPassword, registeredStudents, allUsers, updateUserRole, createUser, updateUserCredentials }}>
       {children}
     </AuthContext.Provider>
   )

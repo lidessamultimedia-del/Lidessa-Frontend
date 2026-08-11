@@ -13,7 +13,9 @@ export default function DashboardShell({ roleLabel, navItems, activeSection, onS
   const { user, logout } = useAuth()
   const { toast } = useToast()
   const navigate = useNavigate()
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  // En pantallas angostas (celular) el sidebar empieza colapsado — abierto
+  // ocupa la mayoría del ancho y deja el contenido apretado en una franja.
+  const [sidebarOpen, setSidebarOpen] = useState(() => typeof window === 'undefined' || window.innerWidth >= 768)
   const [bellOpen, setBellOpen] = useState(false)
   const seenKey = `lidessa_seen_notifications_${user?.id ?? 'anon'}`
   const [seenIds, setSeenIds] = useState(() => {
@@ -154,13 +156,13 @@ export default function DashboardShell({ roleLabel, navItems, activeSection, onS
         {/* Top bar */}
         <header className="no-print" style={{
           height: 60, borderBottom: '1px solid var(--border)',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '0 24px', backgroundColor: 'var(--card)', flexShrink: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+          padding: '0 16px', backgroundColor: 'var(--card)', flexShrink: 0,
         }}>
-          <h1 className="font-bold text-sm" style={{ color: 'var(--foreground)', fontFamily: 'var(--font-display)' }}>
+          <h1 className="font-bold text-sm truncate min-w-0" style={{ color: 'var(--foreground)', fontFamily: 'var(--font-display)' }}>
             {title}
           </h1>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
             <ThemeToggle theme={theme} setTheme={setTheme} />
             <div style={{ position: 'relative' }}>
               <button onClick={() => {

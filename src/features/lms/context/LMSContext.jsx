@@ -42,6 +42,10 @@ const defaultState = {
   quizAttempts: seedQuizAttempts,
   documentTypes: defaultDocumentTypes,
   messages: [],
+  // El certificado se entrega presencial — aquí solo se deja constancia de
+  // que el admin ya se puso en contacto con el estudiante que terminó el
+  // curso, para no mostrárselo de nuevo en la lista de "por contactar".
+  certifications: [],
 }
 
 export function LMSProvider({ children }) {
@@ -81,7 +85,7 @@ export function LMSProvider({ children }) {
     return () => window.removeEventListener('storage', onStorage)
   }, [])
 
-  const { directory, courses, topics, lessons, assignments, submissions, lessonProgress, quizzes, quizAttempts, documentTypes, messages } = state
+  const { directory, courses, topics, lessons, assignments, submissions, lessonProgress, quizzes, quizAttempts, documentTypes, messages, certifications } = state
 
   // Red de seguridad: el registro público (Register.jsx) agrega al estudiante
   // aquí en el mismo paso en que crea su cuenta, pero si esa llamada puntual
@@ -553,6 +557,48 @@ export function LMSProvider({ children }) {
     return { average, allGraded, passed: allGraded && average != null && average >= PASS_THRESHOLD }
   }
 
+  // El certificado se entrega presencial, así que aquí no se genera ni se
+  // envía nada — esto solo le avisa al admin quién ya terminó y aprobó el
+  // curso, con sus datos de contacto, para que lo llame/escriba.
+  function studentsReadyToCertify() {
+    const results = []
+    courses.forEach(course => {
+      course.studentIds.forEach(studentId => {
+        const already = certifications.some(c => c.studentId === studentId && c.courseId === course.id)
+        if (already) return
+        const grade = courseWeightedGrade(studentId, course.id)
+        if (!grade.passed) return
+        const courseGrades = gradesForStudent(studentId).find(g => g.course.id === course.id)
+        const completedAt = (courseGrades?.rows ?? [])
+          .map(r => r.gradedAt)
+          .filter(Boolean)
+          .sort()
+          .at(-1) ?? null
+        results.push({ studentId, courseId: course.id, course, student: directoryById(studentId), average: grade.average, completedAt })
+      })
+    })
+    return results
+  }
+
+  function markCertified(studentId, courseId) {
+    setState(s => ({
+      ...s,
+      certifications: [...s.certifications, { id: `cert_${Date.now()}`, studentId, courseId, markedAt: new Date().toISOString() }],
+    }))
+  }
+
+  // Por si el admin marcó "contactado" por error — lo regresa a la lista de
+  // pendientes por contactar.
+  function unmarkCertified(id) {
+    setState(s => ({ ...s, certifications: s.certifications.filter(c => c.id !== id) }))
+  }
+
+  function certifiedHistory() {
+    return certifications
+      .map(c => ({ ...c, course: courses.find(co => co.id === c.courseId), student: directoryById(c.studentId) }))
+      .sort((a, b) => (b.markedAt ?? '').localeCompare(a.markedAt ?? ''))
+  }
+
   const value = {
     directory, courses, topics, lessons, assignments, submissions, lessonProgress, quizzes, quizAttempts, documentTypes,
     addDirectoryUser, updateDirectoryUser, toggleDirectoryUserActive, deleteDirectoryUser,
@@ -572,6 +618,7 @@ export function LMSProvider({ children }) {
     reviewQuizAttempt, quizAttemptsPendingReview, allowRetry,
     sendMessage, threadMessages, markThreadRead, unreadMessageCount, teacherConversations,
     studentConversations, unreadMessagesForUser, unseenGradesForStudent, markGradeSeen,
+    certifications, studentsReadyToCertify, markCertified, unmarkCertified, certifiedHistory,
   }
 
   return <LMSContext.Provider value={value}>{children}</LMSContext.Provider>

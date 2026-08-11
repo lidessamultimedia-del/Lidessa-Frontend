@@ -1,10 +1,11 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/features/auth/context/AuthContext'
 import { useToast } from '@/shared/context/ToastContext'
 import { useBlog } from '@/features/blog/context/BlogContext'
 import { usePQRSF, isIdentified } from '@/features/pqrsf/context/PQRSFContext'
-import { useLMS } from '@/features/lms/context/LMSContext'
+import { useLMS, MAX_GRADE } from '@/features/lms/context/LMSContext'
+import { downloadCsv } from '@/features/lms/utils/csv'
 import { useServicesData } from '@/features/services/context/ServicesDataContext'
 import BlogPostFormModal from '@/features/blog/components/BlogPostFormModal'
 import CourseFormModal from '@/features/lms/components/CourseFormModal'
@@ -27,7 +28,7 @@ import DocumentTypesManagerView from '../components/DocumentTypesManagerView'
 import AnimatedCounter from '@/shared/components/AnimatedCounter'
 import ThemeToggle from '@/shared/components/ThemeToggle'
 import { courseCardStyle } from '@/features/lms/utils/courseCard'
-import { BarChart2, Building, FileText, GraduationCap, Users, Clipboard, Sliders, Bell, User, AlertTriangle, Edit2, Plus, Send, BookOpen, Trash, Search, Eye, Lock, X, UserCog, ShieldCheck, IdCard, MessageCircle, Sparkle, Check, Inbox } from '@/shared/components/Icons'
+import { BarChart2, Building, FileText, GraduationCap, Users, Clipboard, Sliders, Bell, User, AlertTriangle, Edit2, Plus, Send, BookOpen, Trash, Search, Eye, Lock, X, UserCog, ShieldCheck, IdCard, MessageCircle, Sparkle, Check, Inbox, Download, Mail } from '@/shared/components/Icons'
 import AccountSettings from '@/shared/components/AccountSettings'
 import Avatar from '@/shared/components/Avatar'
 import Toggle from '@/shared/components/Toggle'
@@ -59,16 +60,33 @@ const BRAND_GRADIENT = 'linear-gradient(135deg, #005187 0%, #4d82bc 55%, #b8860b
 
 const ROLE_LABELS = { admin: 'Administrador', profesor: 'Profesor', estudiante: 'Estudiante' }
 
-const ADMIN_NOTIFICATIONS = [
-  { id: 'n1', icon: Clipboard, text: 'Nueva PQRSF de María García', time: 'Hace 1 hora', section: 'pqrsf' },
-  { id: 'n2', icon: User, text: 'Nuevo cliente registrado: Ana Martínez', time: 'Hace 3 horas', section: 'students' },
-  { id: 'n3', icon: GraduationCap, text: '3 nuevas inscripciones en "Auditoría Interna"', time: 'Ayer', section: 'lms-courses' },
-  { id: 'n4', icon: AlertTriangle, text: 'Servicio "PEI" requiere actualización normativa', time: 'Hace 2 días', section: 'services' },
-  { id: 'n5', icon: FileText, text: 'Publicación programada lista para revisión', time: 'Hace 3 días', section: 'blog' },
-]
+const MONTHS_ES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
+// Los posts de Converge guardan la fecha como texto libre "D mes AAAA" (ver
+// BlogPostFormModal.jsx) — esto la vuelve a convertir en Date para poder
+// calcular cuántos son de este mes.
+function parseSpanishDate(str) {
+  const parts = str?.trim().split(' ')
+  if (parts?.length !== 3) return null
+  const [day, monthName, year] = parts
+  const month = MONTHS_ES.indexOf(monthName.toLowerCase())
+  if (month === -1) return null
+  return new Date(Number(year), month, Number(day))
+}
+
+// Convierte una fecha ISO en un texto relativo tipo "Hace 2 días" — se usa
+// para las notificaciones reales del admin (antes eran texto fijo inventado).
+function relativeTime(dateStr) {
+  if (!dateStr) return ''
+  const days = Math.floor((Date.now() - new Date(dateStr).getTime()) / 86400000)
+  if (days <= 0) return 'Hoy'
+  if (days === 1) return 'Ayer'
+  if (days < 7) return `Hace ${days} días`
+  if (days < 30) return `Hace ${Math.floor(days / 7)} semana(s)`
+  return new Date(dateStr).toLocaleDateString('es-CO', { day: '2-digit', month: 'short' })
+}
 
 export default function AdminDashboard({ theme, setTheme }) {
-  const { user, logout, updateProfile, allUsers, updateUserRole, createUser, updateUserCredentials } = useAuth()
+  const { user, logout, allUsers, updateUserRole, createUser, updateUserCredentials } = useAuth()
   const { toast } = useToast()
   const navigate = useNavigate()
   const { posts: blogPosts, addPost, updatePost, deletePost } = useBlog()
@@ -77,12 +95,66 @@ export default function AdminDashboard({ theme, setTheme }) {
   const catalogCourses = lms.listedCourses
   const { services, addService, updateService, deleteService, toggleServiceActive, categories: serviceCategories, addCategory, updateCategory, toggleCategoryActive, deleteCategory } = useServicesData()
   const [section, setSection] = useState('dashboard')
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  // En pantallas angostas (celular) el sidebar empieza colapsado — abierto
+  // ocupa la mayoría del ancho y deja el contenido apretado en una franja.
+  const [sidebarOpen, setSidebarOpen] = useState(() => typeof window === 'undefined' || window.innerWidth >= 768)
   const [bellOpen, setBellOpen] = useState(false)
-  const [notifications, setNotifications] = useState(() => {
-    const alreadySeen = (user?.unreadNotifications ?? 0) === 0
-    return ADMIN_NOTIFICATIONS.map(n => ({ ...n, read: alreadySeen }))
+
+  // Notificaciones reales, armadas a partir del estado actual (antes eran
+  // texto fijo inventado que nunca cambiaba): PQRSF prioritarios pendientes,
+  // anónimos sin leer, cursos publicados sin profesor, y usuarios nuevos.
+  const notifications = useMemo(() => {
+    const items = []
+    pqrsfTickets.filter(p => isIdentified(p) && p.status === 'Pendiente').forEach(p => {
+      items.push({ id: `pqrsf_${p.id}`, icon: Clipboard, text: `Nueva PQRSF de ${p.from}: "${p.subject}"`, date: p.date, section: 'pqrsf' })
+    })
+    pqrsfTickets.filter(p => !isIdentified(p) && !p.read).forEach(p => {
+      items.push({ id: `pqrsf_${p.id}`, icon: Eye, text: `Comentario anónimo: "${p.subject}"`, date: p.date, section: 'pqrsf' })
+    })
+    catalogCourses.filter(c => c.published && !c.teacherId).forEach(c => {
+      items.push({ id: `course_${c.id}`, icon: GraduationCap, text: `Curso "${c.name}" publicado sin profesor asignado`, date: c.startDate || c.createdAt, section: 'lms-courses' })
+    })
+    const recentCutoff = Date.now() - 14 * 86400000
+    lms.directory.filter(u => (u.role === 'profesor' || u.role === 'estudiante') && u.joined && new Date(u.joined).getTime() >= recentCutoff)
+      .forEach(u => {
+        items.push({
+          id: `user_${u.id}`, icon: User,
+          text: `Nuevo ${u.role === 'profesor' ? 'profesor' : 'estudiante'} registrado: ${u.name}`,
+          date: u.joined, section: u.role === 'profesor' ? 'teachers' : 'students',
+        })
+      })
+    lms.studentsReadyToCertify().forEach(r => {
+      items.push({
+        id: `cert_${r.studentId}_${r.courseId}`, icon: ShieldCheck,
+        text: `${r.student?.name ?? 'Estudiante'} terminó "${r.course.name}" — contactarlo`,
+        date: r.completedAt, section: 'certifications',
+      })
+    })
+    return items
+      .sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''))
+      .slice(0, 8)
+      .map(n => ({ ...n, time: relativeTime(n.date) }))
+  }, [pqrsfTickets, catalogCourses, lms.directory, lms.courses, lms.submissions, lms.quizAttempts, lms.certifications])
+
+  const notifSeenKey = `lidessa_admin_seen_notifications_${user?.id ?? 'anon'}`
+  const [notifSeenIds, setNotifSeenIds] = useState(() => {
+    try {
+      const stored = localStorage.getItem(notifSeenKey)
+      return stored ? new Set(JSON.parse(stored)) : new Set()
+    } catch {
+      return new Set()
+    }
   })
+  const unreadNotifications = notifications.filter(n => !notifSeenIds.has(n.id))
+
+  function markAllNotificationsSeen() {
+    setNotifSeenIds(prev => {
+      const next = new Set(prev)
+      notifications.forEach(n => next.add(n.id))
+      localStorage.setItem(notifSeenKey, JSON.stringify([...next]))
+      return next
+    })
+  }
   const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [blogModal, setBlogModal] = useState(null)
   const [lmsCourseModal, setLmsCourseModal] = useState(null)
@@ -102,6 +174,7 @@ export default function AdminDashboard({ theme, setTheme }) {
   const [servicesTab, setServicesTab] = useState('list')
   const [pqrsfReplyModal, setPqrsfReplyModal] = useState(null)
   const [pqrsfSearch, setPqrsfSearch] = useState('')
+  const [certSearch, setCertSearch] = useState('')
   const [servicesSearch, setServicesSearch] = useState('')
   const [servicesCategoryFilter, setServicesCategoryFilter] = useState('all')
   const [categoryFilterOpen, setCategoryFilterOpen] = useState(false)
@@ -377,6 +450,7 @@ export default function AdminDashboard({ theme, setTheme }) {
     { id: 'lms-courses', label: 'Cursos (LMS)', icon: BookOpen },
     { id: 'teachers', label: 'Profesores', icon: User },
     { id: 'students', label: 'Estudiantes', icon: Users },
+    { id: 'certifications', label: 'Certificaciones', icon: ShieldCheck },
     { id: 'settings', label: 'Configuración', icon: Sliders },
   ]
 
@@ -487,34 +561,31 @@ export default function AdminDashboard({ theme, setTheme }) {
         {/* Top bar */}
         <header style={{
           height: 60, borderBottom: '1px solid var(--border)',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '0 24px', backgroundColor: 'var(--card)', flexShrink: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+          padding: '0 16px', backgroundColor: 'var(--card)', flexShrink: 0,
         }}>
-          <h1 className="font-bold text-sm" style={{ color: 'var(--foreground)', fontFamily: 'var(--font-display)' }}>
+          <h1 className="font-bold text-sm truncate min-w-0" style={{ color: 'var(--foreground)', fontFamily: 'var(--font-display)' }}>
             Administración — {navItems.find(n => n.id === section)?.label}
           </h1>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 shrink-0">
             <ThemeToggle theme={theme} setTheme={setTheme} />
             {/* Bell */}
             <div style={{ position: 'relative' }}>
               <button onClick={() => {
                 const next = !bellOpen
                 setBellOpen(next)
-                if (next) {
-                  setNotifications(ns => ns.map(n => ({ ...n, read: true })))
-                  updateProfile({ unreadNotifications: 0 })
-                }
+                if (next) markAllNotificationsSeen()
               }}
                 style={{ position: 'relative', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--foreground)' }}>
                 <Bell size={20} />
-                {(user?.unreadNotifications ?? 0) > 0 && (
+                {unreadNotifications.length > 0 && (
                   <span style={{
                     position: 'absolute', top: -4, right: -4,
                     width: 18, height: 18, borderRadius: '50%',
                     backgroundColor: '#dc2626', color: 'white',
                     fontSize: 10, fontWeight: 700,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>{user.unreadNotifications}</span>
+                  }}>{unreadNotifications.length}</span>
                 )}
               </button>
               {bellOpen && (
@@ -527,22 +598,27 @@ export default function AdminDashboard({ theme, setTheme }) {
                   <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)' }}>
                     <span className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>Notificaciones admin</span>
                   </div>
-                  {notifications.map((n, i) => (
+                  {notifications.length === 0 && (
+                    <p className="text-xs px-4 py-4" style={{ color: 'var(--muted-foreground)' }}>Sin novedades por ahora.</p>
+                  )}
+                  {notifications.map((n, i) => {
+                    const wasUnread = !notifSeenIds.has(n.id)
+                    return (
                     <div key={n.id}
                       onClick={() => { setSection(n.section); setBellOpen(false) }}
                       className="cursor-pointer transition-colors"
                       style={{
                         padding: '10px 16px',
                         borderBottom: i < notifications.length - 1 ? '1px solid var(--border)' : 'none',
-                        backgroundColor: !n.read ? 'rgba(0,81,135,0.05)' : 'transparent',
+                        backgroundColor: wasUnread ? 'rgba(0,81,135,0.05)' : 'transparent',
                       }}
                       onMouseEnter={e => e.currentTarget.style.backgroundColor = 'rgba(0,81,135,0.1)'}
-                      onMouseLeave={e => e.currentTarget.style.backgroundColor = !n.read ? 'rgba(0,81,135,0.05)' : 'transparent'}
+                      onMouseLeave={e => e.currentTarget.style.backgroundColor = wasUnread ? 'rgba(0,81,135,0.05)' : 'transparent'}
                     >
                       <div className="flex gap-3">
                         <span style={{ flexShrink: 0, color: 'var(--muted-foreground)', position: 'relative' }}>
                           <n.icon size={16} />
-                          {!n.read && (
+                          {wasUnread && (
                             <span style={{
                               position: 'absolute', top: -2, right: -2,
                               width: 6, height: 6, borderRadius: '50%', backgroundColor: '#005187',
@@ -550,12 +626,13 @@ export default function AdminDashboard({ theme, setTheme }) {
                           )}
                         </span>
                         <div>
-                          <p className="text-xs" style={{ color: 'var(--foreground)', opacity: n.read ? 0.65 : 1 }}>{n.text}</p>
+                          <p className="text-xs" style={{ color: 'var(--foreground)', opacity: wasUnread ? 1 : 0.65 }}>{n.text}</p>
                           <p className="text-xs" style={{ color: 'var(--muted-foreground)', opacity: 0.7 }}>{n.time}</p>
                         </div>
                       </div>
                     </div>
-                  ))}
+                    )
+                  })}
                 </div>
               )}
             </div>
@@ -587,8 +664,17 @@ export default function AdminDashboard({ theme, setTheme }) {
               <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                 {[
                   { label: 'PQRSF pendientes', value: pqrsfTickets.filter(p => p.status === 'Pendiente').length, icon: Clipboard, color: '#d97706' },
-                  { label: 'Cursos activos', value: 12, icon: GraduationCap, color: '#16a34a' },
-                  { label: 'Publicaciones del mes', value: 4, icon: FileText, color: '#7c3aed' },
+                  { label: 'Cursos activos', value: catalogCourses.filter(c => c.published).length, icon: GraduationCap, color: '#16a34a' },
+                  {
+                    label: 'Publicaciones del mes',
+                    value: blogPosts.filter(p => {
+                      const d = parseSpanishDate(p.date)
+                      const now = new Date()
+                      return d && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
+                    }).length,
+                    icon: FileText, color: '#7c3aed',
+                  },
+                  { label: 'Estudiantes por certificar', value: lms.studentsReadyToCertify().length, icon: ShieldCheck, color: '#16a34a' },
                 ].map(s => (
                   <div key={s.label} className="rounded-xl p-5"
                     style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
@@ -1093,6 +1179,152 @@ export default function AdminDashboard({ theme, setTheme }) {
                   {anonymousTickets.length === 0 && (
                     <p className="text-sm px-4 py-6 text-center" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)' }}>
                       {pqrsfSearch ? 'Nada coincide con esa búsqueda.' : 'No hay comentarios anónimos por ahora.'}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )
+          })()}
+
+          {/* ── CERTIFICACIONES ── */}
+          {section === 'certifications' && (() => {
+            const q = certSearch.trim().toLowerCase()
+            const matches = (student, course) => !q || [student?.name, student?.email, course?.name].some(v => v?.toLowerCase().includes(q))
+            const ready = lms.studentsReadyToCertify()
+              .filter(r => matches(r.student, r.course))
+              .sort((a, b) => (b.completedAt ?? '').localeCompare(a.completedAt ?? ''))
+            const history = lms.certifiedHistory().filter(c => matches(c.student, c.course))
+            const fmt = iso => iso ? new Date(iso).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
+            // Gmail compose en el navegador — a diferencia de mailto:, no depende
+            // de tener un programa de correo instalado, solo de estar conectada
+            // a su cuenta de Gmail/Workspace en el navegador.
+            function gmailComposeUrl(to, subject, body) {
+              const params = new URLSearchParams({ view: 'cm', fs: '1', to, su: subject, body })
+              return `https://mail.google.com/mail/?${params.toString()}`
+            }
+            function certEmailUrl(r) {
+              const firstName = (r.student?.name ?? '').trim().split(' ')[0] || 'estudiante'
+              const body = [
+                `¡Hola ${firstName}! 🎉`,
+                '',
+                `¡Felicitaciones! Nos complace informarte que finalizaste y aprobaste exitosamente el curso con Lidessa Formación.`,
+                '',
+                '📊 Resumen de tu logro',
+                `   • Curso: ${r.course.name}`,
+                `   • Calificación final: ${r.average}/${MAX_GRADE}`,
+                '   • Estado: Aprobado ✅',
+                '',
+                '🎓 Sobre tu certificado',
+                'Tu certificado de finalización ya está listo. La entrega se hace de forma presencial en nuestras instalaciones — cuéntanos qué día y hora te queda mejor para coordinarlo contigo.',
+                '',
+                'Si tienes alguna pregunta, con gusto te ayudamos.',
+                '',
+                '¡Gracias por tu esfuerzo y compromiso durante el curso!',
+                '',
+                'Saludos cordiales,',
+                'Equipo Lidessa Formación',
+                [settings.phone && `📞 ${settings.phone}`, settings.email && `✉️ ${settings.email}`].filter(Boolean).join('  ·  '),
+                settings.address || '',
+              ].join('\n')
+              return gmailComposeUrl(r.student.email, `¡Felicitaciones! Terminaste ${r.course.name} 🎓`, body)
+            }
+            function handleExportCert() {
+              const headers = ['Nombre', 'Correo', 'Teléfono', 'Curso', 'Promedio', 'Estado', 'Fecha']
+              const rows = [
+                ...ready.map(r => [r.student?.name ?? '', r.student?.email ?? '', r.student?.phone ?? '', r.course.name, r.average, 'Por contactar', fmt(r.completedAt)]),
+                ...history.map(c => [c.student?.name ?? '', c.student?.email ?? '', c.student?.phone ?? '', c.course?.name ?? '', '', 'Contactado', fmt(c.markedAt)]),
+              ]
+              downloadCsv('certificaciones-lidessa.csv', headers, rows)
+            }
+            return (
+              <div style={{ animation: 'fadeUp 0.4s ease' }}>
+                <div className="flex items-center justify-between flex-wrap gap-3 mb-1">
+                  <h2 className="text-xl font-black" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Certificaciones</h2>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)' }}>
+                      <Search size={14} style={{ color: 'var(--muted-foreground)' }} />
+                      <input value={certSearch} onChange={e => setCertSearch(e.target.value)}
+                        placeholder="Buscar por nombre, correo o curso…"
+                        className="text-sm outline-none bg-transparent" style={{ color: 'var(--foreground)', width: 220 }} />
+                    </div>
+                    <button onClick={handleExportCert}
+                      className="text-xs px-3 py-2 rounded-lg font-bold flex items-center gap-1.5"
+                      style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>
+                      <Download size={13} /> Descargar CSV
+                    </button>
+                  </div>
+                </div>
+                <p className="text-xs mb-6" style={{ color: 'var(--muted-foreground)' }}>
+                  El certificado se entrega presencial — aquí solo ves quién ya terminó y aprobó el curso, con sus datos de contacto, para que te comuniques con esa persona. Cuando ya hayas hablado con ella, márcala como contactada para que salga de la lista.
+                </p>
+
+                <div className="flex items-center gap-2 mb-3">
+                  <span style={{ color: '#16a34a' }}><ShieldCheck size={16} /></span>
+                  <h3 className="text-sm font-bold" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Listos para certificar</h3>
+                  <span className="text-xs font-bold rounded-full px-1.5" style={{ backgroundColor: 'rgba(22,163,74,0.1)', color: '#16a34a' }}>{ready.length}</span>
+                </div>
+                <div className="rounded-xl overflow-hidden mb-8" style={{ border: '1px solid var(--border)' }}>
+                  {ready.map((r, i, arr) => (
+                    <div key={`${r.studentId}_${r.courseId}`} style={{
+                      display: 'flex', gap: 12, padding: '16px', alignItems: 'flex-start',
+                      borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none',
+                      backgroundColor: 'rgba(22,163,74,0.04)',
+                    }}>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold mb-0.5" style={{ color: 'var(--foreground)', fontFamily: 'var(--font-display)' }}>{r.student?.name ?? 'Estudiante'}</p>
+                        <p className="text-xs mb-1" style={{ color: 'var(--muted-foreground)' }}>
+                          {r.course.name} · Promedio ponderado: {r.average}/{MAX_GRADE} · Terminó: {fmt(r.completedAt)}
+                        </p>
+                        <p className="text-xs font-medium" style={{ color: '#005187' }}>
+                          {[r.student?.email, r.student?.phone].filter(Boolean).join(' · ') || 'Sin datos de contacto registrados'}
+                        </p>
+                      </div>
+                      <div className="flex flex-col gap-2 shrink-0">
+                        {r.student?.email && (
+                          <a href={certEmailUrl(r)} target="_blank" rel="noopener noreferrer"
+                            className="text-xs px-3 py-1.5 rounded-lg font-bold flex items-center justify-center gap-1.5"
+                            style={{ border: '1px solid #005187', color: '#005187' }}>
+                            <Mail size={12} /> Enviar correo
+                          </a>
+                        )}
+                        <button onClick={() => { lms.markCertified(r.studentId, r.courseId); toast('success', 'Marcado como contactado', `${r.student?.name ?? 'Estudiante'} — ${r.course.name}`) }}
+                          className="text-xs px-3 py-1.5 rounded-lg font-bold text-white" style={{ backgroundColor: '#16a34a' }}>
+                          Marcar como contactado
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                  {ready.length === 0 && (
+                    <p className="text-sm px-4 py-6 text-center" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)' }}>
+                      {certSearch ? 'Nada coincide con esa búsqueda.' : 'Nadie está pendiente por contactar por ahora.'}
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2 mb-3">
+                  <h3 className="text-sm font-bold" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Ya contactados</h3>
+                  <span className="text-xs font-bold rounded-full px-1.5" style={{ backgroundColor: 'var(--muted)', color: 'var(--muted-foreground)' }}>{history.length}</span>
+                </div>
+                <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+                  {history.map((c, i, arr) => (
+                    <div key={c.id} style={{
+                      display: 'flex', gap: 12, padding: '14px 16px', alignItems: 'center',
+                      borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none', backgroundColor: 'var(--card)',
+                    }}>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{c.student?.name ?? 'Estudiante'}</p>
+                        <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{c.course?.name ?? 'Curso eliminado'} · Contactado: {fmt(c.markedAt)}</p>
+                      </div>
+                      <button onClick={() => { lms.unmarkCertified(c.id); toast('info', 'Deshecho', `${c.student?.name ?? 'Estudiante'} vuelve a "Listos para certificar"`) }}
+                        className="text-xs px-3 py-1.5 rounded-lg font-semibold shrink-0"
+                        style={{ color: 'var(--muted-foreground)' }}>
+                        Deshacer
+                      </button>
+                    </div>
+                  ))}
+                  {history.length === 0 && (
+                    <p className="text-sm px-4 py-6 text-center" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)' }}>
+                      {certSearch ? 'Nada coincide con esa búsqueda.' : 'Todavía no has marcado a nadie como contactado.'}
                     </p>
                   )}
                 </div>

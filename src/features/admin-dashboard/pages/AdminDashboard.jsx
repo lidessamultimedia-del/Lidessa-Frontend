@@ -68,7 +68,7 @@ const ADMIN_NOTIFICATIONS = [
 ]
 
 export default function AdminDashboard({ theme, setTheme }) {
-  const { user, logout, updateProfile, allUsers, updateUserRole } = useAuth()
+  const { user, logout, updateProfile, allUsers, updateUserRole, createUser, updateUserCredentials } = useAuth()
   const { toast } = useToast()
   const navigate = useNavigate()
   const { posts: blogPosts, addPost, updatePost, deletePost } = useBlog()
@@ -305,11 +305,33 @@ export default function AdminDashboard({ theme, setTheme }) {
   }
 
   function handleSaveDirectoryUser(form) {
+    const { password, ...directoryData } = form
     if (directoryModal.mode === 'edit') {
-      lms.updateDirectoryUser(directoryModal.user.id, form)
+      const userId = directoryModal.user.id
+      const hasAccount = allUsers.some(u => u.id === userId)
+      try {
+        if (hasAccount) {
+          const creds = { name: directoryData.name, email: directoryData.email, phone: directoryData.phone }
+          if (password) creds.password = password
+          updateUserCredentials(userId, creds)
+        } else if (password) {
+          createUser({ id: userId, name: directoryData.name, email: directoryData.email, password, phone: directoryData.phone, role: directoryData.role })
+        }
+      } catch (err) {
+        toast('error', 'No se pudo actualizar el acceso', err.message)
+        return
+      }
+      lms.updateDirectoryUser(userId, directoryData)
       toast('success', 'Usuario actualizado', form.name)
     } else {
-      lms.addDirectoryUser(form)
+      let account
+      try {
+        account = createUser({ name: directoryData.name, email: directoryData.email, password, phone: directoryData.phone, role: directoryData.role })
+      } catch (err) {
+        toast('error', 'No se pudo crear el usuario', err.message)
+        return
+      }
+      lms.addDirectoryUser({ ...directoryData, id: account.id })
       toast('success', `${form.role === 'profesor' ? 'Profesor' : 'Estudiante'} creado`, form.name)
     }
     setDirectoryModal(null)

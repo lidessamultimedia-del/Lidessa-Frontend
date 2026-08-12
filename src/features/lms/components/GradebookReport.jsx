@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useLMS, PASS_THRESHOLD } from '../context/LMSContext'
 import { downloadCsv } from '../utils/csv'
 import { Search, Download, FileText, HelpCircle } from '@/shared/components/Icons'
+import Avatar from '@/shared/components/Avatar'
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
 const KIND_ICON = { assignment: FileText, quiz: HelpCircle }
@@ -65,7 +66,7 @@ export default function GradebookReport({ courseId }) {
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-        <h3 className="text-sm font-bold" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Informe del calificador</h3>
+        <h3 className="text-sm font-bold pb-1.5" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)', borderBottom: '2px solid #b8860b', display: 'inline-block' }}>Informe del calificador</h3>
         <button onClick={handleExport}
           className="text-xs px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5"
           style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>
@@ -141,20 +142,32 @@ export default function GradebookReport({ courseId }) {
             <tbody>
               {pageRows.map(s => {
                 const wg = lms.courseWeightedGrade(s.id, courseId)
+                const rowTint = wg.allGraded ? (wg.passed ? 'rgba(22,163,74,0.06)' : 'rgba(220,38,38,0.06)') : 'transparent'
                 return (
-                <tr key={s.id} style={{ borderTop: '1px solid var(--border)' }}>
-                  <td className="px-4 py-2.5" style={{ position: 'sticky', left: 0, backgroundColor: 'var(--card)', borderRight: '1px solid var(--border)' }}>
-                    <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{s.name}</p>
-                    <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{s.email}</p>
+                <tr key={s.id} style={{ borderTop: '1px solid var(--border)', backgroundColor: rowTint }}>
+                  <td className="px-4 py-2.5" style={{ position: 'sticky', left: 0, backgroundColor: wg.allGraded ? (wg.passed ? 'color-mix(in srgb, #16a34a 6%, var(--card))' : 'color-mix(in srgb, #dc2626 6%, var(--card))') : 'var(--card)', borderRight: '1px solid var(--border)' }}>
+                    <div className="flex items-center gap-2.5">
+                      <Avatar user={s} size={30} />
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold truncate" style={{ color: 'var(--foreground)' }}>{s.name}</p>
+                        <p className="text-xs truncate" style={{ color: 'var(--muted-foreground)' }}>{s.email}</p>
+                      </div>
+                    </div>
                   </td>
                   {topicGroups.flatMap(g => g.items).map(({ kind, item }) => {
                     const g = gradeFor(s.id, kind, item.id)
                     const failed = g != null && g < PASS_THRESHOLD
                     const record = failed ? retryRecordFor(s.id, kind, item.id) : null
+                    const cellColor = g == null ? 'var(--muted-foreground)' : failed ? '#dc2626' : '#16a34a'
                     return (
-                      <td key={item.id} className="px-3 py-2.5 text-sm whitespace-nowrap"
-                        style={{ color: g == null ? 'var(--muted-foreground)' : failed ? '#dc2626' : '#16a34a', fontWeight: g != null ? 700 : 400, borderLeft: '1px solid var(--border)' }}>
-                        {g != null ? `${g.toFixed(1)} ${failed ? '✗' : '✓'}` : '—'}
+                      <td key={item.id} className="px-3 py-2.5 text-sm whitespace-nowrap" style={{ borderLeft: '1px solid var(--border)' }}>
+                        {g != null ? (
+                          <span className="inline-flex items-center gap-1 font-bold px-2 py-1 rounded-lg" style={{ backgroundColor: `${cellColor}1a`, color: cellColor }}>
+                            {g.toFixed(1)} {failed ? '✗' : '✓'}
+                          </span>
+                        ) : (
+                          <span style={{ color: 'var(--muted-foreground)' }}>—</span>
+                        )}
                         {failed && record && !record.retryAllowed && (
                           <button onClick={() => handleAllowRetry(kind, record)} title="Permitir que reintente"
                             className="ml-1.5 text-xs font-bold" style={{ color: '#005187' }}>
@@ -167,13 +180,13 @@ export default function GradebookReport({ courseId }) {
                       </td>
                     )
                   })}
-                  <td className="px-4 py-2.5" style={{ borderLeft: '1px solid var(--border)' }}>
-                    <p className="text-sm font-black" style={{ color: 'var(--foreground)' }}>
+                  <td className="px-4 py-2.5" style={{ borderLeft: '1px solid var(--border)', backgroundColor: wg.allGraded ? (wg.passed ? 'color-mix(in srgb, #16a34a 8%, var(--card))' : 'color-mix(in srgb, #dc2626 8%, var(--card))') : 'transparent' }}>
+                    <p className="text-base font-black" style={{ color: 'var(--foreground)' }}>
                       {wg.average != null ? wg.average.toFixed(1) : '—'}
                     </p>
                     {wg.allGraded && (
                       <span className="text-xs font-bold px-1.5 py-0.5 rounded-full"
-                        style={{ backgroundColor: wg.passed ? 'rgba(22,163,74,0.12)' : 'rgba(220,38,38,0.12)', color: wg.passed ? '#16a34a' : '#dc2626' }}>
+                        style={{ backgroundColor: wg.passed ? 'rgba(22,163,74,0.15)' : 'rgba(220,38,38,0.15)', color: wg.passed ? '#16a34a' : '#dc2626' }}>
                         {wg.passed ? '✓ Aprobado' : '✗ Reprobado'}
                       </span>
                     )}

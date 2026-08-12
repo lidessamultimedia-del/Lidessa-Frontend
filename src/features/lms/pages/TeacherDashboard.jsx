@@ -15,6 +15,7 @@ import ChatThread from '@/features/lms/components/ChatThread'
 import AnimatedCounter from '@/shared/components/AnimatedCounter'
 import FormField, { errorInputStyle } from '@/shared/components/FormField'
 import AccountSettings from '@/shared/components/AccountSettings'
+import Avatar from '@/shared/components/Avatar'
 import {
   BarChart2, GraduationCap, ClipboardCheck, Plus, Users,
   BookOpen, Search, Paperclip, Mail, UserCog,
@@ -47,9 +48,12 @@ export default function TeacherDashboard({ theme, setTheme }) {
   const [selectedCourseId, setSelectedCourseId] = useState(null)
   const [courseTab, setCourseTab] = useState('content')
   const [participantsView, setParticipantsView] = useState('list')
+  const [participantsSearch, setParticipantsSearch] = useState('')
   const [gradingSubmissionId, setGradingSubmissionId] = useState(null)
   const [gradingFilter, setGradingFilter] = useState('pending')
   const [quizGradingFilter, setQuizGradingFilter] = useState('all')
+  const [gradingSearch, setGradingSearch] = useState('')
+  const [quizGradingSearch, setQuizGradingSearch] = useState('')
   const [gradingAttemptId, setGradingAttemptId] = useState(null)
   const [messageConversation, setMessageConversation] = useState(null)
   const [messagesSearch, setMessagesSearch] = useState('')
@@ -141,6 +145,10 @@ export default function TeacherDashboard({ theme, setTheme }) {
     .filter(s => gradingFilter === 'all' ? true : gradingFilter === 'pending' ? s.status !== 'graded' : s.status === 'graded')
     .map(sub => ({ sub, assignment: assignmentOf(sub) }))
     .map(row => ({ ...row, course: courseOf(row.assignment) }))
+    .filter(row => {
+      const q = gradingSearch.trim().toLowerCase()
+      return !q || [lms.studentName(row.sub.studentId), row.assignment?.title, row.course?.name].some(v => v?.toLowerCase().includes(q))
+    })
     .sort((a, b) => (b.sub.submittedAt ?? '').localeCompare(a.sub.submittedAt ?? ''))
 
   const gradingSubmission = gradingSubmissionId ? lms.submissions.find(s => s.id === gradingSubmissionId) : null
@@ -161,6 +169,10 @@ export default function TeacherDashboard({ theme, setTheme }) {
     .filter(a => quizGradingFilter === 'all' ? true : quizGradingFilter === 'pending' ? !a.reviewed : a.reviewed)
     .map(a => ({ attempt: a, quiz: quizOf(a) }))
     .map(row => ({ ...row, course: courseOf(row.quiz) }))
+    .filter(row => {
+      const q = quizGradingSearch.trim().toLowerCase()
+      return !q || [lms.studentName(row.attempt.studentId), row.quiz?.title, row.course?.name].some(v => v?.toLowerCase().includes(q))
+    })
     .sort((a, b) => (b.attempt.submittedAt ?? '').localeCompare(a.attempt.submittedAt ?? ''))
 
   const conversations = lms.teacherConversations(teacherId)
@@ -193,6 +205,7 @@ export default function TeacherDashboard({ theme, setTheme }) {
   return (
     <DashboardShell
       roleLabel="PANEL DOCENTE"
+      accent="gold"
       theme={theme}
       setTheme={setTheme}
       navItems={navItems}
@@ -238,21 +251,23 @@ export default function TeacherDashboard({ theme, setTheme }) {
               { label: 'Tareas por Revisar', value: pendingSubmissions.length, icon: ClipboardCheck, color: '#d97706' },
               { label: 'Promedio de Calificación', value: averageGrade, empty: gradedSubmissions.length === 0, icon: BarChart2, color: '#7c3aed' },
             ].map(s => (
-              <div key={s.label} className="rounded-xl p-5" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
+              <div key={s.label} className="rounded-lg p-5" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', borderLeft: `3px solid ${s.color}` }}>
                 <div className="flex items-center justify-between mb-3">
-                  <span style={{ color: s.color }}><s.icon size={26} /></span>
+                  <span className="flex items-center justify-center rounded-lg shrink-0" style={{ width: 38, height: 38, backgroundColor: `${s.color}1a`, color: s.color }}>
+                    <s.icon size={19} />
+                  </span>
                   {s.empty ? (
                     <span className="text-sm font-bold text-right" style={{ color: 'var(--muted-foreground)' }}>Sin calificaciones</span>
                   ) : (
                     <AnimatedCounter target={s.value} style={{ fontSize: 32, fontFamily: 'var(--font-display)', color: s.color, fontWeight: 900 }} />
                   )}
                 </div>
-                <p className="text-xs font-medium" style={{ color: 'var(--muted-foreground)' }}>{s.label}</p>
+                <p className="text-xs font-bold uppercase tracking-wide" style={{ color: 'var(--muted-foreground)' }}>{s.label}</p>
               </div>
             ))}
           </div>
 
-          <h2 className="font-bold text-sm mb-3" style={{ color: 'var(--foreground)', fontFamily: 'var(--font-display)' }}>Mis cursos</h2>
+          <h2 className="font-bold text-sm mb-3 pb-1.5" style={{ color: 'var(--foreground)', fontFamily: 'var(--font-display)', borderBottom: '2px solid #b8860b', display: 'inline-block' }}>Mis cursos</h2>
           <div className="flex flex-wrap gap-3 mb-8">
             {myCourses.map(c => (
               <button key={c.id} onClick={() => openCourseDetail(c.id)}
@@ -266,7 +281,7 @@ export default function TeacherDashboard({ theme, setTheme }) {
             {myCourses.length === 0 && <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>Aún no tienes cursos. Crea el primero desde "Mis Cursos".</p>}
           </div>
 
-          <h2 className="font-bold text-sm mb-3" style={{ color: 'var(--foreground)', fontFamily: 'var(--font-display)' }}>Tareas pendientes de revisar</h2>
+          <h2 className="font-bold text-sm mb-3 pb-1.5" style={{ color: 'var(--foreground)', fontFamily: 'var(--font-display)', borderBottom: '2px solid #b8860b', display: 'inline-block' }}>Tareas pendientes de revisar</h2>
           <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
             {pendingSubmissions.length === 0 && (
               <p className="text-sm px-4 py-6 text-center" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)' }}>No hay entregas pendientes por calificar.</p>
@@ -291,7 +306,7 @@ export default function TeacherDashboard({ theme, setTheme }) {
             })}
           </div>
 
-          <h2 className="font-bold text-sm mb-3 mt-8" style={{ color: 'var(--foreground)', fontFamily: 'var(--font-display)' }}>Exámenes pendientes de revisar</h2>
+          <h2 className="font-bold text-sm mb-3 mt-8 pb-1.5" style={{ color: 'var(--foreground)', fontFamily: 'var(--font-display)', borderBottom: '2px solid #b8860b', display: 'inline-block' }}>Exámenes pendientes de revisar</h2>
           <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
             {pendingQuizReviews.length === 0 && (
               <p className="text-sm px-4 py-6 text-center" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)' }}>No hay exámenes pendientes por calificar.</p>
@@ -486,17 +501,59 @@ export default function TeacherDashboard({ theme, setTheme }) {
               </div>
               {participantsView === 'list' ? (
                 <div>
-                  <p className="text-xs mb-3" style={{ color: 'var(--muted-foreground)' }}>Las inscripciones las gestiona el administrador — aquí puedes ver quién está inscrito.</p>
-                  <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-                    {enrolledStudents.map((s, i, arr) => (
-                      <div key={s.id} style={{ display: 'flex', gap: 12, padding: '12px 16px', alignItems: 'center', borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none', backgroundColor: 'var(--card)' }}>
-                        <div className="flex-1">
-                          <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{s.name}</p>
-                          <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{s.email}</p>
+                  <div className="flex items-center justify-between flex-wrap gap-3 mb-3">
+                    <p className="text-xs" style={{ color: 'var(--muted-foreground)', maxWidth: 480 }}>
+                      Las inscripciones las gestiona el administrador — aquí ves el progreso individual de cada estudiante (el % de la tarjeta del curso es el promedio de todos).
+                    </p>
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg shrink-0" style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)' }}>
+                      <Search size={14} style={{ color: 'var(--muted-foreground)' }} />
+                      <input value={participantsSearch} onChange={e => setParticipantsSearch(e.target.value)}
+                        placeholder="Buscar estudiante…"
+                        className="text-sm outline-none bg-transparent" style={{ color: 'var(--foreground)', width: 180 }} />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    {enrolledStudents
+                      .filter(s => !participantsSearch.trim() || [s.name, s.email].some(v => v?.toLowerCase().includes(participantsSearch.trim().toLowerCase())))
+                      .sort((a, b) => a.name.localeCompare(b.name))
+                      .map(s => {
+                        const progress = lms.progressForStudentCourse(s.id, selectedCourse.id)
+                        const wg = lms.courseWeightedGrade(s.id, selectedCourse.id)
+                        const statusColor = wg.allGraded ? (wg.passed ? '#16a34a' : '#dc2626') : progress.percent > 0 ? '#d97706' : 'var(--border)'
+                        return (
+                        <div key={s.id} className="rounded-lg" style={{
+                          display: 'flex', gap: 16, padding: '14px 16px', alignItems: 'center',
+                          backgroundColor: 'var(--card)', border: '1px solid var(--border)', borderLeft: `3px solid ${statusColor}`,
+                        }}>
+                          <Avatar user={s} size={36} />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold truncate" style={{ color: 'var(--foreground)' }}>{s.name}</p>
+                            <p className="text-xs truncate" style={{ color: 'var(--muted-foreground)' }}>{s.email}</p>
+                          </div>
+                          <div style={{ width: 160 }} className="shrink-0">
+                            <div className="flex justify-between text-xs mb-1" style={{ color: 'var(--muted-foreground)' }}>
+                              <span>Progreso</span><span className="font-bold" style={{ color: 'var(--foreground)' }}>{progress.percent}%</span>
+                            </div>
+                            <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--muted)' }}>
+                              <div style={{ width: `${progress.percent}%`, height: '100%', backgroundColor: selectedCourse.color ?? '#005187' }} />
+                            </div>
+                          </div>
+                          {wg.allGraded ? (
+                            <span className="text-xs font-bold px-2.5 py-1.5 rounded-lg shrink-0"
+                              style={{ backgroundColor: `${statusColor}1a`, color: statusColor }}>
+                              {wg.passed ? '✓ Aprobado' : '✗ Reprobado'} · {wg.average}/{MAX_GRADE}
+                            </span>
+                          ) : (
+                            <span className="text-xs font-medium shrink-0 px-2.5 py-1.5 rounded-lg" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--muted)' }}>
+                              {wg.average != null ? `En curso · ${wg.average}/${MAX_GRADE}` : 'Sin calificar'}
+                            </span>
+                          )}
                         </div>
-                      </div>
-                    ))}
-                    {enrolledStudents.length === 0 && <p className="text-sm px-4 py-6 text-center" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)' }}>Sin estudiantes inscritos.</p>}
+                        )
+                      })}
+                    {enrolledStudents.length === 0 && (
+                      <p className="text-sm px-4 py-6 text-center rounded-lg" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>Sin estudiantes inscritos.</p>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -510,8 +567,8 @@ export default function TeacherDashboard({ theme, setTheme }) {
       {/* ── TAREAS POR REVISAR ── */}
       {section === 'grading' && (
         <div style={{ animation: 'fadeUp 0.4s ease' }}>
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="text-xl font-black" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Tareas por revisar</h2>
+          <div className="flex items-center justify-between flex-wrap gap-3 mb-1">
+            <h2 className="text-xl font-black pb-1.5" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)', borderBottom: '2px solid #b8860b', display: 'inline-block' }}>Tareas por revisar</h2>
             <div className="flex gap-1 rounded-xl p-1" style={{ backgroundColor: 'var(--muted)' }}>
               {[{ id: 'pending', label: 'Pendientes' }, { id: 'graded', label: 'Calificadas' }, { id: 'all', label: 'Todas' }].map(f => (
                 <button key={f.id} onClick={() => setGradingFilter(f.id)}
@@ -522,18 +579,30 @@ export default function TeacherDashboard({ theme, setTheme }) {
               ))}
             </div>
           </div>
-          <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-            {gradingRows.map(({ sub, assignment, course }, i, arr) => (
-              <div key={sub.id} style={{ display: 'flex', gap: 12, padding: '14px 16px', alignItems: 'center', borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none', backgroundColor: 'var(--card)' }}>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{lms.studentName(sub.studentId)} — {assignment?.title}</p>
-                  <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{course?.name} · Entregado: {formatDate(sub.submittedAt)}</p>
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg mt-4 mb-3" style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', maxWidth: 320 }}>
+            <Search size={14} style={{ color: 'var(--muted-foreground)' }} />
+            <input value={gradingSearch} onChange={e => setGradingSearch(e.target.value)}
+              placeholder="Buscar por estudiante, tarea o curso…"
+              className="text-sm outline-none bg-transparent w-full" style={{ color: 'var(--foreground)' }} />
+          </div>
+          <div className="space-y-2">
+            {gradingRows.map(({ sub, assignment, course }) => {
+              const failed = sub.status === 'graded' && sub.grade < PASS_THRESHOLD
+              const statusColor = sub.status === 'graded' ? (failed ? '#dc2626' : '#16a34a') : '#d97706'
+              return (
+              <div key={sub.id} className="rounded-lg" style={{
+                display: 'flex', gap: 14, padding: '14px 16px', alignItems: 'center',
+                backgroundColor: 'var(--card)', border: '1px solid var(--border)', borderLeft: `3px solid ${statusColor}`,
+              }}>
+                <Avatar user={lms.directoryById(sub.studentId)} size={36} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold truncate" style={{ color: 'var(--foreground)' }}>{lms.studentName(sub.studentId)} — {assignment?.title}</p>
+                  <p className="text-xs truncate" style={{ color: 'var(--muted-foreground)' }}>{course?.name} · Entregado: {formatDate(sub.submittedAt)}</p>
                 </div>
-                <span className="text-xs px-2 py-1 rounded-full font-semibold shrink-0"
-                  style={{ backgroundColor: sub.status === 'graded' ? 'rgba(22,163,74,0.12)' : 'rgba(217,119,6,0.12)', color: sub.status === 'graded' ? '#16a34a' : '#d97706' }}>
+                <span className="text-xs font-bold px-2.5 py-1.5 rounded-lg shrink-0" style={{ backgroundColor: `${statusColor}1a`, color: statusColor }}>
                   {sub.status === 'graded' ? `Calificada · ${sub.grade}/${assignment?.maxScore}` : 'Pendiente'}
                 </span>
-                {sub.status === 'graded' && sub.grade < PASS_THRESHOLD && !sub.retryAllowed && (
+                {failed && !sub.retryAllowed && (
                   <button onClick={() => { lms.allowRetry('assignment', sub.id); toast('success', 'Reintento permitido', `${lms.studentName(sub.studentId)} — ${assignment?.title}`) }}
                     className="text-xs px-3 py-1.5 rounded-lg font-bold shrink-0" style={{ border: '1px solid rgba(0,81,135,0.3)', color: '#005187' }}>
                     Permitir reintento
@@ -544,12 +613,17 @@ export default function TeacherDashboard({ theme, setTheme }) {
                   {sub.status === 'graded' ? 'Ver / Editar' : 'Calificar'}
                 </button>
               </div>
-            ))}
-            {gradingRows.length === 0 && <p className="text-sm px-4 py-6 text-center" style={{ color: 'var(--muted-foreground)' }}>No hay entregas para este filtro.</p>}
+              )
+            })}
+            {gradingRows.length === 0 && (
+              <p className="text-sm px-4 py-6 text-center rounded-lg" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
+                {gradingSearch ? 'Nada coincide con esa búsqueda.' : 'No hay entregas para este filtro.'}
+              </p>
+            )}
           </div>
 
-          <div className="flex items-center justify-between mb-1 mt-8">
-            <h2 className="text-xl font-black" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Exámenes</h2>
+          <div className="flex items-center justify-between flex-wrap gap-3 mb-1 mt-8">
+            <h2 className="text-xl font-black pb-1.5" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)', borderBottom: '2px solid #b8860b', display: 'inline-block' }}>Exámenes</h2>
             <div className="flex gap-1 rounded-xl p-1" style={{ backgroundColor: 'var(--muted)' }}>
               {[{ id: 'pending', label: 'Pendientes' }, { id: 'graded', label: 'Calificados' }, { id: 'all', label: 'Todos' }].map(f => (
                 <button key={f.id} onClick={() => setQuizGradingFilter(f.id)}
@@ -560,18 +634,28 @@ export default function TeacherDashboard({ theme, setTheme }) {
               ))}
             </div>
           </div>
-          <p className="text-xs mb-4" style={{ color: 'var(--muted-foreground)' }}>Las de selección múltiple se califican solas; las de respuesta abierta hay que leerlas y ponerles nota.</p>
-          <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-            {quizGradingRows.map(({ attempt: a, quiz, course }, i, arr) => {
+          <p className="text-xs mt-3 mb-3" style={{ color: 'var(--muted-foreground)' }}>Las de selección múltiple se califican solas; las de respuesta abierta hay que leerlas y ponerles nota.</p>
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg mb-3" style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', maxWidth: 320 }}>
+            <Search size={14} style={{ color: 'var(--muted-foreground)' }} />
+            <input value={quizGradingSearch} onChange={e => setQuizGradingSearch(e.target.value)}
+              placeholder="Buscar por estudiante, examen o curso…"
+              className="text-sm outline-none bg-transparent w-full" style={{ color: 'var(--foreground)' }} />
+          </div>
+          <div className="space-y-2">
+            {quizGradingRows.map(({ attempt: a, quiz, course }) => {
               const failed = a.reviewed && a.score < PASS_THRESHOLD
+              const statusColor = !a.reviewed ? '#d97706' : (failed ? '#dc2626' : '#16a34a')
               return (
-                <div key={a.id} style={{ display: 'flex', gap: 12, padding: '14px 16px', alignItems: 'center', borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none', backgroundColor: 'var(--card)' }}>
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{lms.studentName(a.studentId)} — {quiz?.title}</p>
-                    <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{course?.name} · Presentado: {formatDate(a.submittedAt)}</p>
+                <div key={a.id} className="rounded-lg" style={{
+                  display: 'flex', gap: 14, padding: '14px 16px', alignItems: 'center',
+                  backgroundColor: 'var(--card)', border: '1px solid var(--border)', borderLeft: `3px solid ${statusColor}`,
+                }}>
+                  <Avatar user={lms.directoryById(a.studentId)} size={36} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold truncate" style={{ color: 'var(--foreground)' }}>{lms.studentName(a.studentId)} — {quiz?.title}</p>
+                    <p className="text-xs truncate" style={{ color: 'var(--muted-foreground)' }}>{course?.name} · Presentado: {formatDate(a.submittedAt)}</p>
                   </div>
-                  <span className="text-xs px-2 py-1 rounded-full font-semibold shrink-0"
-                    style={{ backgroundColor: a.reviewed ? (failed ? 'rgba(220,38,38,0.12)' : 'rgba(22,163,74,0.12)') : 'rgba(217,119,6,0.12)', color: a.reviewed ? (failed ? '#dc2626' : '#16a34a') : '#d97706' }}>
+                  <span className="text-xs font-bold px-2.5 py-1.5 rounded-lg shrink-0" style={{ backgroundColor: `${statusColor}1a`, color: statusColor }}>
                     {a.reviewed ? `Calificado · ${a.score}/${MAX_GRADE}` : 'Pendiente de revisión'}
                   </span>
                   {failed && !a.retryAllowed && (
@@ -587,7 +671,11 @@ export default function TeacherDashboard({ theme, setTheme }) {
                 </div>
               )
             })}
-            {quizGradingRows.length === 0 && <p className="text-sm px-4 py-6 text-center" style={{ color: 'var(--muted-foreground)' }}>No hay exámenes presentados para este filtro.</p>}
+            {quizGradingRows.length === 0 && (
+              <p className="text-sm px-4 py-6 text-center rounded-lg" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
+                {quizGradingSearch ? 'Nada coincide con esa búsqueda.' : 'No hay exámenes presentados para este filtro.'}
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -629,13 +717,18 @@ export default function TeacherDashboard({ theme, setTheme }) {
         <div style={{ animation: 'fadeUp 0.4s ease' }}>
           {messageConversation ? (
             <div style={{ maxWidth: 640 }}>
-              <button onClick={() => setMessageConversation(null)} className="text-xs font-semibold mb-3" style={{ color: '#005187' }}>← Volver a mensajes</button>
-              <h2 className="text-xl font-black mb-1" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
-                {lms.studentName(messageConversation.studentId)}
-              </h2>
-              <p className="text-sm mb-4" style={{ color: 'var(--muted-foreground)' }}>
-                {lms.courses.find(c => c.id === messageConversation.courseId)?.name}
-              </p>
+              <button onClick={() => setMessageConversation(null)} className="text-xs font-semibold mb-3" style={{ color: 'var(--accent)' }}>← Volver a mensajes</button>
+              <div className="flex items-center gap-3 mb-4 rounded-lg p-4" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', borderTop: '3px solid #b8860b' }}>
+                <Avatar user={lms.directoryById(messageConversation.studentId)} size={42} />
+                <div className="min-w-0">
+                  <h2 className="text-lg font-black truncate" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
+                    {lms.studentName(messageConversation.studentId)}
+                  </h2>
+                  <p className="text-xs truncate" style={{ color: 'var(--accent)' }}>
+                    {lms.courses.find(c => c.id === messageConversation.courseId)?.name}
+                  </p>
+                </div>
+              </div>
               <ChatThread
                 messages={lms.threadMessages(messageConversation.courseId, teacherId, messageConversation.studentId)}
                 currentUserId={teacherId}
@@ -644,35 +737,48 @@ export default function TeacherDashboard({ theme, setTheme }) {
             </div>
           ) : (
             <>
-              <h2 className="text-xl font-black mb-3" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Mensajes</h2>
-              <div className="flex items-center gap-2 px-3 py-2 rounded-lg mb-4" style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', maxWidth: 320 }}>
+              <h2 className="text-xl font-black mb-3 pb-1.5" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)', borderBottom: '2px solid #b8860b', display: 'inline-block' }}>Mensajes</h2>
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg mb-4 mt-3" style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', maxWidth: 320 }}>
                 <Search size={14} style={{ color: 'var(--muted-foreground)' }} />
                 <input value={messagesSearch} onChange={e => setMessagesSearch(e.target.value)}
                   placeholder="Buscar por nombre o correo…"
                   className="text-sm outline-none bg-transparent w-full" style={{ color: 'var(--foreground)' }} />
               </div>
-              <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-                {filteredConversations.map((c, i, arr) => (
+              <div className="space-y-2">
+                {filteredConversations.map(c => {
+                  const unread = c.unreadCount > 0
+                  const fromTeacher = c.lastMessage.fromId === teacherId
+                  return (
                   <div key={`${c.courseId}_${c.studentId}`}
                     onClick={() => {
                       setMessageConversation(c)
                       lms.markThreadRead(c.courseId, teacherId, c.studentId)
                     }}
-                    className="cursor-pointer"
-                    style={{ display: 'flex', gap: 12, padding: '14px 16px', alignItems: 'center', borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none', backgroundColor: 'var(--card)' }}>
+                    className="cursor-pointer rounded-lg transition-opacity hover:opacity-90"
+                    style={{
+                      display: 'flex', gap: 14, padding: '14px 16px', alignItems: 'center',
+                      backgroundColor: 'var(--card)', border: '1px solid var(--border)',
+                      borderLeft: unread ? '3px solid #b8860b' : '3px solid transparent',
+                    }}>
+                    <Avatar user={lms.directoryById(c.studentId)} size={38} />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{lms.studentName(c.studentId)}</p>
-                      <p className="text-xs truncate" style={{ color: 'var(--muted-foreground)' }}>
-                        {lms.courses.find(course => course.id === c.courseId)?.name} · {c.lastMessage.body}
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-sm truncate" style={{ color: 'var(--foreground)', fontWeight: unread ? 800 : 600 }}>{lms.studentName(c.studentId)}</p>
+                        <span className="text-xs shrink-0" style={{ color: 'var(--muted-foreground)' }}>{formatDate(c.lastMessage.createdAt)}</span>
+                      </div>
+                      <p className="text-xs mb-0.5 font-medium" style={{ color: 'var(--accent)' }}>{lms.courses.find(course => course.id === c.courseId)?.name}</p>
+                      <p className="text-xs truncate" style={{ color: unread ? 'var(--foreground)' : 'var(--muted-foreground)', fontWeight: unread ? 600 : 400 }}>
+                        {fromTeacher ? 'Tú: ' : ''}{c.lastMessage.body}
                       </p>
                     </div>
-                    {c.unreadCount > 0 && (
-                      <span className="text-xs font-bold text-white rounded-full px-2 py-0.5 shrink-0" style={{ backgroundColor: '#dc2626' }}>{c.unreadCount}</span>
+                    {unread && (
+                      <span className="text-xs font-bold text-white rounded-full px-2 py-0.5 shrink-0" style={{ backgroundColor: '#b8860b' }}>{c.unreadCount}</span>
                     )}
                   </div>
-                ))}
+                  )
+                })}
                 {filteredConversations.length === 0 && (
-                  <p className="text-sm px-4 py-6 text-center" style={{ color: 'var(--muted-foreground)' }}>
+                  <p className="text-sm px-4 py-6 text-center rounded-lg" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
                     {conversations.length === 0 ? 'Todavía no tienes mensajes de estudiantes.' : 'Ningún estudiante coincide con esa búsqueda.'}
                   </p>
                 )}

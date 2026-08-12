@@ -1,8 +1,12 @@
+import { useState } from 'react'
 import { X } from '@/shared/components/Icons'
+import Avatar from '@/shared/components/Avatar'
+import PhotoLightbox from '@/shared/components/PhotoLightbox'
 
 export default function DirectoryUserDetailModal({ user, role, lms, onClose }) {
   const isStudent = role === 'estudiante'
   const courses = isStudent ? lms.coursesByStudent(user.id) : lms.coursesByTeacher(user.id)
+  const [showPhoto, setShowPhoto] = useState(false)
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4"
@@ -14,10 +18,11 @@ export default function DirectoryUserDetailModal({ user, role, lms, onClose }) {
         {/* Header */}
         <div className="flex items-start justify-between gap-3 p-6 pb-4 shrink-0" style={{ borderBottom: '1px solid var(--border)' }}>
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-11 h-11 rounded-full flex items-center justify-center text-white text-base font-bold shrink-0"
-              style={{ background: 'linear-gradient(135deg, #005187, #4d82bc)' }}>
-              {user.name.charAt(0)}
-            </div>
+            <button type="button" onClick={() => user.avatar && setShowPhoto(true)}
+              disabled={!user.avatar} title={user.avatar ? 'Ver foto más grande' : undefined}
+              className="rounded-full shrink-0" style={{ cursor: user.avatar ? 'zoom-in' : 'default', lineHeight: 0 }}>
+              <Avatar user={user} size={44} />
+            </button>
             <div className="min-w-0">
               <h3 className="text-base font-black truncate" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
                 {user.name}
@@ -94,6 +99,8 @@ export default function DirectoryUserDetailModal({ user, role, lms, onClose }) {
           </button>
         </div>
       </div>
+
+      {showPhoto && user.avatar && <PhotoLightbox user={user} onClose={() => setShowPhoto(false)} />}
     </div>
   )
 }

@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense, lazy } from 'react'
 import Header from '@/shared/components/Header'
 import Footer from '@/shared/components/Footer'
 import WhatsAppButton from '@/shared/components/WhatsAppButton'
@@ -10,13 +10,25 @@ import Store from '@/features/store/pages/Store'
 import Training from '@/features/training/pages/Training'
 import ServicesOverview from '@/features/services/pages/ServicesOverview'
 import ServicePage from '@/features/services/pages/ServicePage'
-import AdminDashboard from '@/features/admin-dashboard/pages/AdminDashboard'
-import TeacherDashboard from '@/features/lms/pages/TeacherDashboard'
-import StudentDashboard from '@/features/lms/pages/StudentDashboard'
 import Login from '@/features/auth/pages/Login'
 import Register from '@/features/auth/pages/Register'
 import ForgotPassword from '@/features/auth/pages/ForgotPassword'
 import { useAuth } from '@/features/auth/context/AuthContext'
+
+// Los paneles de admin y LMS son la parte más pesada del bundle y solo los
+// usan usuarios autenticados con esos roles — se cargan aparte para que un
+// visitante público no descargue ese JS.
+const AdminDashboard = lazy(() => import('@/features/admin-dashboard/pages/AdminDashboard'))
+const TeacherDashboard = lazy(() => import('@/features/lms/pages/TeacherDashboard'))
+const StudentDashboard = lazy(() => import('@/features/lms/pages/StudentDashboard'))
+
+function PanelLoading() {
+  return (
+    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--background)' }}>
+      <div className="w-8 h-8 rounded-full animate-spin" style={{ border: '3px solid var(--border)', borderTopColor: '#005187' }} />
+    </div>
+  )
+}
 
 function PublicLayout({ theme, setTheme }) {
   return (
@@ -82,17 +94,23 @@ export default function AppRoutes() {
       <Route path="/recuperar-contrasena" element={<ForgotPassword />} />
       <Route path="/admin" element={
         <ProtectedRoute roles={['admin']}>
-          <AdminDashboard theme={theme} setTheme={setTheme} />
+          <Suspense fallback={<PanelLoading />}>
+            <AdminDashboard theme={theme} setTheme={setTheme} />
+          </Suspense>
         </ProtectedRoute>
       } />
       <Route path="/profesor" element={
         <ProtectedRoute roles={['profesor']}>
-          <TeacherDashboard theme={theme} setTheme={setTheme} />
+          <Suspense fallback={<PanelLoading />}>
+            <TeacherDashboard theme={theme} setTheme={setTheme} />
+          </Suspense>
         </ProtectedRoute>
       } />
       <Route path="/estudiante" element={
         <ProtectedRoute roles={['estudiante']}>
-          <StudentDashboard theme={theme} setTheme={setTheme} />
+          <Suspense fallback={<PanelLoading />}>
+            <StudentDashboard theme={theme} setTheme={setTheme} />
+          </Suspense>
         </ProtectedRoute>
       } />
       <Route path="/*" element={<PublicLayout theme={theme} setTheme={setTheme} />} />

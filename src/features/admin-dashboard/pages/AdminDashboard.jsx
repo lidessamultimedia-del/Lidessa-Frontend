@@ -32,15 +32,7 @@ import { BarChart2, Building, FileText, GraduationCap, Users, Clipboard, Sliders
 import AccountSettings from '@/shared/components/AccountSettings'
 import Avatar from '@/shared/components/Avatar'
 import Toggle from '@/shared/components/Toggle'
-
-const SETTINGS_KEY = 'lidessa_site_settings'
-
-const defaultSettings = {
-  phone: '+57 300 123 4567',
-  email: 'info@lidessa.co',
-  address: 'Calle 100 # 19-61, Bogotá D.C.',
-  schedule: 'Lunes a viernes: 7:30 am – 5:30 pm',
-}
+import { useSiteSettings } from '@/shared/context/SiteSettingsContext'
 
 const statusColor = {
   'Pendiente': '#d97706',
@@ -194,14 +186,7 @@ export default function AdminDashboard({ theme, setTheme }) {
   const [rolesSearch, setRolesSearch] = useState('')
   const [settingsTab, setSettingsTab] = useState('site')
   const lmsSelectedCourse = lmsSelectedCourseId ? lms.courses.find(c => c.id === lmsSelectedCourseId) : null
-  const [settings, setSettings] = useState(() => {
-    try {
-      const stored = localStorage.getItem(SETTINGS_KEY)
-      return stored ? JSON.parse(stored) : defaultSettings
-    } catch {
-      return defaultSettings
-    }
-  })
+  const { settings, setSettings } = useSiteSettings()
 
   function handleLogout() {
     logout()
@@ -436,7 +421,6 @@ export default function AdminDashboard({ theme, setTheme }) {
 
   function handleSettingsSave(e) {
     e.preventDefault()
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings))
     toast('success', 'Configuración guardada', 'Los cambios fueron aplicados exitosamente.')
   }
 

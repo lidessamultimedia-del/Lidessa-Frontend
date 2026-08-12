@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import PQRSFModal from './PQRSFModal'
 import { MessageCircle, LinkIcon } from './Icons'
+import { useSiteSettings } from '@/shared/context/SiteSettingsContext'
 
 const icons = {
   facebook: 'M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036 26.805 26.805 0 0 0-.733-.009c-.707 0-1.259.096-1.675.309a1.686 1.686 0 0 0-.679.622c-.258.42-.374.995-.374 1.752v1.297h3.919l-.386 1.913-.287 1.754h-3.246v7.98H9.101Z',
@@ -22,6 +23,7 @@ function Icon({ path }) {
 
 export default function Footer() {
   const [pqrsfOpen, setPqrsfOpen] = useState(false)
+  const { settings } = useSiteSettings()
 
   const socialLinks = [
     { label: 'Facebook', icon: icons.facebook, href: 'https://www.facebook.com/lidessa.co' },
@@ -74,10 +76,6 @@ export default function Footer() {
                 <p className="text-sm leading-relaxed">
                   Más de <strong className="text-white">12 años</strong> acompañando a empresas e instituciones en el cumplimiento normativo, la excelencia organizacional y el desarrollo sostenible.
                 </p>
-                <div className="mt-4 flex flex-col items-center gap-1.5 text-xs">
-                  <span>NIT: 900.XXX.XXX-X</span>
-                  <span>RUT vigente 2025</span>
-                </div>
               </div>
 
               {/* Col 2 — Páginas de interés */}
@@ -103,8 +101,8 @@ export default function Footer() {
                 </h4>
                 <ul className="space-y-3 text-sm">
                   <li>
-                    <span className="text-white font-medium">Lunes – Viernes</span><br />
-                    7:00 a.m. – 4:30 p.m.
+                    <span className="text-white font-medium">Horario</span><br />
+                    {settings.schedule}
                   </li>
                   <li className="text-xs" style={{ color: '#5f7690' }}>
                     Sábados, domingos y festivos: cerrado
@@ -133,12 +131,6 @@ export default function Footer() {
                       Formulario PQRSF
                     </button>
                   </li>
-                  <li><a href="#" className="hover:text-white transition-colors">Política de privacidad</a></li>
-                  <li>
-                    <Link to="/servicios/datos-personales" className="hover:text-white transition-colors">
-                      Tratamiento de datos
-                    </Link>
-                  </li>
                 </ul>
               </div>
 
@@ -148,7 +140,7 @@ export default function Footer() {
                   Dirección
                 </h4>
                 <p className="text-sm">
-                  Cra. 71 #46-28, Laureles,<br />Medellín, Antioquia
+                  {settings.address}
                 </p>
               </div>
             </div>
@@ -158,7 +150,7 @@ export default function Footer() {
               <a href="mailto:comercial@lidessa.co" className="hover:text-white transition-colors">comercial@lidessa.co</a>
               <a href="mailto:mercadeo@lidessa.co" className="hover:text-white transition-colors">mercadeo@lidessa.co</a>
               <a href="mailto:servicios@lidessa.co" className="hover:text-white transition-colors">servicios@lidessa.co</a>
-              <a href="https://wa.me/573016280574" target="_blank" rel="noreferrer" className="hover:text-white transition-colors">+57 301 628 0574</a>
+              <a href={`tel:${settings.phone.replace(/[^\d+]/g, '')}`} className="hover:text-white transition-colors">{settings.phone}</a>
             </div>
 
             <div className="text-center mt-6">

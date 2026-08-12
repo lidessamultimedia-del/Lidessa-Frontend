@@ -1540,7 +1540,7 @@ export default function AdminDashboard({ theme, setTheme }) {
                         </span>
                       </div>
                       <div className="flex gap-2 shrink-0">
-                        <button onClick={() => setDirectoryDetailModal({ role, user: u })} title="Ver detalle"
+                        <button onClick={() => setDirectoryDetailModal({ role, user: { ...u, avatar: allUsers.find(au => au.id === u.id)?.avatar } })} title="Ver detalle"
                           className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
                           style={{ border: '1px solid var(--border)', color: 'var(--muted-foreground)' }}
                           onMouseEnter={e => { e.currentTarget.style.borderColor = '#4d82bc'; e.currentTarget.style.color = '#4d82bc' }}

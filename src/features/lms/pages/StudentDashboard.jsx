@@ -152,6 +152,7 @@ export default function StudentDashboard({ theme, setTheme }) {
   return (
     <DashboardShell
       roleLabel="PANEL ESTUDIANTE"
+      accent="blue"
       theme={theme}
       setTheme={setTheme}
       navItems={navItems}
@@ -206,9 +207,11 @@ export default function StudentDashboard({ theme, setTheme }) {
               { label: 'Actividades Pendientes', value: pendingAssignments.length + pendingQuizzes.length, icon: ClipboardCheck, color: '#d97706' },
               { label: 'Calificación Promedio', value: averageGrade, empty: overallGrades.length === 0, icon: BarChart2, color: '#7c3aed' },
             ].map(s => (
-              <div key={s.label} className="rounded-xl p-5" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
+              <div key={s.label} className="rounded-2xl p-5" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', boxShadow: '0 1px 4px rgba(0,0,0,0.03)' }}>
                 <div className="flex items-center justify-between mb-3">
-                  <span style={{ color: s.color }}><s.icon size={26} /></span>
+                  <span className="flex items-center justify-center rounded-full shrink-0" style={{ width: 42, height: 42, backgroundColor: `${s.color}1a`, color: s.color }}>
+                    <s.icon size={21} />
+                  </span>
                   {s.empty ? (
                     <span className="text-sm font-bold text-right" style={{ color: 'var(--muted-foreground)' }}>Sin calificaciones</span>
                   ) : (
@@ -220,20 +223,25 @@ export default function StudentDashboard({ theme, setTheme }) {
             ))}
           </div>
 
-          <h2 className="font-bold text-sm mb-3" style={{ color: 'var(--foreground)', fontFamily: 'var(--font-display)' }}>Mis cursos</h2>
+          <h2 className="font-bold text-sm mb-3 flex items-center gap-2" style={{ color: 'var(--foreground)', fontFamily: 'var(--font-display)' }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#005187', display: 'inline-block' }} /> Mis cursos
+          </h2>
           <div className="flex flex-wrap gap-3 mb-8">
             {myCourses.map(c => (
               <button key={c.id} onClick={() => openCourseDetail(c.id)}
-                className="px-4 py-2.5 rounded-xl text-sm font-semibold transition-all"
-                style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', color: 'var(--foreground)', borderLeft: `4px solid ${c.color ?? '#005187'}` }}>
+                className="pl-3 pr-4 py-2.5 rounded-full text-sm font-semibold transition-all flex items-center gap-2"
+                style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', color: 'var(--foreground)' }}>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: c.color ?? '#005187', flexShrink: 0 }} />
                 {c.name}
               </button>
             ))}
             {myCourses.length === 0 && <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>No tiene cursos por el momento.</p>}
           </div>
 
-          <h2 className="font-bold text-sm mb-3" style={{ color: 'var(--foreground)', fontFamily: 'var(--font-display)' }}>Tareas próximas a vencer</h2>
-          <div className="rounded-xl overflow-hidden mb-8" style={{ border: '1px solid var(--border)' }}>
+          <h2 className="font-bold text-sm mb-3 flex items-center gap-2" style={{ color: 'var(--foreground)', fontFamily: 'var(--font-display)' }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#d97706', display: 'inline-block' }} /> Tareas próximas a vencer
+          </h2>
+          <div className="rounded-2xl overflow-hidden mb-8" style={{ border: '1px solid var(--border)' }}>
             {pendingAssignments.length === 0 && (
               <p className="text-sm px-4 py-6 text-center" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)' }}>¡Estás al día! No tienes tareas pendientes.</p>
             )}
@@ -247,15 +255,17 @@ export default function StudentDashboard({ theme, setTheme }) {
                   )}
                 </div>
                 <button onClick={() => openSubmit(item.id)}
-                  className="text-xs px-3 py-1.5 rounded-lg font-bold text-white shrink-0" style={{ backgroundColor: '#005187' }}>
+                  className="text-xs px-3.5 py-1.5 rounded-full font-bold text-white shrink-0" style={{ backgroundColor: '#005187' }}>
                   Ver y entregar
                 </button>
               </div>
             ))}
           </div>
 
-          <h2 className="font-bold text-sm mb-3" style={{ color: 'var(--foreground)', fontFamily: 'var(--font-display)' }}>Exámenes próximos a vencer</h2>
-          <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+          <h2 className="font-bold text-sm mb-3 flex items-center gap-2" style={{ color: 'var(--foreground)', fontFamily: 'var(--font-display)' }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#7c3aed', display: 'inline-block' }} /> Exámenes próximos a vencer
+          </h2>
+          <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
             {pendingQuizzes.length === 0 && (
               <p className="text-sm px-4 py-6 text-center" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)' }}>¡Estás al día! No tienes exámenes pendientes.</p>
             )}
@@ -269,7 +279,7 @@ export default function StudentDashboard({ theme, setTheme }) {
                   )}
                 </div>
                 <button onClick={() => openQuiz(item.id)}
-                  className="text-xs px-3 py-1.5 rounded-lg font-bold text-white shrink-0" style={{ backgroundColor: '#005187' }}>
+                  className="text-xs px-3.5 py-1.5 rounded-full font-bold text-white shrink-0" style={{ backgroundColor: '#005187' }}>
                   Ver y responder
                 </button>
               </div>

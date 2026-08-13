@@ -565,7 +565,7 @@ export default function StudentDashboard({ theme, setTheme }) {
       {section === 'grades' && (
         <div style={{ animation: 'fadeUp 0.4s ease' }}>
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-black" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Mis calificaciones</h2>
+            <h2 className="text-xl font-black pb-1.5" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)', borderBottom: '2px solid var(--accent)', display: 'inline-block' }}>Mis calificaciones</h2>
             <div className="flex gap-2 no-print">
               <button onClick={() => window.print()}
                 className="text-xs px-3 py-1.5 rounded-lg font-bold" style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>
@@ -585,9 +585,11 @@ export default function StudentDashboard({ theme, setTheme }) {
               if (!byTopic[key]) byTopic[key] = []
               byTopic[key].push(r)
             })
+            const cardTint = allGraded ? (passed ? 'color-mix(in srgb, #16a34a 5%, var(--card))' : 'color-mix(in srgb, #dc2626 5%, var(--card))') : 'var(--card)'
+            const cardBorder = allGraded ? (passed ? 'rgba(22,163,74,0.3)' : 'rgba(220,38,38,0.3)') : 'var(--border)'
             return (
-              <div key={course.id} className="mb-6">
-                <div className="flex items-center gap-2 mb-2 flex-wrap">
+              <div key={course.id} className="mb-6 rounded-xl p-4" style={{ backgroundColor: cardTint, border: `1px solid ${cardBorder}` }}>
+                <div className="flex items-center gap-2 mb-3 flex-wrap">
                   <h3 className="font-bold text-sm" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>{course.name}</h3>
                   {average != null && (
                     <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: '#005187' }}>
@@ -615,18 +617,27 @@ export default function StudentDashboard({ theme, setTheme }) {
                           <span key={h} className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--muted-foreground)' }}>{h}</span>
                         ))}
                       </div>
-                      {topicRows.map(({ kind, item, graded, grade, maxScore, gradedAt }) => (
+                      {topicRows.map(({ kind, item, graded, grade, maxScore, gradedAt }) => {
+                        const gradeColor = grade >= PASS_THRESHOLD ? '#16a34a' : '#dc2626'
+                        return (
                         <div key={item.id} style={{ display: 'grid', gridTemplateColumns: '1fr 2fr 1fr 1fr', padding: '10px 16px', borderTop: '1px solid var(--border)', backgroundColor: 'var(--card)' }}>
                           <span className="text-xs font-semibold" style={{ color: kind === 'assignment' ? '#7c3aed' : '#d97706' }}>
                             {kind === 'assignment' ? 'Tarea' : 'Examen'}
                           </span>
                           <span className="text-sm" style={{ color: 'var(--foreground)' }}>{item.title}</span>
                           <span className="text-sm" style={{ color: 'var(--muted-foreground)' }}>{graded ? formatDate(gradedAt) : '—'}</span>
-                          <span className="text-sm font-bold" style={{ color: graded ? (grade >= PASS_THRESHOLD ? '#16a34a' : '#dc2626') : 'var(--muted-foreground)' }}>
-                            {graded ? `${grade}/${maxScore}` : '⏳'}
+                          <span>
+                            {graded ? (
+                              <span className="inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-lg" style={{ backgroundColor: `${gradeColor}1a`, color: gradeColor }}>
+                                {grade}/{maxScore} {grade >= PASS_THRESHOLD ? '✓' : '✗'}
+                              </span>
+                            ) : (
+                              <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>⏳ Pendiente</span>
+                            )}
                           </span>
                         </div>
-                      ))}
+                        )
+                      })}
                     </div>
                   </div>
                 ))}

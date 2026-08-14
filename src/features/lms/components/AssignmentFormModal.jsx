@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import FormField, { errorInputStyle } from '@/shared/components/FormField'
+import AssignedToField from './AssignedToField'
 import { Upload, FileText, X } from '@/shared/components/Icons'
 import { MAX_GRADE, PASS_THRESHOLD } from '../context/LMSContext'
 
@@ -16,7 +17,7 @@ function toDatetimeLocal(value) {
 const MAX_FILE_MB = 3
 const MAX_FILE_BYTES = MAX_FILE_MB * 1024 * 1024
 
-export default function AssignmentFormModal({ assignment, topics = [], initialTopicId, onSave, onClose }) {
+export default function AssignmentFormModal({ assignment, topics = [], students = [], initialTopicId, onSave, onClose }) {
   const [form, setForm] = useState({
     title: assignment?.title ?? '',
     description: assignment?.description ?? '',
@@ -26,6 +27,7 @@ export default function AssignmentFormModal({ assignment, topics = [], initialTo
     fileName: assignment?.fileName ?? '',
     fileData: assignment?.fileData ?? '',
     fileSize: assignment?.fileSize ?? 0,
+    assignedStudentIds: assignment?.assignedStudentIds ?? [],
   })
   const [errors, setErrors] = useState({})
 
@@ -115,6 +117,8 @@ export default function AssignmentFormModal({ assignment, topics = [], initialTo
               </select>
             </FormField>
           )}
+          <AssignedToField students={students} value={form.assignedStudentIds}
+            onChange={ids => setForm(f => ({ ...f, assignedStudentIds: ids }))} />
           <div className="flex gap-3 pt-2">
             <button type="button" onClick={onClose}
               className="flex-1 py-2.5 rounded-lg text-sm font-bold transition-colors"

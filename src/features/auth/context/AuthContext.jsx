@@ -54,7 +54,10 @@ export function AuthProvider({ children }) {
   const [resetCodes, setResetCodes] = useState({})
 
   useEffect(() => {
-    const stored = localStorage.getItem('lidessa_user')
+    // La sesión vive en sessionStorage (no localStorage) a propósito: así se
+    // olvida sola al cerrar la pestaña/navegador en vez de quedar iniciada
+    // para siempre, mientras que la lista de cuentas (USERS_KEY) sí persiste.
+    const stored = sessionStorage.getItem('lidessa_user')
     if (stored) setUser(JSON.parse(stored))
     setInitialized(true)
   }, [])
@@ -69,7 +72,7 @@ export function AuthProvider({ children }) {
     if (!found) throw new Error('Credenciales incorrectas')
     const { password: _pw, ...safe } = found
     setUser(safe)
-    localStorage.setItem('lidessa_user', JSON.stringify(safe))
+    sessionStorage.setItem('lidessa_user', JSON.stringify(safe))
   }
 
   async function register({ name, email, password, phone }) {
@@ -85,7 +88,7 @@ export function AuthProvider({ children }) {
     setUsers(prev => [...prev, newUser])
     const { password: _pw, ...safe } = newUser
     setUser(safe)
-    localStorage.setItem('lidessa_user', JSON.stringify(safe))
+    sessionStorage.setItem('lidessa_user', JSON.stringify(safe))
     return safe
   }
 
@@ -147,14 +150,14 @@ export function AuthProvider({ children }) {
 
   function logout() {
     setUser(null)
-    localStorage.removeItem('lidessa_user')
+    sessionStorage.removeItem('lidessa_user')
   }
 
   function updateProfile(data) {
     if (!user) return
     const updated = { ...user, ...data }
     setUser(updated)
-    localStorage.setItem('lidessa_user', JSON.stringify(updated))
+    sessionStorage.setItem('lidessa_user', JSON.stringify(updated))
     setUsers(prev => prev.map(u => u.id === user.id ? { ...u, ...data } : u))
   }
 
@@ -163,7 +166,7 @@ export function AuthProvider({ children }) {
     if (user?.id === id) {
       const updated = { ...user, role }
       setUser(updated)
-      localStorage.setItem('lidessa_user', JSON.stringify(updated))
+      sessionStorage.setItem('lidessa_user', JSON.stringify(updated))
     }
   }
 

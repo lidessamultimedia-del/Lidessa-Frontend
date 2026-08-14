@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import FormField, { errorInputStyle } from '@/shared/components/FormField'
+import AssignedToField from './AssignedToField'
 import { Plus, Trash } from '@/shared/components/Icons'
 
 function newQuestion() {
@@ -13,7 +14,7 @@ function toDatetimeLocal(value) {
   return value.includes('T') ? value : `${value}T00:00`
 }
 
-export default function QuizFormModal({ quiz, topics = [], initialTopicId, onSave, onClose }) {
+export default function QuizFormModal({ quiz, topics = [], students = [], initialTopicId, onSave, onClose }) {
   const [form, setForm] = useState({
     title: quiz?.title ?? '',
     description: quiz?.description ?? '',
@@ -21,6 +22,7 @@ export default function QuizFormModal({ quiz, topics = [], initialTopicId, onSav
     publishAt: quiz?.publishAt ?? '',
     timeLimitMinutes: quiz?.timeLimitMinutes ?? '',
     topicId: quiz?.topicId ?? initialTopicId ?? topics[0]?.id ?? '',
+    assignedStudentIds: quiz?.assignedStudentIds ?? [],
     questions: quiz?.questions?.length
       ? quiz.questions.map(q => ({ type: 'multiple', ...q, options: q.options ? [...q.options] : ['', ''] }))
       : [newQuestion()],
@@ -79,6 +81,7 @@ export default function QuizFormModal({ quiz, topics = [], initialTopicId, onSav
     onSave({
       title: form.title, description: form.description, dueDate: form.dueDate, publishAt: form.publishAt,
       timeLimitMinutes: form.timeLimitMinutes ? Number(form.timeLimitMinutes) : null, topicId: form.topicId,
+      assignedStudentIds: form.assignedStudentIds,
       questions: form.questions.map(({ id, type, text, options, correctIndex }) => (
         type === 'open'
           ? { id, type, text: text.trim(), options: [], correctIndex: null }
@@ -131,6 +134,8 @@ export default function QuizFormModal({ quiz, topics = [], initialTopicId, onSav
               </select>
             </FormField>
           )}
+          <AssignedToField students={students} value={form.assignedStudentIds}
+            onChange={ids => setForm(f => ({ ...f, assignedStudentIds: ids }))} />
 
           <div className="space-y-3 pt-1">
             <div className="flex items-center justify-between">

@@ -55,7 +55,7 @@ export default function GradebookReport({ courseId }) {
       const wg = lms.courseWeightedGrade(s.id, courseId)
       return [
         s.name, s.email,
-        ...allItems.map(({ kind, item }) => gradeFor(s.id, kind, item.id) ?? ''),
+        ...allItems.map(({ kind, item }) => lms.isAssignedTo(item, s.id) ? (gradeFor(s.id, kind, item.id) ?? '') : 'N/A'),
         wg.average ?? '',
         wg.allGraded ? (wg.passed ? 'Aprobado' : 'Reprobado') : 'En curso',
       ]
@@ -155,13 +155,16 @@ export default function GradebookReport({ courseId }) {
                     </div>
                   </td>
                   {topicGroups.flatMap(g => g.items).map(({ kind, item }) => {
-                    const g = gradeFor(s.id, kind, item.id)
+                    const notAssigned = !lms.isAssignedTo(item, s.id)
+                    const g = notAssigned ? null : gradeFor(s.id, kind, item.id)
                     const failed = g != null && g < PASS_THRESHOLD
                     const record = failed ? retryRecordFor(s.id, kind, item.id) : null
                     const cellColor = g == null ? 'var(--muted-foreground)' : failed ? '#dc2626' : '#16a34a'
                     return (
                       <td key={item.id} className="px-3 py-2.5 text-sm whitespace-nowrap" style={{ borderLeft: '1px solid var(--border)' }}>
-                        {g != null ? (
+                        {notAssigned ? (
+                          <span style={{ color: 'var(--muted-foreground)', opacity: 0.5 }} title="No asignada a este estudiante">N/A</span>
+                        ) : g != null ? (
                           <span className="inline-flex items-center gap-1 font-bold px-2 py-1 rounded-lg" style={{ backgroundColor: `${cellColor}1a`, color: cellColor }}>
                             {g.toFixed(1)} {failed ? '✗' : '✓'}
                           </span>

@@ -4,7 +4,7 @@ import FormField, { errorInputStyle } from '@/shared/components/FormField'
 export default function CourseSettingsForm({ course, onSave }) {
   const [form, setForm] = useState({
     name: course.name, shortName: course.shortName ?? '', category: course.category,
-    visible: course.visible ?? true, startDate: course.startDate ?? '', endDate: course.endDate ?? '',
+    visible: course.visible ?? true,
     description: course.description ?? '', format: course.format ?? 'topics',
     completionTrackingEnabled: course.completionTrackingEnabled ?? true,
   })
@@ -36,16 +36,6 @@ export default function CourseSettingsForm({ course, onSave }) {
               <option value="hide">Ocultar</option>
             </select>
           </SettingField>
-          <div className="grid grid-cols-2 gap-3">
-            <SettingField label="Fecha de inicio">
-              <input type="date" value={form.startDate} onChange={e => setForm(f => ({ ...f, startDate: e.target.value }))}
-                className="w-full px-3 py-2.5 rounded-lg text-sm outline-none" style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }} />
-            </SettingField>
-            <SettingField label="Fecha de finalización">
-              <input type="date" value={form.endDate} onChange={e => setForm(f => ({ ...f, endDate: e.target.value }))}
-                className="w-full px-3 py-2.5 rounded-lg text-sm outline-none" style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }} />
-            </SettingField>
-          </div>
           <SettingField label="Número (ID) del curso">
             <input disabled value={course.id} className="w-full px-3 py-2.5 rounded-lg text-sm outline-none opacity-60"
               style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }} />

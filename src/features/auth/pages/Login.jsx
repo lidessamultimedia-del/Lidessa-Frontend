@@ -32,7 +32,7 @@ export default function Login() {
     setLoading(true)
     try {
       await login(form.email, form.password)
-      const stored = localStorage.getItem('lidessa_user')
+      const stored = sessionStorage.getItem('lidessa_user')
       const user = stored ? JSON.parse(stored) : null
       toast('success', `¡Bienvenido${user?.name ? ', ' + user.name.split(' ')[0] : ''}!`, 'Has iniciado sesión correctamente.')
       navigate(ROLE_HOME[user?.role] ?? '/')

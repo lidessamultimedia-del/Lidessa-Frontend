@@ -413,6 +413,9 @@ export function LMSProvider({ children }) {
   const listedCourses = courses.filter(c => c.listed)
   const publicCourses = courses.filter(c => c.listed && c.published)
   const isPublished = item => !!item?.publishAt && item.publishAt <= todayISO()
+  // Una tarea/examen sin `assignedStudentIds` (o vacío) es para todo el curso —
+  // si trae la lista, solo cuenta/aparece para esos estudiantes puntuales.
+  const isAssignedTo = (item, studentId) => !item?.assignedStudentIds?.length || item.assignedStudentIds.includes(studentId)
   const lessonsByCourse = courseId => lessons.filter(l => l.courseId === courseId).sort((a, b) => a.order - b.order)
   const assignmentsByCourse = courseId => assignments.filter(a => a.courseId === courseId)
   const submissionFor = (assignmentId, studentId) => submissions.find(sub => sub.assignmentId === assignmentId && sub.studentId === studentId) ?? null
@@ -426,8 +429,8 @@ export function LMSProvider({ children }) {
   // individual por estudiante y no todos avanzan igual aunque hayan
   // entregado lo mismo.
   function progressForStudentCourse(studentId, courseId) {
-    const courseAssignments = assignmentsByCourse(courseId).filter(isPublished)
-    const courseQuizzes = quizzesByCourse(courseId).filter(isPublished)
+    const courseAssignments = assignmentsByCourse(courseId).filter(isPublished).filter(a => isAssignedTo(a, studentId))
+    const courseQuizzes = quizzesByCourse(courseId).filter(isPublished).filter(q => isAssignedTo(q, studentId))
     const assignmentsDone = courseAssignments.filter(a => {
       const sub = submissionFor(a.id, studentId)
       return sub?.status === 'graded' && sub.grade >= PASS_THRESHOLD
@@ -465,8 +468,8 @@ export function LMSProvider({ children }) {
 
   function courseCompletion(studentId, courseId) {
     const courseLessons = lessonsByCourse(courseId).filter(isPublished)
-    const courseAssignments = assignmentsByCourse(courseId).filter(isPublished)
-    const courseQuizzes = quizzesByCourse(courseId).filter(isPublished)
+    const courseAssignments = assignmentsByCourse(courseId).filter(isPublished).filter(a => isAssignedTo(a, studentId))
+    const courseQuizzes = quizzesByCourse(courseId).filter(isPublished).filter(q => isAssignedTo(q, studentId))
     const lessonStatus = courseLessons.map(l => ({
       kind: 'lesson', item: l,
       done: lessonProgress.some(p => p.studentId === studentId && p.lessonId === l.id),
@@ -508,7 +511,7 @@ export function LMSProvider({ children }) {
   // usa la misma fórmula ponderada que ve el profesor (examen pesa el doble).
   function gradesForStudent(studentId) {
     return coursesByStudent(studentId).map(course => {
-      const assignmentRows = assignmentsByCourse(course.id).filter(isPublished).map(a => {
+      const assignmentRows = assignmentsByCourse(course.id).filter(isPublished).filter(a => isAssignedTo(a, studentId)).map(a => {
         const sub = submissionFor(a.id, studentId)
         return {
           kind: 'assignment', item: a, topicId: a.topicId,
@@ -516,7 +519,7 @@ export function LMSProvider({ children }) {
           maxScore: a.maxScore, gradedAt: sub?.gradedAt ?? null,
         }
       })
-      const quizRows = quizzesByCourse(course.id).filter(isPublished).map(q => {
+      const quizRows = quizzesByCourse(course.id).filter(isPublished).filter(q => isAssignedTo(q, studentId)).map(q => {
         const attempt = attemptFor(q.id, studentId)
         return {
           kind: 'quiz', item: q, topicId: q.topicId,
@@ -534,8 +537,8 @@ export function LMSProvider({ children }) {
   // `allGraded` solo es true cuando el curso tiene contenido y todo está calificado —
   // eso es lo que determina si ya se puede decidir si el estudiante aprobó o no.
   function courseWeightedGrade(studentId, courseId) {
-    const asg = assignmentsByCourse(courseId).filter(isPublished)
-    const qz = quizzesByCourse(courseId).filter(isPublished)
+    const asg = assignmentsByCourse(courseId).filter(isPublished).filter(a => isAssignedTo(a, studentId))
+    const qz = quizzesByCourse(courseId).filter(isPublished).filter(q => isAssignedTo(q, studentId))
     const asgGrades = asg.map(a => {
       const sub = submissionFor(a.id, studentId)
       return sub?.status === 'graded' ? sub.grade : null
@@ -610,7 +613,7 @@ export function LMSProvider({ children }) {
     addQuiz, updateQuiz, deleteQuiz, submitQuizAttempt,
     submitAssignment, gradeSubmission,
     directoryById, teacherName, studentName,
-    coursesByTeacher, coursesByStudent, listedCourses, publicCourses, isPublished, lessonsByCourse, assignmentsByCourse, submissionFor,
+    coursesByTeacher, coursesByStudent, listedCourses, publicCourses, isPublished, isAssignedTo, lessonsByCourse, assignmentsByCourse, submissionFor,
     quizzesByCourse, attemptFor,
     progressForStudentCourse, isLessonUnlocked,
     topicsByCourse, topicById, itemsByTopic, courseCompletion,

@@ -819,6 +819,7 @@ export default function TeacherDashboard({ theme, setTheme }) {
         <AssignmentFormModal
           assignment={assignmentModal.mode === 'edit' ? assignmentModal.assignment : null}
           topics={lms.topicsByCourse(selectedCourse.id)}
+          students={selectedCourse.studentIds.map(id => lms.directoryById(id)).filter(Boolean)}
           initialTopicId={assignmentModal.topicId}
           onSave={form => {
             if (assignmentModal.mode === 'edit') { lms.updateAssignment(assignmentModal.assignment.id, form); toast('success', 'Tarea actualizada', form.title) }
@@ -832,6 +833,7 @@ export default function TeacherDashboard({ theme, setTheme }) {
         <QuizFormModal
           quiz={quizModal.mode === 'edit' ? quizModal.quiz : null}
           topics={lms.topicsByCourse(selectedCourse.id)}
+          students={selectedCourse.studentIds.map(id => lms.directoryById(id)).filter(Boolean)}
           initialTopicId={quizModal.topicId}
           onSave={form => {
             if (quizModal.mode === 'edit') { lms.updateQuiz(quizModal.quiz.id, form); toast('success', 'Examen actualizado', form.title) }

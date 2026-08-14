@@ -112,6 +112,13 @@ function TopicBlock({
   )
 }
 
+function AssignedToLabel({ item, lms }) {
+  const ids = item.assignedStudentIds
+  if (!ids?.length) return <span>Todo el curso</span>
+  const names = ids.map(id => lms.directoryById(id)?.name).filter(Boolean)
+  return <span title={names.join(', ')}>{ids.length === 1 ? names[0] : `${ids.length} estudiantes`}</span>
+}
+
 function StatusBadge({ item, lms, color }) {
   if (!item.publishAt) {
     return <span className="text-xs font-semibold px-1.5 py-0.5 rounded" style={{ backgroundColor: 'var(--muted)', color: 'var(--muted-foreground)' }}>Borrador</span>
@@ -160,12 +167,12 @@ function KindSection({ kind, label, addLabel, emptyText, rows, lms, onAdd, onEdi
               )}
               {kind === 'assignment' && (
                 <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
-                  Vence: {new Date(item.dueDate).toLocaleDateString('es-CO')} · {lms.submissions.filter(s => s.assignmentId === item.id).length} entregas · /{item.maxScore} pts
+                  Vence: {new Date(item.dueDate).toLocaleDateString('es-CO')} · {lms.submissions.filter(s => s.assignmentId === item.id).length} entregas · /{item.maxScore} pts · <AssignedToLabel item={item} lms={lms} />
                 </p>
               )}
               {kind === 'quiz' && (
                 <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
-                  Vence: {new Date(item.dueDate).toLocaleDateString('es-CO')} · {item.questions?.length ?? 0} preguntas · {lms.quizAttempts.filter(a => a.quizId === item.id).length} presentados
+                  Vence: {new Date(item.dueDate).toLocaleDateString('es-CO')} · {item.questions?.length ?? 0} preguntas · {lms.quizAttempts.filter(a => a.quizId === item.id).length} presentados · <AssignedToLabel item={item} lms={lms} />
                 </p>
               )}
             </div>

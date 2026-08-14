@@ -6,9 +6,10 @@ import DashboardShell from '@/features/lms/components/DashboardShell'
 import ChatThread from '@/features/lms/components/ChatThread'
 import AnimatedCounter from '@/shared/components/AnimatedCounter'
 import AccountSettings from '@/shared/components/AccountSettings'
+import Avatar from '@/shared/components/Avatar'
 import { courseCardStyle } from '@/features/lms/utils/courseCard'
 import {
-  BarChart2, GraduationCap, ClipboardCheck, Check, Lock, BookOpen, FileText, Upload, Users, MoreVertical,
+  BarChart2, GraduationCap, ClipboardCheck, Check, Lock, BookOpen, FileText, Upload, Users,
   HelpCircle, Paperclip, Mail, Search, UserCog,
 } from '@/shared/components/Icons'
 
@@ -46,7 +47,7 @@ function daysUntil(dateStr) {
 }
 
 export default function StudentDashboard({ theme, setTheme }) {
-  const { user } = useAuth()
+  const { user, allUsers } = useAuth()
   const studentId = user.id
   const lms = useLMS()
   const { toast } = useToast()
@@ -56,25 +57,20 @@ export default function StudentDashboard({ theme, setTheme }) {
   const [courseTab, setCourseTab] = useState('general')
   const [submitAssignmentId, setSubmitAssignmentId] = useState(null)
   const [openQuizId, setOpenQuizId] = useState(null)
-  const [openCourseMenuId, setOpenCourseMenuId] = useState(null)
   const [messageModalOpen, setMessageModalOpen] = useState(false)
   const [messagesSearch, setMessagesSearch] = useState('')
   const [lessonViewModal, setLessonViewModal] = useState(null)
-
-  useEffect(() => {
-    function handleClick(e) {
-      if (!e.target.closest('[data-course-menu]')) setOpenCourseMenuId(null)
-    }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [])
+  const [gradesCourseId, setGradesCourseId] = useState(null)
 
   const myCourses = lms.coursesByStudent(studentId)
   const selectedCourse = selectedCourseId ? lms.courses.find(c => c.id === selectedCourseId) : null
+  const selectedCourseTeacher = selectedCourse ? lms.directoryById(selectedCourse.teacherId) : null
+  const selectedCourseTeacherAvatar = selectedCourse ? allUsers.find(u => u.id === selectedCourse.teacherId)?.avatar : null
+  const selectedCourseWg = selectedCourse ? lms.courseWeightedGrade(studentId, selectedCourse.id) : null
 
   const myAssignments = useMemo(() => {
     const courseIds = myCourses.map(c => c.id)
-    return lms.assignments.filter(a => courseIds.includes(a.courseId)).filter(lms.isPublished)
+    return lms.assignments.filter(a => courseIds.includes(a.courseId)).filter(lms.isPublished).filter(a => lms.isAssignedTo(a, studentId))
   }, [myCourses, lms.assignments])
 
   const pendingAssignments = myAssignments.filter(a => new Date(a.dueDate) >= new Date()).filter(a => {
@@ -84,7 +80,7 @@ export default function StudentDashboard({ theme, setTheme }) {
 
   const myQuizzes = useMemo(() => {
     const courseIds = myCourses.map(c => c.id)
-    return lms.quizzes.filter(q => courseIds.includes(q.courseId)).filter(lms.isPublished)
+    return lms.quizzes.filter(q => courseIds.includes(q.courseId)).filter(lms.isPublished).filter(q => lms.isAssignedTo(q, studentId))
   }, [myCourses, lms.quizzes])
 
   const pendingQuizzes = myQuizzes.filter(q => new Date(q.dueDate) >= new Date()).filter(q => {
@@ -223,9 +219,7 @@ export default function StudentDashboard({ theme, setTheme }) {
             ))}
           </div>
 
-          <h2 className="font-bold text-sm mb-3 flex items-center gap-2" style={{ color: 'var(--foreground)', fontFamily: 'var(--font-display)' }}>
-            <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#005187', display: 'inline-block' }} /> Mis cursos
-          </h2>
+          <h2 className="font-bold text-sm mb-3 pb-1.5" style={{ color: 'var(--foreground)', fontFamily: 'var(--font-display)', borderBottom: '2px solid var(--accent)', display: 'inline-block' }}>Mis cursos</h2>
           <div className="flex flex-wrap gap-3 mb-8">
             {myCourses.map(c => (
               <button key={c.id} onClick={() => openCourseDetail(c.id)}
@@ -238,9 +232,7 @@ export default function StudentDashboard({ theme, setTheme }) {
             {myCourses.length === 0 && <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>No tiene cursos por el momento.</p>}
           </div>
 
-          <h2 className="font-bold text-sm mb-3 flex items-center gap-2" style={{ color: 'var(--foreground)', fontFamily: 'var(--font-display)' }}>
-            <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#d97706', display: 'inline-block' }} /> Tareas próximas a vencer
-          </h2>
+          <h2 className="font-bold text-sm mb-3 pb-1.5" style={{ color: 'var(--foreground)', fontFamily: 'var(--font-display)', borderBottom: '2px solid var(--accent)', display: 'inline-block' }}>Tareas próximas a vencer</h2>
           <div className="rounded-2xl overflow-hidden mb-8" style={{ border: '1px solid var(--border)' }}>
             {pendingAssignments.length === 0 && (
               <p className="text-sm px-4 py-6 text-center" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)' }}>¡Estás al día! No tienes tareas pendientes.</p>
@@ -262,9 +254,7 @@ export default function StudentDashboard({ theme, setTheme }) {
             ))}
           </div>
 
-          <h2 className="font-bold text-sm mb-3 flex items-center gap-2" style={{ color: 'var(--foreground)', fontFamily: 'var(--font-display)' }}>
-            <span style={{ width: 8, height: 8, borderRadius: '50%', backgroundColor: '#7c3aed', display: 'inline-block' }} /> Exámenes próximos a vencer
-          </h2>
+          <h2 className="font-bold text-sm mb-3 pb-1.5" style={{ color: 'var(--foreground)', fontFamily: 'var(--font-display)', borderBottom: '2px solid var(--accent)', display: 'inline-block' }}>Exámenes próximos a vencer</h2>
           <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
             {pendingQuizzes.length === 0 && (
               <p className="text-sm px-4 py-6 text-center" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)' }}>¡Estás al día! No tienes exámenes pendientes.</p>
@@ -295,46 +285,45 @@ export default function StudentDashboard({ theme, setTheme }) {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {myCourses.map((c, i) => {
               const progress = lms.progressForStudentCourse(studentId, c.id)
-              const courseGrades = gradesByCourse.find(g => g.course.id === c.id)
-              const menuOpen = openCourseMenuId === c.id
+              const wg = lms.courseWeightedGrade(studentId, c.id)
+              const badgeColor = wg.allGraded ? (wg.passed ? '#16a34a' : '#dc2626') : '#005187'
               return (
-                <div key={c.id} className="rounded-xl overflow-hidden transition-shadow hover:shadow-md" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
-                  <button onClick={() => openCourseDetail(c.id)} className="block w-full text-left" style={{ height: 110, ...courseCardStyle(c, i) }} />
+                <div key={c.id} className="group rounded-xl overflow-hidden transition-all duration-200 hover:shadow-lg hover:-translate-y-1"
+                  style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
+                  <div className="relative overflow-hidden">
+                    <button onClick={() => openCourseDetail(c.id)} className="block w-full text-left transition-transform duration-300 group-hover:scale-105"
+                      style={{ height: 120, ...courseCardStyle(c, i) }} />
+                    {wg.average != null && (
+                      <span className="absolute top-2.5 right-2.5 text-xs font-black px-2 py-1 rounded-full shadow-sm"
+                        style={{ backgroundColor: 'white', color: badgeColor }}>
+                        {wg.average}/{MAX_GRADE} {wg.allGraded ? (wg.passed ? '✓' : '✗') : ''}
+                      </span>
+                    )}
+                  </div>
                   <div className="p-4">
                     <button onClick={() => openCourseDetail(c.id)}
                       className="font-bold text-sm mb-0.5 leading-snug text-left hover:underline"
-                      style={{ fontFamily: 'var(--font-display)', color: '#005187' }}>
+                      style={{ fontFamily: 'var(--font-display)', color: 'var(--accent)' }}>
                       {c.name}
                     </button>
-                    <p className="text-xs mb-4" style={{ color: 'var(--muted-foreground)' }}>{c.category}</p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium" style={{ color: 'var(--muted-foreground)' }}>{progress.percent}% completado</span>
-                      <div className="relative" data-course-menu>
-                        <button onClick={() => setOpenCourseMenuId(menuOpen ? null : c.id)}
-                          className="p-1 rounded-lg transition-colors" style={{ color: 'var(--muted-foreground)' }}
-                          onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--muted)'}
-                          onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
-                          aria-label="Más opciones">
-                          <MoreVertical size={16} />
-                        </button>
-                        {menuOpen && (
-                          <div className="absolute right-0 bottom-full mb-1.5 rounded-xl overflow-hidden z-20"
-                            style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', boxShadow: '0 12px 32px rgba(0,0,0,0.15)', minWidth: 180, animation: 'fadeUp 0.15s ease' }}>
-                            <button onClick={() => { openCourseDetail(c.id); setOpenCourseMenuId(null) }}
-                              className="w-full text-left text-sm px-3.5 py-2.5 transition-colors" style={{ color: 'var(--foreground)' }}
-                              onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--muted)'}
-                              onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
-                              Ver curso
-                            </button>
-                            <button onClick={() => { setSection('grades'); setOpenCourseMenuId(null) }}
-                              className="w-full text-left text-sm px-3.5 py-2.5 transition-colors" style={{ color: 'var(--foreground)' }}
-                              onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--muted)'}
-                              onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
-                              {courseGrades?.average != null ? `Calificación: ${courseGrades.average}/${MAX_GRADE}` : 'Ver calificaciones'}
-                            </button>
-                          </div>
-                        )}
+                    <p className="text-xs mb-3" style={{ color: 'var(--muted-foreground)' }}>{c.category}</p>
+                    <div className="mb-4">
+                      <div className="flex justify-between text-xs mb-1" style={{ color: 'var(--muted-foreground)' }}>
+                        <span>Progreso</span><span className="font-semibold">{progress.percent}%</span>
                       </div>
+                      <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--muted)' }}>
+                        <div className="h-full rounded-full transition-all duration-500" style={{ width: `${progress.percent}%`, backgroundColor: c.color ?? '#005187' }} />
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <button onClick={() => openCourseDetail(c.id)}
+                        className="flex-1 py-1.5 rounded-lg text-xs font-bold text-white transition-opacity hover:opacity-90" style={{ backgroundColor: '#005187' }}>
+                        Ver curso
+                      </button>
+                      <button onClick={() => setSection('grades')}
+                        className="flex-1 py-1.5 rounded-lg text-xs font-bold transition-colors" style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>
+                        Calificaciones
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -352,24 +341,31 @@ export default function StudentDashboard({ theme, setTheme }) {
       {/* ── DETALLE DE CURSO ── */}
       {section === 'courseDetail' && selectedCourse && (
         <div style={{ animation: 'fadeUp 0.4s ease' }}>
-          <button onClick={() => setSection('courses')} className="text-xs font-semibold mb-3" style={{ color: '#005187' }}>← Volver a mis cursos</button>
+          <button onClick={() => setSection('courses')} className="text-xs font-semibold mb-3" style={{ color: 'var(--accent)' }}>← Volver a mis cursos</button>
 
           <div className="rounded-xl overflow-hidden mb-5" style={{ border: '1px solid var(--border)' }}>
-            <div style={{ height: 90, backgroundColor: selectedCourse.color ?? '#005187', display: 'flex', alignItems: 'flex-end', padding: 16 }}>
-              <h2 className="text-xl font-black text-white" style={{ fontFamily: 'var(--font-display)' }}>{selectedCourse.name}</h2>
+            <div className="relative" style={{ height: 130, ...courseCardStyle(selectedCourse, 0) }}>
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.6), transparent 65%)' }} />
+              <h2 className="text-2xl font-black text-white relative" style={{ fontFamily: 'var(--font-display)', position: 'absolute', left: 20, right: 20, bottom: 16 }}>
+                {selectedCourse.name}
+              </h2>
             </div>
             <div className="p-4" style={{ backgroundColor: 'var(--card)' }}>
-              <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
-                <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>
-                  Profesor: {lms.teacherName(selectedCourse.teacherId)} | Categoría: {selectedCourse.category}
-                </p>
+              <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <Avatar user={{ ...selectedCourseTeacher, avatar: selectedCourseTeacherAvatar }} size={36} />
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold truncate" style={{ color: 'var(--foreground)' }}>{lms.teacherName(selectedCourse.teacherId)}</p>
+                    <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{selectedCourse.category}</p>
+                  </div>
+                </div>
                 {selectedCourse.teacherId && (
                   <button onClick={() => {
                     setMessageModalOpen(true)
                     lms.markThreadRead(selectedCourse.id, studentId, selectedCourse.teacherId)
                   }}
                     className="text-xs px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 shrink-0 relative"
-                    style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: '#005187', border: '1px solid rgba(0,81,135,0.2)' }}>
+                    style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: 'var(--accent)', border: '1px solid rgba(0,81,135,0.2)' }}>
                     <Mail size={13} /> Mensaje al profesor
                     {lms.threadMessages(selectedCourse.id, studentId, selectedCourse.teacherId).some(m => m.fromId === selectedCourse.teacherId && !m.read) && (
                       <span className="w-2 h-2 rounded-full" style={{ backgroundColor: '#dc2626', position: 'absolute', top: -2, right: -2 }} />
@@ -380,16 +376,19 @@ export default function StudentDashboard({ theme, setTheme }) {
               <div className="flex items-center gap-6">
                 <div className="flex-1">
                   <div className="flex justify-between text-xs mb-1" style={{ color: 'var(--muted-foreground)' }}>
-                    <span>Progreso</span><span>{lms.progressForStudentCourse(studentId, selectedCourse.id).percent}%</span>
+                    <span>Progreso</span><span className="font-semibold">{lms.progressForStudentCourse(studentId, selectedCourse.id).percent}%</span>
                   </div>
                   <div className="h-2 rounded-full overflow-hidden" style={{ backgroundColor: 'var(--muted)' }}>
                     <div style={{ width: `${lms.progressForStudentCourse(studentId, selectedCourse.id).percent}%`, height: '100%', backgroundColor: selectedCourse.color ?? '#005187' }} />
                   </div>
                 </div>
-                <p className="text-sm font-bold shrink-0" style={{ color: 'var(--foreground)' }}>
-                  Calificación: {gradesByCourse.find(g => g.course.id === selectedCourse.id)?.average != null
-                    ? `${gradesByCourse.find(g => g.course.id === selectedCourse.id).average}/${MAX_GRADE}` : 'Sin calificar'}
-                </p>
+                <span className="text-xs font-black px-3 py-1.5 rounded-full shrink-0"
+                  style={{
+                    backgroundColor: selectedCourseWg.allGraded ? (selectedCourseWg.passed ? 'rgba(22,163,74,0.12)' : 'rgba(220,38,38,0.12)') : 'rgba(0,81,135,0.1)',
+                    color: selectedCourseWg.allGraded ? (selectedCourseWg.passed ? '#16a34a' : '#dc2626') : 'var(--accent)',
+                  }}>
+                  {selectedCourseWg.average != null ? `${selectedCourseWg.average}/${MAX_GRADE}` : 'Sin calificar'} {selectedCourseWg.allGraded ? (selectedCourseWg.passed ? '✓' : '✗') : ''}
+                </span>
               </div>
             </div>
           </div>
@@ -402,7 +401,7 @@ export default function StudentDashboard({ theme, setTheme }) {
             ].map(t => (
               <button key={t.id} onClick={() => setCourseTab(t.id)}
                 className="px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-1.5"
-                style={{ backgroundColor: courseTab === t.id ? 'var(--card)' : 'transparent', color: courseTab === t.id ? '#005187' : 'var(--muted-foreground)' }}>
+                style={{ backgroundColor: courseTab === t.id ? 'var(--card)' : 'transparent', color: courseTab === t.id ? 'var(--accent)' : 'var(--muted-foreground)' }}>
                 <t.icon size={14} /> {t.label}
               </button>
             ))}
@@ -414,28 +413,31 @@ export default function StudentDashboard({ theme, setTheme }) {
               <p className="text-sm mb-5" style={{ color: 'var(--muted-foreground)' }}>{selectedCourse.description}</p>
 
               <h3 className="text-sm font-bold mb-2" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Información del curso</h3>
-              <div className="rounded-xl overflow-hidden mb-5" style={{ border: '1px solid var(--border)' }}>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-5">
                 {[
-                  ['Fecha de inicio', formatDate(selectedCourse.startDate)],
-                  ['Fecha de conclusión', formatDate(selectedCourse.endDate)],
-                  ['Estudiantes inscritos', selectedCourse.studentIds.length],
-                  ['Calificación promedio del curso', courseAverageGrade(selectedCourse.id) != null ? `${courseAverageGrade(selectedCourse.id)}/${MAX_GRADE}` : 'Sin datos aún'],
-                  ['Lecciones', lms.lessonsByCourse(selectedCourse.id).filter(lms.isPublished).length],
-                ].map(([label, value], i) => (
-                  <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 16px', borderTop: i > 0 ? '1px solid var(--border)' : 'none', backgroundColor: 'var(--card)' }}>
-                    <span className="text-sm" style={{ color: 'var(--muted-foreground)' }}>{label}</span>
-                    <span className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{value}</span>
+                  { icon: Users, label: 'Estudiantes inscritos', value: selectedCourse.studentIds.length, color: '#16a34a' },
+                  { icon: BarChart2, label: 'Calificación promedio', value: courseAverageGrade(selectedCourse.id) != null ? `${courseAverageGrade(selectedCourse.id)}/${MAX_GRADE}` : 'Sin datos aún', color: '#d97706' },
+                  { icon: BookOpen, label: 'Lecciones', value: lms.lessonsByCourse(selectedCourse.id).filter(lms.isPublished).length, color: '#0891b2' },
+                ].map(s => (
+                  <div key={s.label} className="rounded-xl p-3.5 flex items-center gap-3" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
+                    <span className="flex items-center justify-center rounded-lg shrink-0" style={{ width: 36, height: 36, backgroundColor: `${s.color}1a`, color: s.color }}>
+                      <s.icon size={17} />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-bold truncate" style={{ color: 'var(--foreground)' }}>{s.value}</p>
+                      <p className="text-xs truncate" style={{ color: 'var(--muted-foreground)' }}>{s.label}</p>
+                    </div>
                   </div>
                 ))}
               </div>
 
               {(() => {
                 const notExpired = item => new Date(item.dueDate) >= new Date()
-                const pendingCourseAssignments = lms.assignmentsByCourse(selectedCourse.id).filter(lms.isPublished).filter(notExpired).filter(a => {
+                const pendingCourseAssignments = lms.assignmentsByCourse(selectedCourse.id).filter(lms.isPublished).filter(a => lms.isAssignedTo(a, studentId)).filter(notExpired).filter(a => {
                   const sub = lms.submissionFor(a.id, studentId)
                   return !sub || sub.status === 'draft' || (sub.status === 'graded' && sub.grade < PASS_THRESHOLD && sub.retryAllowed)
                 })
-                const pendingCourseQuizzes = lms.quizzesByCourse(selectedCourse.id).filter(lms.isPublished).filter(notExpired).filter(q => {
+                const pendingCourseQuizzes = lms.quizzesByCourse(selectedCourse.id).filter(lms.isPublished).filter(q => lms.isAssignedTo(q, studentId)).filter(notExpired).filter(q => {
                   const attempt = lms.attemptFor(q.id, studentId)
                   if (!attempt) return true
                   if (attempt.reviewed === false) return false
@@ -482,6 +484,7 @@ export default function StudentDashboard({ theme, setTheme }) {
               {lms.topicsByCourse(selectedCourse.id).map((topic, ti) => {
                 const publishedItems = lms.itemsByTopic(topic.id)
                   .filter(({ item }) => lms.isPublished(item))
+                  .filter(({ kind, item }) => kind === 'lesson' || lms.isAssignedTo(item, studentId))
                   .filter(({ kind, item }) => isStillVisible(kind, item, lms, studentId))
                 return (
                 <div key={topic.id} className="mb-5">
@@ -514,17 +517,30 @@ export default function StudentDashboard({ theme, setTheme }) {
           )}
 
           {courseTab === 'participants' && (
-            <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-              <div style={{ padding: '12px 16px', backgroundColor: 'var(--card)', borderBottom: '1px solid var(--border)' }}>
-                <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{lms.teacherName(selectedCourse.teacherId)}</p>
-                <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>Profesor</p>
-              </div>
-              {selectedCourse.studentIds.map(id => lms.directoryById(id)).filter(Boolean).map((s, i, arr) => (
-                <div key={s.id} style={{ padding: '12px 16px', backgroundColor: 'var(--card)', borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none' }}>
-                  <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{s.name}{s.id === studentId ? ' (Tú)' : ''}</p>
-                  <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>Estudiante</p>
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--muted-foreground)' }}>Profesor</p>
+              <div className="rounded-xl p-3.5 flex items-center gap-3 mb-5" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', borderLeft: '3px solid var(--accent)' }}>
+                <Avatar user={{ ...selectedCourseTeacher, avatar: selectedCourseTeacherAvatar }} size={40} />
+                <div>
+                  <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{lms.teacherName(selectedCourse.teacherId)}</p>
+                  <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>Profesor del curso</p>
                 </div>
-              ))}
+              </div>
+
+              <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--muted-foreground)' }}>
+                Estudiantes ({selectedCourse.studentIds.length})
+              </p>
+              <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+                {selectedCourse.studentIds.map(id => lms.directoryById(id)).filter(Boolean).map((s, i, arr) => (
+                  <div key={s.id} className="flex items-center gap-3" style={{ padding: '10px 16px', backgroundColor: 'var(--card)', borderTop: i > 0 ? '1px solid var(--border)' : 'none' }}>
+                    <Avatar user={{ ...s, avatar: allUsers.find(u => u.id === s.id)?.avatar }} size={32} />
+                    <div>
+                      <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{s.name}{s.id === studentId ? ' (Tú)' : ''}</p>
+                      <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>Estudiante</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
@@ -578,7 +594,24 @@ export default function StudentDashboard({ theme, setTheme }) {
               No tiene calificaciones por el momento.
             </p>
           )}
-          {gradesByCourse.map(({ course, rows, average, allGraded, passed }) => {
+          {gradesByCourse.length > 0 && (() => {
+            const activeCourseId = gradesCourseId ?? gradesByCourse[0].course.id
+            return (
+              <div className="flex flex-wrap gap-1.5 mb-5 no-print">
+                {gradesByCourse.map(({ course }) => (
+                  <button key={course.id} onClick={() => setGradesCourseId(course.id)}
+                    className="text-xs px-3 py-1.5 rounded-full font-bold transition-colors"
+                    style={{
+                      backgroundColor: activeCourseId === course.id ? 'var(--accent)' : 'var(--muted)',
+                      color: activeCourseId === course.id ? 'white' : 'var(--muted-foreground)',
+                    }}>
+                    {course.name}
+                  </button>
+                ))}
+              </div>
+            )
+          })()}
+          {gradesByCourse.filter(({ course }) => course.id === (gradesCourseId ?? gradesByCourse[0]?.course.id)).map(({ course, rows, average, allGraded, passed }) => {
             const byTopic = {}
             rows.forEach(r => {
               const key = r.topicId ?? 'none'
@@ -592,7 +625,7 @@ export default function StudentDashboard({ theme, setTheme }) {
                 <div className="flex items-center gap-2 mb-3 flex-wrap">
                   <h3 className="font-bold text-sm" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>{course.name}</h3>
                   {average != null && (
-                    <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: '#005187' }}>
+                    <span className="text-xs font-bold px-2 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: 'var(--accent)' }}>
                       Promedio ponderado: {average}/{MAX_GRADE}
                     </span>
                   )}
@@ -775,7 +808,7 @@ function LessonViewModal({ lesson, studentId, course, lms, onToast, onClose }) {
             ) : null}
             <a href={lesson.fileData} download={lesson.fileName}
               className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-colors max-w-full"
-              style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: '#005187', border: '1px solid rgba(0,81,135,0.2)' }}>
+              style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: 'var(--accent)', border: '1px solid rgba(0,81,135,0.2)' }}>
               <Paperclip size={14} className="shrink-0" />
               <span className="wrap-break-word flex-1">{lesson.fileName}</span>
               {lesson.fileSize > 0 && (
@@ -821,7 +854,7 @@ function LessonRow({ lms, studentId, course, lesson, onOpen }) {
         {!unlocked && <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>Bloqueada — completa la lección anterior</p>}
         {unlocked && lesson.fileName && (
           <a href={lesson.fileData} download={lesson.fileName}
-            className="text-xs flex items-start gap-1 mt-0.5 max-w-full" style={{ color: '#005187' }}>
+            className="text-xs flex items-start gap-1 mt-0.5 max-w-full" style={{ color: 'var(--accent)' }}>
             <Paperclip size={11} className="shrink-0 mt-0.5" /> <span className="wrap-break-word">{lesson.fileName}</span>
           </a>
         )}
@@ -865,7 +898,7 @@ function AssignmentRow({ lms, studentId, assignment, onSubmit }) {
         </div>
       )}
       {sub?.status === 'submitted' && (
-        <span className="text-xs px-3 py-1.5 rounded-full font-bold shrink-0" style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: '#005187' }}>Enviada</span>
+        <span className="text-xs px-3 py-1.5 rounded-full font-bold shrink-0" style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: 'var(--accent)' }}>Enviada</span>
       )}
       {!passed && sub?.status !== 'submitted' && !expired && (!sub || sub.status === 'draft' || sub.retryAllowed) && (
         <button onClick={() => onSubmit(assignment.id)} className="text-xs px-3 py-1.5 rounded-lg font-bold text-white shrink-0" style={{ backgroundColor: '#005187' }}>
@@ -969,7 +1002,7 @@ function QuizAttemptForm({ quiz, course, existingAttempt, studentId, onSubmit, o
   if (locked) {
     return (
       <div style={{ animation: 'fadeUp 0.4s ease', maxWidth: 640 }}>
-        <button onClick={onCancel} className="text-xs font-semibold mb-3" style={{ color: '#005187' }}>← Volver</button>
+        <button onClick={onCancel} className="text-xs font-semibold mb-3" style={{ color: 'var(--accent)' }}>← Volver</button>
         <h2 className="text-xl font-black mb-1" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>{quiz.title}</h2>
         <p className="text-sm mb-4" style={{ color: 'var(--muted-foreground)' }}>{course?.name}</p>
         <div className="rounded-xl p-5" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
@@ -1007,7 +1040,7 @@ function QuizAttemptForm({ quiz, course, existingAttempt, studentId, onSubmit, o
 
   return (
     <div style={{ animation: 'fadeUp 0.4s ease', maxWidth: 640 }}>
-      <button onClick={onCancel} className="text-xs font-semibold mb-3" style={{ color: '#005187' }}>← Volver</button>
+      <button onClick={onCancel} className="text-xs font-semibold mb-3" style={{ color: 'var(--accent)' }}>← Volver</button>
       <div className="flex items-start justify-between gap-3 mb-1">
         <h2 className="text-xl font-black" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>{quiz.title}</h2>
         {remainingMs !== null && (
@@ -1108,7 +1141,7 @@ function SubmitAssignmentForm({ assignment, course, existing, onSubmit, onCancel
 
   return (
     <div style={{ animation: 'fadeUp 0.4s ease', maxWidth: 640 }}>
-      <button onClick={onCancel} className="text-xs font-semibold mb-3" style={{ color: '#005187' }}>← Volver</button>
+      <button onClick={onCancel} className="text-xs font-semibold mb-3" style={{ color: 'var(--accent)' }}>← Volver</button>
       <h2 className="text-xl font-black mb-1" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Enviar: {assignment.title}</h2>
       <p className="text-sm mb-4" style={{ color: 'var(--muted-foreground)' }}>{course?.name}</p>
 
@@ -1164,7 +1197,7 @@ function SubmitAssignmentForm({ assignment, course, existing, onSubmit, onCancel
         </p>
         <div className="flex gap-3">
           <button onClick={onCancel} className="flex-1 py-2.5 rounded-lg text-sm font-bold" style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>Cancelar</button>
-          <button onClick={() => handle(true)} className="flex-1 py-2.5 rounded-lg text-sm font-bold" style={{ border: '1px solid var(--border)', color: '#005187' }}>Guardar borrador</button>
+          <button onClick={() => handle(true)} className="flex-1 py-2.5 rounded-lg text-sm font-bold" style={{ border: '1px solid var(--border)', color: 'var(--accent)' }}>Guardar borrador</button>
           <button onClick={() => handle(false)} disabled={hasFile && !confirmed}
             className="flex-1 py-2.5 rounded-lg text-sm font-bold text-white disabled:opacity-50" style={{ backgroundColor: '#005187' }}>
             Entregar Tarea

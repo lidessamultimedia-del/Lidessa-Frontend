@@ -5,7 +5,6 @@ import BlogModal from '@/features/blog/components/BlogModal'
 import { useServicesData } from '@/features/services/context/ServicesDataContext'
 import ServiceModal from '@/features/services/components/ServiceModal'
 import ClientMarquee from '@/shared/components/ClientMarquee'
-import LogoRevealSection from '@/shared/components/LogoRevealSection'
 import { useScrollReveal } from '@/shared/hooks/useScrollReveal'
 import { clients } from '@/shared/data/clients'
 import { MapPin, Phone, Mail, Check } from '@/shared/components/Icons'
@@ -200,7 +199,6 @@ export default function Home() {
 
       {/* ── Clients marquee ── */}
       <ClientMarquee />
-      <LogoRevealSection />
 
       {/* ── Attributes + counters ── */}
       <section className="pt-6 pb-20 max-w-7xl mx-auto px-4 sm:px-6">

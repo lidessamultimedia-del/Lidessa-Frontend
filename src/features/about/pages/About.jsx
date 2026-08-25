@@ -462,11 +462,6 @@ export default function About() {
       {/* Info tabs */}
       <section className="py-16 max-w-6xl mx-auto px-4 sm:px-6">
         <div className="text-center mb-10 reveal">
-          <img
-            src={isDark ? '/assets/logo-outline-dark.png' : '/assets/logo-light.png'}
-            alt="Lidessa"
-            className="w-16 h-16 object-contain mx-auto mb-4"
-          />
           <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#4d82bc' }}>Conózcanos a fondo</p>
           <h2 className="text-3xl font-black" style={{ fontFamily: 'var(--font-display)' }}>
             Todo lo que necesita <span className="gradient-text">saber de nosotros</span>

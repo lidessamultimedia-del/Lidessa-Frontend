@@ -78,7 +78,7 @@ function relativeTime(dateStr) {
 }
 
 export default function AdminDashboard({ theme, setTheme }) {
-  const { user, logout, allUsers, updateUserRole, createUser, updateUserCredentials } = useAuth()
+  const { user, logout, allUsers, updateUserRole, createUser, updateUserCredentials, deleteUser } = useAuth()
   const { toast } = useToast()
   const navigate = useNavigate()
   const { posts: blogPosts, addPost, updatePost, deletePost } = useBlog()
@@ -328,6 +328,7 @@ export default function AdminDashboard({ theme, setTheme }) {
       lms.deleteQuiz(deleteConfirm.id)
       toast('success', 'Eliminado', deleteConfirm.label)
     } else if (deleteConfirm.type === 'directory') {
+      if (allUsers.some(u => u.id === deleteConfirm.id)) deleteUser(deleteConfirm.id)
       lms.deleteDirectoryUser(deleteConfirm.id)
       toast('success', 'Usuario eliminado', deleteConfirm.label)
     } else if (deleteConfirm.type === 'service') {
@@ -1873,6 +1874,7 @@ function AdminLmsCourseDetail({
 }) {
   const enrolledStudents = course.studentIds.map(id => lms.directoryById(id)).filter(Boolean)
   const availableStudents = lms.directory.filter(u => u.role === 'estudiante' && u.active && !course.studentIds.includes(u.id))
+  const isFull = !!course.capacity && course.studentIds.length >= course.capacity
 
   return (
     <div style={{ animation: 'fadeUp 0.4s ease' }}>
@@ -1975,12 +1977,18 @@ function AdminLmsCourseDetail({
                   <option value="">Seleccionar estudiante para inscribir…</option>
                   {availableStudents.map(s => <option key={s.id} value={s.id}>{s.name} ({s.email})</option>)}
                 </select>
-                <button disabled={!addStudentId}
-                  onClick={() => { lms.enrollStudent(course.id, addStudentId); toast('success', 'Estudiante inscrito', lms.studentName(addStudentId)); setAddStudentId('') }}
+                <button disabled={!addStudentId || isFull}
+                  onClick={() => {
+                    const result = lms.enrollStudent(course.id, addStudentId)
+                    if (result === 'full') toast('error', 'Cupo lleno', 'El curso ya alcanzó su capacidad máxima.')
+                    else toast('success', 'Estudiante inscrito', lms.studentName(addStudentId))
+                    setAddStudentId('')
+                  }}
                   className="px-4 py-2 rounded-lg text-sm font-bold text-white disabled:opacity-50" style={{ backgroundColor: '#005187' }}>
                   Inscribir
                 </button>
               </div>
+              {isFull && <p className="text-xs mb-4" style={{ color: '#dc2626' }}>Este curso alcanzó su capacidad máxima ({course.capacity}).</p>}
               <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
                 {enrolledStudents.map((s, i, arr) => (
                   <div key={s.id} style={{ display: 'flex', gap: 12, padding: '12px 16px', alignItems: 'center', borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none', backgroundColor: 'var(--card)' }}>

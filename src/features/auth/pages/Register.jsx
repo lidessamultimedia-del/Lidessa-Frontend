@@ -13,7 +13,9 @@ export default function Register() {
   const courses = lms.publicCourses
   const preselected = courses.find(c => c.name === searchParams.get('curso'))?.name ?? ''
 
-  const [form, setForm] = useState({ name: '', email: '', phone: '', courseInterest: preselected, password: '', confirmPassword: '' })
+  const [form, setForm] = useState({ name: '', email: '', phone: '', courseInterest: preselected, password: '', confirmPassword: '', enrollPassword: '' })
+  const selectedCourse = courses.find(c => c.name === form.courseInterest) ?? null
+  const needsCoursePassword = !!selectedCourse?.selfEnrollment && !!selectedCourse?.requiresPassword
   const [fieldErrors, setFieldErrors] = useState({})
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -34,6 +36,9 @@ export default function Register() {
     if (!form.password) errors.password = 'La contraseña es obligatoria.'
     else if (form.password.length < 6) errors.password = 'Debe tener al menos 6 caracteres.'
     if (form.confirmPassword !== form.password) errors.confirmPassword = 'Las contraseñas no coinciden.'
+    if (needsCoursePassword && form.enrollPassword !== selectedCourse.password) {
+      errors.enrollPassword = 'La contraseña del curso es incorrecta.'
+    }
     return errors
   }
 
@@ -54,7 +59,19 @@ export default function Register() {
         role: 'estudiante',
         courseInterest: form.courseInterest || undefined,
       })
-      toast('success', `¡Bienvenido, ${newUser.name.split(' ')[0]}!`, 'Tu cuenta fue creada. Pronto un asesor te matriculará en el curso.')
+      const greeting = `¡Bienvenido, ${newUser.name.split(' ')[0]}!`
+      if (selectedCourse?.selfEnrollment) {
+        const result = lms.enrollStudent(selectedCourse.id, newUser.id)
+        if (result === 'ok') {
+          toast('success', greeting, `Tu cuenta fue creada y quedaste inscrito en "${selectedCourse.name}".`)
+        } else if (result === 'full') {
+          toast('success', greeting, `Tu cuenta fue creada. "${selectedCourse.name}" ya no tiene cupo disponible — un asesor te contactará con otras opciones.`)
+        } else {
+          toast('success', greeting, 'Tu cuenta fue creada. Pronto un asesor te matriculará en el curso.')
+        }
+      } else {
+        toast('success', greeting, 'Tu cuenta fue creada. Pronto un asesor te matriculará en el curso.')
+      }
       navigate(ROLE_HOME[newUser.role] ?? '/')
     } catch (err) {
       setError(err.message || 'No se pudo crear la cuenta. Intente de nuevo.')
@@ -134,6 +151,16 @@ export default function Register() {
                 </select>
               </FormField>
             </div>
+
+            {selectedCourse?.selfEnrollment && (
+              <p className="text-xs px-3 py-2 rounded-lg" style={{ backgroundColor: 'rgba(0,81,135,0.08)', color: '#005187' }}>
+                Este curso tiene auto-inscripción: quedarás inscrito de inmediato al crear tu cuenta.
+              </p>
+            )}
+            {needsCoursePassword && (
+              <Field label="Contraseña del curso" type="password" placeholder="Provista por Lidessa"
+                value={form.enrollPassword} error={fieldErrors.enrollPassword} onChange={v => set('enrollPassword', v)} />
+            )}
 
             <div className="grid grid-cols-2 gap-3">
               <Field label="Contraseña" type="password" placeholder="Mínimo 6 caracteres"

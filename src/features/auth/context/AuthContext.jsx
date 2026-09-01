@@ -170,6 +170,14 @@ export function AuthProvider({ children }) {
     }
   }
 
+  // Elimina la cuenta de acceso (login) — el admin la usa al borrar un usuario
+  // del directorio del LMS que tenía cuenta vinculada, para que no pueda
+  // seguir iniciando sesión ni reaparezca por la reconciliación automática.
+  function deleteUser(id) {
+    setUsers(prev => prev.filter(u => u.id !== id))
+    if (user?.id === id) logout()
+  }
+
   // Lista de estudiantes registrados (sin contraseña) para que LMSContext pueda
   // reconciliar su directorio — ver comentario en LMSContext sobre por qué
   // esto no puede depender únicamente de la llamada puntual a addDirectoryUser.
@@ -178,7 +186,7 @@ export function AuthProvider({ children }) {
   const allUsers = users.map(({ password: _pw, ...safe }) => safe)
 
   return (
-    <AuthContext.Provider value={{ user, initialized, login, register, logout, updateProfile, changePassword, requestPasswordReset, verifyResetCode, resetPassword, registeredStudents, allUsers, updateUserRole, createUser, updateUserCredentials }}>
+    <AuthContext.Provider value={{ user, initialized, login, register, logout, updateProfile, changePassword, requestPasswordReset, verifyResetCode, resetPassword, registeredStudents, allUsers, updateUserRole, createUser, updateUserCredentials, deleteUser }}>
       {children}
     </AuthContext.Provider>
   )

@@ -54,7 +54,12 @@ export function PQRSFProvider({ children }) {
   // PQRSF — si existe, el ticket queda ligado a esa cuenta real aunque el
   // formulario público no pida correo, porque ya sabemos quién es.
   function addTicket(form, user) {
-    const id = `PQRSF-2025-${String(Math.floor(Math.random() * 9000) + 1000)}`
+    const year = new Date().getFullYear()
+    const existingIds = new Set(tickets.map(t => t.id))
+    let id
+    do {
+      id = `PQRSF-${year}-${String(Math.floor(Math.random() * 9000) + 1000)}`
+    } while (existingIds.has(id))
     const newTicket = {
       id,
       type: form.type,

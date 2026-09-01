@@ -1,8 +1,11 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Check } from '@/shared/components/Icons'
+import { useLMS } from '@/features/lms/context/LMSContext'
 
 export default function CourseModal({ course, onClose }) {
+  const { lessonsByCourse, isPublished } = useLMS()
+  const [showGuestPreview, setShowGuestPreview] = useState(false)
   useEffect(() => {
     document.body.style.overflow = 'hidden'
     const handler = (e) => { if (e.key === 'Escape') onClose() }
@@ -107,6 +110,31 @@ export default function CourseModal({ course, onClose }) {
                   </li>
                 ))}
               </ul>
+            </div>
+          )}
+
+          {course.guestAccess && (
+            <div className="mb-6">
+              <button type="button" onClick={() => setShowGuestPreview(s => !s)}
+                className="w-full text-center py-2.5 rounded-lg text-sm font-semibold transition-colors"
+                style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>
+                {showGuestPreview ? 'Ocultar contenido de muestra' : 'Ver contenido como invitado (sin crear cuenta)'}
+              </button>
+              {showGuestPreview && (() => {
+                const previewLessons = lessonsByCourse(course.id).filter(isPublished)
+                return previewLessons.length > 0 ? (
+                  <ul className="space-y-2 mt-3">
+                    {previewLessons.map(l => (
+                      <li key={l.id} className="rounded-xl p-3" style={{ backgroundColor: 'var(--muted)' }}>
+                        <p className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>{l.title}</p>
+                        <p className="text-sm mt-1 leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>{l.content}</p>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm mt-3 text-center" style={{ color: 'var(--muted-foreground)' }}>Todavía no hay lecciones publicadas para mostrar.</p>
+                )
+              })()}
             </div>
           )}
 

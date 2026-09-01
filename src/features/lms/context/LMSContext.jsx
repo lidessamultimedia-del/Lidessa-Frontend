@@ -123,7 +123,19 @@ export function LMSProvider({ children }) {
     setState(s => ({ ...s, directory: s.directory.map(u => u.id === id ? { ...u, active: !u.active } : u) }))
   }
   function deleteDirectoryUser(id) {
-    setState(s => ({ ...s, directory: s.directory.filter(u => u.id !== id) }))
+    setState(s => ({
+      ...s,
+      directory: s.directory.filter(u => u.id !== id),
+      courses: s.courses.map(c => {
+        const next = c.studentIds.includes(id) ? { ...c, studentIds: c.studentIds.filter(sid => sid !== id) } : c
+        return next.teacherId === id ? { ...next, teacherId: null } : next
+      }),
+      submissions: s.submissions.filter(sub => sub.studentId !== id),
+      quizAttempts: s.quizAttempts.filter(a => a.studentId !== id),
+      lessonProgress: s.lessonProgress.filter(p => p.studentId !== id),
+      messages: s.messages.filter(m => m.fromId !== id && m.toId !== id),
+      certifications: s.certifications.filter(c => c.studentId !== id),
+    }))
   }
 
   // ── Tipos de documento (configurables desde Configuración) ──
@@ -175,12 +187,20 @@ export function LMSProvider({ children }) {
       }
     })
   }
+  // Devuelve 'ok', 'already-enrolled' o 'full' — el llamador decide qué avisarle
+  // al admin. La capacidad se valida acá (no solo en el formulario del curso)
+  // para que sea imposible pasarse del cupo sin importar desde dónde se inscriba.
   function enrollStudent(courseId, studentId) {
+    const course = courses.find(c => c.id === courseId)
+    if (!course) return 'not-found'
+    if (course.studentIds.includes(studentId)) return 'already-enrolled'
+    if (course.capacity && course.studentIds.length >= course.capacity) return 'full'
     setState(s => ({
       ...s,
       courses: s.courses.map(c => c.id === courseId && !c.studentIds.includes(studentId)
         ? { ...c, studentIds: [...c.studentIds, studentId] } : c),
     }))
+    return 'ok'
   }
   function unenrollStudent(courseId, studentId) {
     setState(s => ({
@@ -447,7 +467,7 @@ export function LMSProvider({ children }) {
   function isLessonUnlocked(studentId, courseId, lessonId) {
     const course = courses.find(c => c.id === courseId)
     if (course && course.completionTrackingEnabled === false) return true
-    const list = lessonsByCourse(courseId)
+    const list = lessonsByCourse(courseId).filter(isPublished)
     const idx = list.findIndex(l => l.id === lessonId)
     if (idx <= 0) return true
     const prev = list[idx - 1]
@@ -556,7 +576,7 @@ export function LMSProvider({ children }) {
     qzGrades.forEach(g => { if (g != null) { weightedSum += g * QUIZ_WEIGHT; totalWeight += QUIZ_WEIGHT } })
 
     const average = totalWeight > 0 ? Math.round((weightedSum / totalWeight) * 10) / 10 : null
-    const allGraded = asg.length > 0 && qz.length > 0 && asgGrades.every(g => g != null) && qzGrades.every(g => g != null)
+    const allGraded = (asg.length > 0 || qz.length > 0) && asgGrades.every(g => g != null) && qzGrades.every(g => g != null)
     return { average, allGraded, passed: allGraded && average != null && average >= PASS_THRESHOLD }
   }
 

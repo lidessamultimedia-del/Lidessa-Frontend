@@ -1,0 +1,15 @@
+export const clients = [
+  { name: 'La Pampa', logo: '/assets/pampa.png' },
+  { name: 'CEET', logo: '/assets/ceet.png' },
+  { name: 'Converge', logo: '/assets/Converge.png' },
+  { name: 'Oxi Vital', logo: '/assets/oxivital.png' },
+  { name: 'Reno', logo: '/assets/reno.png' },
+  { name: 'Dental Service', logo: '/assets/dental.png' },
+  { name: 'JAC Producciones', logo: '/assets/jac.jpg' },
+  { name: 'Finito Apartamentos', logo: '/assets/finito.jpg' },
+  { name: 'San Carbón', logo: '/assets/carbon.jpg' },
+  { name: 'El Comedor de Chava', logo: '/assets/chava.jpg' },
+  { name: 'Hydro Bombas', logo: '/assets/hydro.png', dark: true },
+  { name: 'Cultivos Lima', logo: '/assets/lima.png', dark: true },
+  { name: 'Ópticas Visión Éxito', logo: '/assets/vision.png' },
+]

@@ -18,6 +18,8 @@ import GradebookReport from '@/features/lms/components/GradebookReport'
 import CompletionReport from '@/features/lms/components/CompletionReport'
 import CourseContentTab from '@/features/lms/components/CourseContentTab'
 import CourseSettingsForm from '@/features/lms/components/CourseSettingsForm'
+import CourseGradingQueue from '@/features/lms/components/CourseGradingQueue'
+import ChatThread from '@/features/lms/components/ChatThread'
 import DirectoryUserFormModal from '@/features/lms/components/DirectoryUserFormModal'
 import DirectoryUserDetailModal from '@/features/lms/components/DirectoryUserDetailModal'
 import PQRSFReplyModal from '@/features/pqrsf/components/PQRSFReplyModal'
@@ -28,11 +30,13 @@ import DocumentTypesManagerView from '../components/DocumentTypesManagerView'
 import AnimatedCounter from '@/shared/components/AnimatedCounter'
 import ThemeToggle from '@/shared/components/ThemeToggle'
 import { courseCardStyle } from '@/features/lms/utils/courseCard'
-import { BarChart2, Building, FileText, GraduationCap, Users, Clipboard, Sliders, Bell, User, AlertTriangle, Edit2, Plus, Send, BookOpen, Trash, Search, Eye, Lock, X, UserCog, ShieldCheck, IdCard, MessageCircle, Sparkle, Check, Inbox, Download, Mail } from '@/shared/components/Icons'
+import { BarChart2, Building, FileText, GraduationCap, Users, Clipboard, Sliders, Bell, User, AlertTriangle, Edit2, Plus, Send, BookOpen, Trash, Search, Eye, Lock, X, UserCog, ShieldCheck, IdCard, MessageCircle, Sparkle, Check, Inbox, Download, Mail, ClipboardCheck } from '@/shared/components/Icons'
 import AccountSettings from '@/shared/components/AccountSettings'
 import Avatar from '@/shared/components/Avatar'
 import Toggle from '@/shared/components/Toggle'
+import Pagination, { paginate } from '@/shared/components/Pagination'
 import { useSiteSettings } from '@/shared/context/SiteSettingsContext'
+import { serviceThumbUrl } from '@/features/services/utils/thumbnail'
 
 const statusColor = {
   'Pendiente': '#d97706',
@@ -87,6 +91,8 @@ export default function AdminDashboard({ theme, setTheme }) {
   const catalogCourses = lms.listedCourses
   const { services, addService, updateService, deleteService, toggleServiceActive, categories: serviceCategories, addCategory, updateCategory, toggleCategoryActive, deleteCategory } = useServicesData()
   const [section, setSection] = useState('dashboard')
+  const [messageConversation, setMessageConversation] = useState(null)
+  const [messagesSearch, setMessagesSearch] = useState('')
   // En pantallas angostas (celular) el sidebar empieza colapsado — abierto
   // ocupa la mayoría del ancho y deja el contenido apretado en una franja.
   const [sidebarOpen, setSidebarOpen] = useState(() => typeof window === 'undefined' || window.innerWidth >= 768)
@@ -185,6 +191,17 @@ export default function AdminDashboard({ theme, setTheme }) {
   const [directorySearch, setDirectorySearch] = useState('')
   const [rolesSearch, setRolesSearch] = useState('')
   const [settingsTab, setSettingsTab] = useState('site')
+  // Paginación (10 por página) de cada lista larga del panel.
+  const [servicesPage, setServicesPage] = useState(1)
+  const [blogPage, setBlogPage] = useState(1)
+  const [catalogPage, setCatalogPage] = useState(1)
+  const [pqrsfPage, setPqrsfPage] = useState(1)
+  const [pqrsfAnonPage, setPqrsfAnonPage] = useState(1)
+  const [certReadyPage, setCertReadyPage] = useState(1)
+  const [certHistoryPage, setCertHistoryPage] = useState(1)
+  const [lmsCoursesPage, setLmsCoursesPage] = useState(1)
+  const [directoryPage, setDirectoryPage] = useState(1)
+  const [adminMessagesPage, setAdminMessagesPage] = useState(1)
   const lmsSelectedCourse = lmsSelectedCourseId ? lms.courses.find(c => c.id === lmsSelectedCourseId) : null
   const { settings, setSettings } = useSiteSettings()
 
@@ -425,6 +442,15 @@ export default function AdminDashboard({ theme, setTheme }) {
     toast('success', 'Configuración guardada', 'Los cambios fueron aplicados exitosamente.')
   }
 
+  const conversations = lms.staffConversations(user.id)
+  const filteredConversations = conversations.filter(c => {
+    if (!messagesSearch.trim()) return true
+    const student = lms.directoryById(c.studentId)
+    const q = messagesSearch.trim().toLowerCase()
+    return student?.name?.toLowerCase().includes(q) || student?.email?.toLowerCase().includes(q)
+  })
+  const { pageItems: pagedConversations, totalPages: adminMessagesTotalPages, safePage: adminMessagesSafePage } = paginate(filteredConversations, adminMessagesPage)
+
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart2 },
     { id: 'services', label: 'Servicios', icon: Building },
@@ -436,6 +462,7 @@ export default function AdminDashboard({ theme, setTheme }) {
     { id: 'teachers', label: 'Profesores', icon: User },
     { id: 'students', label: 'Estudiantes', icon: Users },
     { id: 'certifications', label: 'Certificaciones', icon: ShieldCheck },
+    { id: 'messages', label: 'Mensajes', icon: Mail },
     { id: 'settings', label: 'Configuración', icon: Sliders },
   ]
 
@@ -720,6 +747,7 @@ export default function AdminDashboard({ theme, setTheme }) {
             const filteredServices = services
               .filter(s => s.title.toLowerCase().includes(servicesSearch.toLowerCase()))
               .filter(s => servicesCategoryFilter === 'all' || s.category === servicesCategoryFilter)
+            const { pageItems: pagedServices, totalPages: servicesTotalPages, safePage: servicesSafePage } = paginate(filteredServices, servicesPage)
             return (
             <div style={{ animation: 'fadeUp 0.4s ease' }}>
               <div className="flex items-center justify-between mb-1">
@@ -804,24 +832,22 @@ export default function AdminDashboard({ theme, setTheme }) {
                 )}
               </div>
               <div className="rounded-2xl overflow-hidden" style={{ border: '1px solid var(--border)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-                {filteredServices.map((s, i) => {
+                {pagedServices.map((s, i) => {
                   const isActive = s.active !== false
                   return (
                   <div key={s.slug}
                     className="transition-colors"
                     style={{
                       display: 'flex', gap: 16, padding: '13px 20px', alignItems: 'center',
-                      borderBottom: i < filteredServices.length - 1 ? '1px solid var(--border)' : 'none',
+                      borderBottom: i < pagedServices.length - 1 ? '1px solid var(--border)' : 'none',
                       backgroundColor: 'var(--card)',
-                      opacity: 0,
-                      animation: 'fadeUpSoft 0.45s ease forwards',
-                      animationDelay: `${Math.min(i * 0.04, 0.3)}s`,
                     }}
                     onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--muted)'}
                     onMouseLeave={e => e.currentTarget.style.backgroundColor = 'var(--card)'}
                   >
                     {s.hero ? (
-                      <img src={s.hero} alt={s.title} className="w-14 h-11 object-cover rounded-lg shrink-0" style={{ border: '1px solid var(--border)' }} />
+                      <img src={serviceThumbUrl(s.hero)} alt={s.title} loading="lazy" decoding="async"
+                        className="w-14 h-11 object-cover rounded-lg shrink-0" style={{ border: '1px solid var(--border)' }} />
                     ) : (
                       <div className="w-14 h-11 rounded-lg shrink-0" style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)' }} />
                     )}
@@ -894,6 +920,7 @@ export default function AdminDashboard({ theme, setTheme }) {
                   </p>
                 )}
               </div>
+              <Pagination page={servicesSafePage} totalPages={servicesTotalPages} onChange={setServicesPage} />
               </>
               )}
             </div>
@@ -901,7 +928,9 @@ export default function AdminDashboard({ theme, setTheme }) {
           })()}
 
           {/* ── BLOG ── */}
-          {section === 'blog' && (
+          {section === 'blog' && (() => {
+            const { pageItems: pagedPosts, totalPages: blogTotalPages, safePage: blogSafePage } = paginate(blogPosts, blogPage)
+            return (
             <div style={{ animation: 'fadeUp 0.4s ease' }}>
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-black" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Converge</h2>
@@ -912,7 +941,7 @@ export default function AdminDashboard({ theme, setTheme }) {
                 </button>
               </div>
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {blogPosts.map(post => (
+                {pagedPosts.map(post => (
                   <div key={post.id} className="rounded-xl overflow-hidden"
                     style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
                     <img src={post.image} alt={post.title} className="w-full h-36 object-cover" />
@@ -937,11 +966,15 @@ export default function AdminDashboard({ theme, setTheme }) {
                   </div>
                 ))}
               </div>
+              <Pagination page={blogSafePage} totalPages={blogTotalPages} onChange={setBlogPage} />
             </div>
-          )}
+            )
+          })()}
 
           {/* ── COURSES ── */}
-          {section === 'courses' && (
+          {section === 'courses' && (() => {
+            const { pageItems: pagedCatalog, totalPages: catalogTotalPages, safePage: catalogSafePage } = paginate(catalogCourses, catalogPage)
+            return (
             <div style={{ animation: 'fadeUp 0.4s ease' }}>
               <div className="flex items-center justify-between mb-2">
                 <h2 className="text-xl font-black" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>CEET</h2>
@@ -957,10 +990,10 @@ export default function AdminDashboard({ theme, setTheme }) {
                 contenido real (temas, materiales, tareas, exámenes) y asignar un profesor, ábrelo en <strong style={{ color: 'var(--foreground)' }}>Cursos (LMS)</strong>.
               </p>
               <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-                {catalogCourses.map((c, i) => (
+                {pagedCatalog.map((c, i) => (
                   <div key={c.id} style={{
                     display: 'flex', gap: 12, padding: '14px 16px', alignItems: 'center',
-                    borderBottom: i < catalogCourses.length - 1 ? '1px solid var(--border)' : 'none',
+                    borderBottom: i < pagedCatalog.length - 1 ? '1px solid var(--border)' : 'none',
                     backgroundColor: 'var(--card)',
                   }}>
                     {c.image ? (
@@ -996,8 +1029,10 @@ export default function AdminDashboard({ theme, setTheme }) {
                   </p>
                 )}
               </div>
+              <Pagination page={catalogSafePage} totalPages={catalogTotalPages} onChange={setCatalogPage} />
             </div>
-          )}
+            )
+          })()}
 
           {/* ── PQRSF ── */}
           {section === 'pqrsf' && (() => {
@@ -1011,6 +1046,8 @@ export default function AdminDashboard({ theme, setTheme }) {
               .filter(p => !isIdentified(p))
               .filter(matches)
               .sort((a, b) => b.date.localeCompare(a.date))
+            const { pageItems: pagedIdentified, totalPages: identifiedTotalPages, safePage: identifiedSafePage } = paginate(identifiedTickets, pqrsfPage)
+            const { pageItems: pagedAnonymous, totalPages: anonTotalPages, safePage: anonSafePage } = paginate(anonymousTickets, pqrsfAnonPage)
             const pendingCount = pqrsfTickets.filter(p => isIdentified(p) && p.status === 'Pendiente').length
             const respondedCount = pqrsfTickets.filter(p => p.status === 'Respondida').length
             const unreadAnonCount = pqrsfTickets.filter(p => !isIdentified(p) && !p.read).length
@@ -1052,8 +1089,8 @@ export default function AdminDashboard({ theme, setTheme }) {
                 <p className="text-xs mb-3" style={{ color: 'var(--muted-foreground)' }}>
                   Vienen de una cuenta real o dejaron un correo válido — se les puede responder y, al hacerlo, se avisa a la persona por correo.
                 </p>
-                <div className="rounded-xl overflow-hidden mb-8 shadow-sm" style={{ border: '1px solid var(--border)' }}>
-                  {identifiedTickets.map((p, i, arr) => {
+                <div className="rounded-xl overflow-hidden mb-2 shadow-sm" style={{ border: '1px solid var(--border)' }}>
+                  {pagedIdentified.map((p, i, arr) => {
                     const typeStyle = PQRSF_TYPE_STYLES[p.type] ?? { color: '#005187', icon: MessageCircle }
                     return (
                     <div key={p.id} style={{
@@ -1113,8 +1150,9 @@ export default function AdminDashboard({ theme, setTheme }) {
                     </p>
                   )}
                 </div>
+                <Pagination page={identifiedSafePage} totalPages={identifiedTotalPages} onChange={setPqrsfPage} />
 
-                <div className="flex items-center gap-2 mb-1">
+                <div className="flex items-center gap-2 mb-1 mt-6">
                   <span style={{ color: 'var(--muted-foreground)' }}><Inbox size={16} /></span>
                   <h3 className="text-sm font-bold" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Anónimos — solo para conocimiento</h3>
                   <span className="text-xs font-bold rounded-full px-1.5" style={{ backgroundColor: 'var(--muted)', color: 'var(--muted-foreground)' }}>{anonymousTickets.length}</span>
@@ -1123,7 +1161,7 @@ export default function AdminDashboard({ theme, setTheme }) {
                   No dejaron cuenta ni correo real — no hay forma de responderles, pero quedan aquí para que los tenga en cuenta.
                 </p>
                 <div className="rounded-xl overflow-hidden" style={{ border: '1px dashed var(--border)' }}>
-                  {anonymousTickets.map((p, i, arr) => (
+                  {pagedAnonymous.map((p, i, arr) => (
                     <div key={p.id} style={{
                       display: 'flex', gap: 12, padding: '16px', alignItems: 'flex-start',
                       borderBottom: i < arr.length - 1 ? '1px dashed var(--border)' : 'none',
@@ -1167,6 +1205,7 @@ export default function AdminDashboard({ theme, setTheme }) {
                     </p>
                   )}
                 </div>
+                <Pagination page={anonSafePage} totalPages={anonTotalPages} onChange={setPqrsfAnonPage} />
               </div>
             )
           })()}
@@ -1179,6 +1218,8 @@ export default function AdminDashboard({ theme, setTheme }) {
               .filter(r => matches(r.student, r.course))
               .sort((a, b) => (b.completedAt ?? '').localeCompare(a.completedAt ?? ''))
             const history = lms.certifiedHistory().filter(c => matches(c.student, c.course))
+            const { pageItems: pagedReady, totalPages: readyTotalPages, safePage: readySafePage } = paginate(ready, certReadyPage)
+            const { pageItems: pagedHistory, totalPages: historyTotalPages, safePage: historySafePage } = paginate(history, certHistoryPage)
             const fmt = iso => iso ? new Date(iso).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
             // Gmail compose en el navegador — a diferencia de mailto:, no depende
             // de tener un programa de correo instalado, solo de estar conectada
@@ -1248,8 +1289,8 @@ export default function AdminDashboard({ theme, setTheme }) {
                   <h3 className="text-sm font-bold" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Listos para certificar</h3>
                   <span className="text-xs font-bold rounded-full px-1.5" style={{ backgroundColor: 'rgba(22,163,74,0.1)', color: '#16a34a' }}>{ready.length}</span>
                 </div>
-                <div className="rounded-xl overflow-hidden mb-8" style={{ border: '1px solid var(--border)' }}>
-                  {ready.map((r, i, arr) => (
+                <div className="rounded-xl overflow-hidden mb-2" style={{ border: '1px solid var(--border)' }}>
+                  {pagedReady.map((r, i, arr) => (
                     <div key={`${r.studentId}_${r.courseId}`} style={{
                       display: 'flex', gap: 12, padding: '16px', alignItems: 'flex-start',
                       borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none',
@@ -1285,13 +1326,14 @@ export default function AdminDashboard({ theme, setTheme }) {
                     </p>
                   )}
                 </div>
+                <Pagination page={readySafePage} totalPages={readyTotalPages} onChange={setCertReadyPage} />
 
-                <div className="flex items-center gap-2 mb-3">
+                <div className="flex items-center gap-2 mb-3 mt-6">
                   <h3 className="text-sm font-bold" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Ya contactados</h3>
                   <span className="text-xs font-bold rounded-full px-1.5" style={{ backgroundColor: 'var(--muted)', color: 'var(--muted-foreground)' }}>{history.length}</span>
                 </div>
                 <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-                  {history.map((c, i, arr) => (
+                  {pagedHistory.map((c, i, arr) => (
                     <div key={c.id} style={{
                       display: 'flex', gap: 12, padding: '14px 16px', alignItems: 'center',
                       borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none', backgroundColor: 'var(--card)',
@@ -1313,6 +1355,7 @@ export default function AdminDashboard({ theme, setTheme }) {
                     </p>
                   )}
                 </div>
+                <Pagination page={historySafePage} totalPages={historyTotalPages} onChange={setCertHistoryPage} />
               </div>
             )
           })()}
@@ -1395,6 +1438,7 @@ export default function AdminDashboard({ theme, setTheme }) {
                   let filteredCourses = lms.courses.filter(c => c.name.toLowerCase().includes(lmsCoursesSearch.toLowerCase()))
                   if (lmsCoursesFilter !== 'all') filteredCourses = filteredCourses.filter(c => lmsCoursesFilter === 'published' ? c.published : !c.published)
                   filteredCourses = [...filteredCourses].sort((a, b) => lmsCoursesSort === 'name' ? a.name.localeCompare(b.name) : (b.createdAt ?? '').localeCompare(a.createdAt ?? ''))
+                  const { pageItems: pagedLmsCourses, totalPages: lmsCoursesTotalPages, safePage: lmsCoursesSafePage } = paginate(filteredCourses, lmsCoursesPage)
                   if (filteredCourses.length === 0) {
                     return (
                       <div className="rounded-xl" style={{ border: '1px solid var(--border)' }}>
@@ -1405,8 +1449,9 @@ export default function AdminDashboard({ theme, setTheme }) {
                     )
                   }
                   return (
+                    <>
                     <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {filteredCourses.map((c, i) => (
+                      {pagedLmsCourses.map((c, i) => (
                         <div key={c.id} className="rounded-xl overflow-hidden transition-shadow hover:shadow-md" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
                           <button onClick={() => openLmsCourseDetail(c.id)} className="block w-full text-left" style={{ height: 90, ...courseCardStyle(c, i) }} />
                           <div className="p-4">
@@ -1484,6 +1529,8 @@ export default function AdminDashboard({ theme, setTheme }) {
                         </div>
                       ))}
                     </div>
+                    <Pagination page={lmsCoursesSafePage} totalPages={lmsCoursesTotalPages} onChange={setLmsCoursesPage} />
+                    </>
                   )
                 })()}
               </div>
@@ -1496,6 +1543,7 @@ export default function AdminDashboard({ theme, setTheme }) {
             const roleLabel = section === 'teachers' ? 'profesor' : 'estudiante'
             const rows = lms.directory.filter(u => u.role === role)
               .filter(u => u.name.toLowerCase().includes(directorySearch.toLowerCase()) || u.email.toLowerCase().includes(directorySearch.toLowerCase()))
+            const { pageItems: pagedRows, totalPages: directoryTotalPages, safePage: directorySafePage } = paginate(rows, directoryPage)
             return (
               <div style={{ animation: 'fadeUp 0.4s ease' }}>
                 <div className="flex items-center justify-between mb-6">
@@ -1519,7 +1567,7 @@ export default function AdminDashboard({ theme, setTheme }) {
                       <span key={h} className="text-xs font-bold uppercase tracking-wider" style={{ color: 'var(--muted-foreground)' }}>{h}</span>
                     ))}
                   </div>
-                  {rows.map(u => (
+                  {pagedRows.map(u => (
                     <div key={u.id} style={{
                       display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto',
                       gap: '0 16px', padding: '12px 16px', alignItems: 'center',
@@ -1568,9 +1616,87 @@ export default function AdminDashboard({ theme, setTheme }) {
                     </p>
                   )}
                 </div>
+                <Pagination page={directorySafePage} totalPages={directoryTotalPages} onChange={setDirectoryPage} />
               </div>
             )
           })()}
+
+          {/* ── MENSAJES ── */}
+          {section === 'messages' && (
+            <div style={{ animation: 'fadeUp 0.4s ease' }}>
+              {messageConversation ? (
+                <div style={{ maxWidth: 640 }}>
+                  <button onClick={() => setMessageConversation(null)} className="text-xs font-semibold mb-3" style={{ color: '#005187' }}>← Volver a mensajes</button>
+                  <div className="flex items-center gap-3 mb-4 rounded-lg p-4" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', borderTop: '3px solid #005187' }}>
+                    <Avatar user={lms.directoryById(messageConversation.studentId)} size={42} />
+                    <div className="min-w-0">
+                      <h2 className="text-lg font-black truncate" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
+                        {lms.studentName(messageConversation.studentId)}
+                      </h2>
+                      <p className="text-xs truncate" style={{ color: '#005187' }}>
+                        {lms.courses.find(c => c.id === messageConversation.courseId)?.name}
+                      </p>
+                    </div>
+                  </div>
+                  <ChatThread
+                    messages={lms.threadMessages(messageConversation.courseId, user.id, messageConversation.studentId)}
+                    currentUserId={user.id}
+                    onSend={body => lms.sendMessage({ courseId: messageConversation.courseId, fromId: user.id, toId: messageConversation.studentId, body })}
+                  />
+                </div>
+              ) : (
+                <>
+                  <h2 className="text-xl font-black mb-3" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Mensajes</h2>
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg mb-4 mt-3" style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', maxWidth: 320 }}>
+                    <Search size={14} style={{ color: 'var(--muted-foreground)' }} />
+                    <input value={messagesSearch} onChange={e => setMessagesSearch(e.target.value)}
+                      placeholder="Buscar por nombre o correo…"
+                      className="text-sm outline-none bg-transparent w-full" style={{ color: 'var(--foreground)' }} />
+                  </div>
+                  <div className="space-y-2">
+                    {pagedConversations.map(c => {
+                      const unread = c.unreadCount > 0
+                      const fromMe = c.lastMessage.fromId === user.id
+                      return (
+                      <div key={`${c.courseId}_${c.studentId}`}
+                        onClick={() => {
+                          setMessageConversation(c)
+                          lms.markThreadRead(c.courseId, user.id, c.studentId)
+                        }}
+                        className="cursor-pointer rounded-lg transition-opacity hover:opacity-90"
+                        style={{
+                          display: 'flex', gap: 14, padding: '14px 16px', alignItems: 'center',
+                          backgroundColor: 'var(--card)', border: '1px solid var(--border)',
+                          borderLeft: unread ? '3px solid #005187' : '3px solid transparent',
+                        }}>
+                        <Avatar user={lms.directoryById(c.studentId)} size={38} />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-sm truncate" style={{ color: 'var(--foreground)', fontWeight: unread ? 800 : 600 }}>{lms.studentName(c.studentId)}</p>
+                            <span className="text-xs shrink-0" style={{ color: 'var(--muted-foreground)' }}>{new Date(c.lastMessage.createdAt).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                          </div>
+                          <p className="text-xs mb-0.5 font-medium" style={{ color: '#005187' }}>{lms.courses.find(course => course.id === c.courseId)?.name}</p>
+                          <p className="text-xs truncate" style={{ color: unread ? 'var(--foreground)' : 'var(--muted-foreground)', fontWeight: unread ? 600 : 400 }}>
+                            {fromMe ? 'Tú: ' : ''}{c.lastMessage.body}
+                          </p>
+                        </div>
+                        {unread && (
+                          <span className="text-xs font-bold text-white rounded-full px-2 py-0.5 shrink-0" style={{ backgroundColor: '#005187' }}>{c.unreadCount}</span>
+                        )}
+                      </div>
+                      )
+                    })}
+                    {filteredConversations.length === 0 && (
+                      <p className="text-sm px-4 py-6 text-center rounded-lg" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
+                        {conversations.length === 0 ? 'Todavía no tienes mensajes de estudiantes.' : 'Ningún estudiante coincide con esa búsqueda.'}
+                      </p>
+                    )}
+                  </div>
+                  <Pagination page={adminMessagesSafePage} totalPages={adminMessagesTotalPages} onChange={setAdminMessagesPage} />
+                </>
+              )}
+            </div>
+          )}
 
           {/* ── CONFIGURACIÓN ── */}
           {section === 'settings' && (
@@ -1778,6 +1904,7 @@ export default function AdminDashboard({ theme, setTheme }) {
         <AssignmentFormModal
           assignment={lmsAssignmentModal.mode === 'edit' ? lmsAssignmentModal.assignment : null}
           topics={lms.topicsByCourse(lmsSelectedCourse.id)}
+          students={lmsSelectedCourse.studentIds.map(id => lms.directoryById(id)).filter(Boolean)}
           initialTopicId={lmsAssignmentModal.topicId}
           onSave={form => {
             if (lmsAssignmentModal.mode === 'edit') { lms.updateAssignment(lmsAssignmentModal.assignment.id, form); toast('success', 'Tarea actualizada', form.title) }
@@ -1791,6 +1918,7 @@ export default function AdminDashboard({ theme, setTheme }) {
         <QuizFormModal
           quiz={lmsQuizModal.mode === 'edit' ? lmsQuizModal.quiz : null}
           topics={lms.topicsByCourse(lmsSelectedCourse.id)}
+          students={lmsSelectedCourse.studentIds.map(id => lms.directoryById(id)).filter(Boolean)}
           initialTopicId={lmsQuizModal.topicId}
           onSave={form => {
             if (lmsQuizModal.mode === 'edit') { lms.updateQuiz(lmsQuizModal.quiz.id, form); toast('success', 'Examen actualizado', form.title) }
@@ -1921,6 +2049,7 @@ function AdminLmsCourseDetail({
       <div className="flex gap-1 mb-5 rounded-xl p-1" style={{ backgroundColor: 'var(--muted)', width: 'fit-content' }}>
         {[
           { id: 'content', label: 'Contenido', icon: BookOpen },
+          { id: 'grading', label: 'Por revisar', icon: ClipboardCheck },
           { id: 'grades', label: 'Calificaciones', icon: BarChart2 },
           { id: 'participants', label: 'Participantes', icon: Users },
           { id: 'settings', label: 'Configuración', icon: FileText },
@@ -1954,6 +2083,8 @@ function AdminLmsCourseDetail({
           onPublishQuiz={onPublishQuiz}
         />
       )}
+
+      {tab === 'grading' && <CourseGradingQueue courseId={course.id} />}
 
       {tab === 'grades' && <GradebookReport courseId={course.id} />}
 

@@ -127,22 +127,6 @@ export default function DashboardShell({ roleLabel, navItems, activeSection, onS
           </div>
         </nav>
 
-        {/* Profile mini-card */}
-        <div style={{ padding: '0 12px 12px' }}>
-          <div className="flex items-center gap-2.5" style={{
-            padding: sidebarOpen ? '10px 10px' : '10px 0', borderRadius: 10,
-            backgroundColor: 'rgba(255,255,255,0.05)', border: `1px solid rgba(${a.rgb},0.12)`,
-            justifyContent: sidebarOpen ? 'flex-start' : 'center',
-          }}>
-            <Avatar user={user} size={32} />
-            {sidebarOpen && (
-              <div className="min-w-0">
-                <p className="text-xs font-bold truncate" style={{ color: 'white' }}>{user?.name ?? roleLabel}</p>
-                <p className="text-[11px] truncate" style={{ color: 'rgba(255,255,255,0.4)' }}>{roleLabel}</p>
-              </div>
-            )}
-          </div>
-        </div>
 
         <div style={{ padding: 12, borderTop: `1px solid rgba(${a.rgb},0.15)` }}>
           <button onClick={() => setSidebarOpen(s => !s)} style={{

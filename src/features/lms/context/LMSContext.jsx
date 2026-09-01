@@ -50,7 +50,7 @@ const defaultState = {
 
 export function LMSProvider({ children }) {
   const { toast } = useToast()
-  const { registeredStudents } = useAuth()
+  const { registeredStudents, allUsers } = useAuth()
   const [state, setState] = useState(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY)
@@ -345,30 +345,37 @@ export function LMSProvider({ children }) {
     return messages.filter(m => m.toId === userId && !m.read).length
   }
   // Agrupa los mensajes del profesor en conversaciones (una por curso+estudiante).
-  function teacherConversations(teacherId) {
-    const teacherCourseIds = coursesByTeacher(teacherId).map(c => c.id)
-    const relevant = messages.filter(m => teacherCourseIds.includes(m.courseId) && (m.fromId === teacherId || m.toId === teacherId))
+  // Conversaciones de un miembro del staff (profesor O admin) con estudiantes.
+  // No se restringe a "mis cursos" — se arma directamente de los mensajes en
+  // los que participó, así sirve igual para el profesor de un curso que para
+  // el admin (que no es profesor de ninguno).
+  function staffConversations(staffId) {
+    const relevant = messages.filter(m => m.fromId === staffId || m.toId === staffId)
     const byKey = {}
     relevant.forEach(m => {
-      const studentId = m.fromId === teacherId ? m.toId : m.fromId
+      const studentId = m.fromId === staffId ? m.toId : m.fromId
       const key = `${m.courseId}_${studentId}`
       if (!byKey[key] || m.createdAt > byKey[key].lastMessage.createdAt) {
         byKey[key] = { courseId: m.courseId, studentId, lastMessage: m }
       }
     })
     return Object.values(byKey)
-      .map(c => ({ ...c, unreadCount: relevant.filter(m => m.courseId === c.courseId && m.fromId === c.studentId && m.toId === teacherId && !m.read).length }))
+      .map(c => ({ ...c, unreadCount: relevant.filter(m => m.courseId === c.courseId && m.fromId === c.studentId && m.toId === staffId && !m.read).length }))
       .sort((a, b) => b.lastMessage.createdAt.localeCompare(a.lastMessage.createdAt))
   }
-  // Una conversación por curso inscrito (con su profesor) — así el estudiante
-  // tiene un solo lugar donde revisar todos sus cursos en vez de entrar uno
-  // por uno a ver si le escribieron.
+  // Una conversación por curso inscrito, por cada persona con la que puede
+  // escribirse (su profesor y el admin) — así siempre puede iniciar aunque
+  // todavía no haya ningún mensaje con esa persona.
   function studentConversations(studentId) {
-    return coursesByStudent(studentId).map(course => {
-      const thread = threadMessages(course.id, studentId, course.teacherId)
-      const lastMessage = thread.length ? thread[thread.length - 1] : null
-      const unreadCount = thread.filter(m => m.toId === studentId && !m.read).length
-      return { course, lastMessage, unreadCount }
+    const adminId = allUsers.find(u => u.role === 'admin')?.id
+    return coursesByStudent(studentId).flatMap(course => {
+      const parties = [...new Set([course.teacherId, adminId].filter(Boolean))]
+      return parties.map(otherId => {
+        const thread = threadMessages(course.id, studentId, otherId)
+        const lastMessage = thread.length ? thread[thread.length - 1] : null
+        const unreadCount = thread.filter(m => m.toId === studentId && !m.read).length
+        return { course, otherId, lastMessage, unreadCount }
+      })
     }).sort((a, b) => {
       if (a.unreadCount !== b.unreadCount) return b.unreadCount - a.unreadCount
       const at = a.lastMessage?.createdAt ?? ''
@@ -425,7 +432,11 @@ export function LMSProvider({ children }) {
   }
 
   // ── Selectores (funciones simples, dataset pequeño así que no hace falta memoizar) ──
-  const directoryById = id => directory.find(u => u.id === id)
+  // Cae a la cuenta de acceso (AuthContext) cuando el id no está en el
+  // directorio del LMS — el admin nunca tuvo ficha ahí (solo profesores y
+  // estudiantes), así que sin este fallback su nombre/foto saldrían vacíos
+  // en cualquier vista que muestre "quién" hizo algo (ej. un mensaje suyo).
+  const directoryById = id => directory.find(u => u.id === id) ?? allUsers.find(u => u.id === id)
   const teacherName = id => directoryById(id)?.name ?? 'Sin asignar'
   const studentName = id => directoryById(id)?.name ?? 'Estudiante'
   const coursesByTeacher = teacherId => courses.filter(c => c.teacherId === teacherId)
@@ -639,7 +650,7 @@ export function LMSProvider({ children }) {
     topicsByCourse, topicById, itemsByTopic, courseCompletion,
     submissionsPendingForTeacher, submissionsForTeacherCourse, gradesForStudent, courseWeightedGrade,
     reviewQuizAttempt, quizAttemptsPendingReview, allowRetry,
-    sendMessage, threadMessages, markThreadRead, unreadMessageCount, teacherConversations,
+    sendMessage, threadMessages, markThreadRead, unreadMessageCount, staffConversations,
     studentConversations, unreadMessagesForUser, unseenGradesForStudent, markGradeSeen,
     certifications, studentsReadyToCertify, markCertified, unmarkCertified, certifiedHistory,
   }

@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react'
 import FormField, { errorInputStyle } from '@/shared/components/FormField'
 import { Plus, Trash, Lock, X, AlertTriangle } from '@/shared/components/Icons'
+import { serviceThumbUrl } from '@/features/services/utils/thumbnail'
 
 function existingSections(service) {
   const sections = service?.tabs?.[0]?.sections ?? []
@@ -187,7 +188,7 @@ export default function ServiceFormModal({ service, categories, onAddCategory, o
                   <FormField label="Imagen de portada" required error={errors.hero}>
                     <div className="flex items-center gap-2">
                       {form.hero ? (
-                        <img src={form.hero} alt="" className="w-11 h-11 object-cover rounded-lg shrink-0" style={{ border: '1px solid var(--border)' }} />
+                        <img src={serviceThumbUrl(form.hero)} alt="" loading="lazy" decoding="async" className="w-11 h-11 object-cover rounded-lg shrink-0" style={{ border: '1px solid var(--border)' }} />
                       ) : (
                         <div className="w-11 h-11 rounded-lg shrink-0 flex items-center justify-center" style={{ ...inputStyle, ...errorInputStyle(!!errors.hero) }}>
                           <Plus size={16} style={{ color: 'var(--muted-foreground)' }} />

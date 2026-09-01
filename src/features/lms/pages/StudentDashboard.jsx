@@ -7,6 +7,7 @@ import ChatThread from '@/features/lms/components/ChatThread'
 import AnimatedCounter from '@/shared/components/AnimatedCounter'
 import AccountSettings from '@/shared/components/AccountSettings'
 import Avatar from '@/shared/components/Avatar'
+import Pagination, { paginate } from '@/shared/components/Pagination'
 import { courseCardStyle } from '@/features/lms/utils/courseCard'
 import {
   BarChart2, GraduationCap, ClipboardCheck, Check, Lock, BookOpen, FileText, Upload, Users,
@@ -57,16 +58,21 @@ export default function StudentDashboard({ theme, setTheme }) {
   const [courseTab, setCourseTab] = useState('general')
   const [submitAssignmentId, setSubmitAssignmentId] = useState(null)
   const [openQuizId, setOpenQuizId] = useState(null)
-  const [messageModalOpen, setMessageModalOpen] = useState(false)
+  const [messageTarget, setMessageTarget] = useState(null)
   const [messagesSearch, setMessagesSearch] = useState('')
   const [lessonViewModal, setLessonViewModal] = useState(null)
   const [gradesCourseId, setGradesCourseId] = useState(null)
+  // Paginación (10 por página) de cada lista larga del panel.
+  const [coursesPage, setCoursesPage] = useState(1)
+  const [messagesPage, setMessagesPage] = useState(1)
+  const [participantsPage, setParticipantsPage] = useState(1)
 
   const myCourses = lms.coursesByStudent(studentId)
   const selectedCourse = selectedCourseId ? lms.courses.find(c => c.id === selectedCourseId) : null
   const selectedCourseTeacher = selectedCourse ? lms.directoryById(selectedCourse.teacherId) : null
   const selectedCourseTeacherAvatar = selectedCourse ? allUsers.find(u => u.id === selectedCourse.teacherId)?.avatar : null
   const selectedCourseWg = selectedCourse ? lms.courseWeightedGrade(studentId, selectedCourse.id) : null
+  const adminId = allUsers.find(u => u.role === 'admin')?.id
 
   const myAssignments = useMemo(() => {
     const courseIds = myCourses.map(c => c.id)
@@ -95,10 +101,11 @@ export default function StudentDashboard({ theme, setTheme }) {
   const conversations = lms.studentConversations(studentId)
   const filteredConversations = conversations.filter(c => {
     if (!messagesSearch.trim()) return true
-    const teacher = lms.directoryById(c.course.teacherId)
+    const other = lms.directoryById(c.otherId)
     const q = messagesSearch.trim().toLowerCase()
-    return teacher?.name?.toLowerCase().includes(q) || teacher?.email?.toLowerCase().includes(q) || c.course.name?.toLowerCase().includes(q)
+    return other?.name?.toLowerCase().includes(q) || other?.email?.toLowerCase().includes(q) || c.course.name?.toLowerCase().includes(q)
   })
+  const { pageItems: pagedConversations, totalPages: messagesTotalPages, safePage: messagesSafePage } = paginate(filteredConversations, messagesPage)
 
   const gradesByCourse = lms.gradesForStudent(studentId)
   const overallGrades = gradesByCourse.flatMap(g => g.rows).filter(r => r.graded)
@@ -170,7 +177,7 @@ export default function StudentDashboard({ theme, setTheme }) {
             icon: Mail,
             text: `${lms.teacherName(m.fromId)}: "${m.body}"`,
             time: course?.name ?? '',
-            onClick: () => { openCourseDetail(m.courseId); setMessageModalOpen(true); lms.markThreadRead(m.courseId, studentId, m.fromId) },
+            onClick: () => { setMessageTarget({ courseId: m.courseId, otherId: m.fromId }); lms.markThreadRead(m.courseId, studentId, m.fromId) },
           }
         }),
         ...pendingAssignments.slice(0, 2).map(a => ({
@@ -282,8 +289,12 @@ export default function StudentDashboard({ theme, setTheme }) {
       {section === 'courses' && (
         <div style={{ animation: 'fadeUp 0.4s ease' }}>
           <h2 className="text-xl font-black mb-6" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Mis cursos</h2>
+          {(() => {
+            const { pageItems: pagedMyCourses, totalPages: coursesTotalPages, safePage: coursesSafePage } = paginate(myCourses, coursesPage)
+            return (
+          <>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {myCourses.map((c, i) => {
+            {pagedMyCourses.map((c, i) => {
               const progress = lms.progressForStudentCourse(studentId, c.id)
               const wg = lms.courseWeightedGrade(studentId, c.id)
               const badgeColor = wg.allGraded ? (wg.passed ? '#16a34a' : '#dc2626') : '#005187'
@@ -335,6 +346,10 @@ export default function StudentDashboard({ theme, setTheme }) {
               No tiene cursos por el momento.
             </p>
           )}
+          <Pagination page={coursesSafePage} totalPages={coursesTotalPages} onChange={setCoursesPage} />
+          </>
+            )
+          })()}
         </div>
       )}
 
@@ -359,19 +374,34 @@ export default function StudentDashboard({ theme, setTheme }) {
                     <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{selectedCourse.category}</p>
                   </div>
                 </div>
-                {selectedCourse.teacherId && (
-                  <button onClick={() => {
-                    setMessageModalOpen(true)
-                    lms.markThreadRead(selectedCourse.id, studentId, selectedCourse.teacherId)
-                  }}
-                    className="text-xs px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 shrink-0 relative"
-                    style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: 'var(--accent)', border: '1px solid rgba(0,81,135,0.2)' }}>
-                    <Mail size={13} /> Mensaje al profesor
-                    {lms.threadMessages(selectedCourse.id, studentId, selectedCourse.teacherId).some(m => m.fromId === selectedCourse.teacherId && !m.read) && (
-                      <span className="w-2 h-2 rounded-full" style={{ backgroundColor: '#dc2626', position: 'absolute', top: -2, right: -2 }} />
-                    )}
-                  </button>
-                )}
+                <div className="flex gap-2 shrink-0">
+                  {selectedCourse.teacherId && (
+                    <button onClick={() => {
+                      setMessageTarget({ courseId: selectedCourse.id, otherId: selectedCourse.teacherId })
+                      lms.markThreadRead(selectedCourse.id, studentId, selectedCourse.teacherId)
+                    }}
+                      className="text-xs px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 relative"
+                      style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: 'var(--accent)', border: '1px solid rgba(0,81,135,0.2)' }}>
+                      <Mail size={13} /> Mensaje al profesor
+                      {lms.threadMessages(selectedCourse.id, studentId, selectedCourse.teacherId).some(m => m.fromId === selectedCourse.teacherId && !m.read) && (
+                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: '#dc2626', position: 'absolute', top: -2, right: -2 }} />
+                      )}
+                    </button>
+                  )}
+                  {adminId && (
+                    <button onClick={() => {
+                      setMessageTarget({ courseId: selectedCourse.id, otherId: adminId })
+                      lms.markThreadRead(selectedCourse.id, studentId, adminId)
+                    }}
+                      className="text-xs px-3 py-1.5 rounded-lg font-bold flex items-center gap-1.5 relative"
+                      style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>
+                      <Mail size={13} /> Mensaje al administrador
+                      {lms.threadMessages(selectedCourse.id, studentId, adminId).some(m => m.fromId === adminId && !m.read) && (
+                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: '#dc2626', position: 'absolute', top: -2, right: -2 }} />
+                      )}
+                    </button>
+                  )}
+                </div>
               </div>
               <div className="flex items-center gap-6">
                 <div className="flex-1">
@@ -516,7 +546,10 @@ export default function StudentDashboard({ theme, setTheme }) {
             </div>
           )}
 
-          {courseTab === 'participants' && (
+          {courseTab === 'participants' && (() => {
+            const courseParticipants = selectedCourse.studentIds.map(id => lms.directoryById(id)).filter(Boolean)
+            const { pageItems: pagedParticipants, totalPages: participantsTotalPages, safePage: participantsSafePage } = paginate(courseParticipants, participantsPage)
+            return (
             <div>
               <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--muted-foreground)' }}>Profesor</p>
               <div className="rounded-xl p-3.5 flex items-center gap-3 mb-5" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', borderLeft: '3px solid var(--accent)' }}>
@@ -531,7 +564,7 @@ export default function StudentDashboard({ theme, setTheme }) {
                 Estudiantes ({selectedCourse.studentIds.length})
               </p>
               <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-                {selectedCourse.studentIds.map(id => lms.directoryById(id)).filter(Boolean).map((s, i, arr) => (
+                {pagedParticipants.map((s, i) => (
                   <div key={s.id} className="flex items-center gap-3" style={{ padding: '10px 16px', backgroundColor: 'var(--card)', borderTop: i > 0 ? '1px solid var(--border)' : 'none' }}>
                     <Avatar user={{ ...s, avatar: allUsers.find(u => u.id === s.id)?.avatar }} size={32} />
                     <div>
@@ -541,8 +574,10 @@ export default function StudentDashboard({ theme, setTheme }) {
                   </div>
                 ))}
               </div>
+              <Pagination page={participantsSafePage} totalPages={participantsTotalPages} onChange={setParticipantsPage} />
             </div>
-          )}
+            )
+          })()}
         </div>
       )}
 
@@ -687,21 +722,23 @@ export default function StudentDashboard({ theme, setTheme }) {
           <div className="flex items-center gap-2 px-3 py-2 rounded-lg mb-4" style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', maxWidth: 320 }}>
             <Search size={14} style={{ color: 'var(--muted-foreground)' }} />
             <input value={messagesSearch} onChange={e => setMessagesSearch(e.target.value)}
-              placeholder="Buscar por profesor, correo o curso…"
+              placeholder="Buscar por nombre, correo o curso…"
               className="text-sm outline-none bg-transparent w-full" style={{ color: 'var(--foreground)' }} />
           </div>
           <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-            {filteredConversations.map((c, i, arr) => (
-              <div key={c.course.id}
+            {pagedConversations.map((c, i, arr) => (
+              <div key={`${c.course.id}_${c.otherId}`}
                 onClick={() => {
-                  setSelectedCourseId(c.course.id)
-                  setMessageModalOpen(true)
-                  if (c.course.teacherId) lms.markThreadRead(c.course.id, studentId, c.course.teacherId)
+                  setMessageTarget({ courseId: c.course.id, otherId: c.otherId })
+                  lms.markThreadRead(c.course.id, studentId, c.otherId)
                 }}
                 className="cursor-pointer"
                 style={{ display: 'flex', gap: 12, padding: '14px 16px', alignItems: 'center', borderBottom: i < arr.length - 1 ? '1px solid var(--border)' : 'none', backgroundColor: 'var(--card)' }}>
+                <Avatar user={lms.directoryById(c.otherId)} size={36} />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{lms.teacherName(c.course.teacherId)}</p>
+                  <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>
+                    {lms.teacherName(c.otherId)} <span className="text-xs font-normal" style={{ color: 'var(--muted-foreground)' }}>{c.otherId === adminId ? '· Administración' : '· Profesor'}</span>
+                  </p>
                   <p className="text-xs truncate" style={{ color: 'var(--muted-foreground)' }}>
                     {c.course.name}{c.lastMessage ? ` · ${c.lastMessage.body}` : ' · Sin mensajes todavía'}
                   </p>
@@ -713,36 +750,41 @@ export default function StudentDashboard({ theme, setTheme }) {
             ))}
             {filteredConversations.length === 0 && (
               <p className="text-sm px-4 py-6 text-center" style={{ color: 'var(--muted-foreground)' }}>
-                {conversations.length === 0 ? 'Inscríbete a un curso para poder escribirle a tu profesor.' : 'Ningún profesor coincide con esa búsqueda.'}
+                {conversations.length === 0 ? 'Inscríbete a un curso para poder escribir mensajes.' : 'Nadie coincide con esa búsqueda.'}
               </p>
             )}
           </div>
+          <Pagination page={messagesSafePage} totalPages={messagesTotalPages} onChange={setMessagesPage} />
         </div>
       )}
 
       {/* ── CONFIGURACIÓN ── */}
       {section === 'settings' && <AccountSettings />}
 
-      {messageModalOpen && selectedCourse && (
+      {messageTarget && (() => {
+        const targetCourse = lms.courses.find(c => c.id === messageTarget.courseId)
+        if (!targetCourse) return null
+        return (
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4"
           style={{ backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
-          onClick={e => e.target === e.currentTarget && setMessageModalOpen(false)}>
+          onClick={e => e.target === e.currentTarget && setMessageTarget(null)}>
           <div className="rounded-2xl p-6 max-w-lg w-full shadow-2xl" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', animation: 'fadeUp 0.25s ease' }}>
             <div className="flex items-center justify-between mb-1">
               <h3 className="text-lg font-black" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
-                {lms.teacherName(selectedCourse.teacherId)}
+                {lms.teacherName(messageTarget.otherId)}
               </h3>
-              <button onClick={() => setMessageModalOpen(false)} className="text-sm" style={{ color: 'var(--muted-foreground)' }}>✕</button>
+              <button onClick={() => setMessageTarget(null)} className="text-sm" style={{ color: 'var(--muted-foreground)' }}>✕</button>
             </div>
-            <p className="text-xs mb-4" style={{ color: 'var(--muted-foreground)' }}>{selectedCourse.name}</p>
+            <p className="text-xs mb-4" style={{ color: 'var(--muted-foreground)' }}>{targetCourse.name}</p>
             <ChatThread
-              messages={lms.threadMessages(selectedCourse.id, studentId, selectedCourse.teacherId)}
+              messages={lms.threadMessages(messageTarget.courseId, studentId, messageTarget.otherId)}
               currentUserId={studentId}
-              onSend={body => lms.sendMessage({ courseId: selectedCourse.id, fromId: studentId, toId: selectedCourse.teacherId, body })}
+              onSend={body => lms.sendMessage({ courseId: messageTarget.courseId, fromId: studentId, toId: messageTarget.otherId, body })}
             />
           </div>
         </div>
-      )}
+        )
+      })()}
 
       {lessonViewModal && selectedCourse && (
         <LessonViewModal

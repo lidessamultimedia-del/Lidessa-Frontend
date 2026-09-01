@@ -58,9 +58,6 @@ export default function CategoriesManagerView({ categories, services, onAdd, onU
                 display: 'flex', gap: 12, padding: '13px 20px', alignItems: 'center',
                 borderBottom: i < categories.length - 1 ? '1px solid var(--border)' : 'none',
                 backgroundColor: 'var(--card)',
-                opacity: 0,
-                animation: 'fadeUpSoft 0.45s ease forwards',
-                animationDelay: `${Math.min(i * 0.04, 0.3)}s`,
               }}
             >
               {isEditing ? (

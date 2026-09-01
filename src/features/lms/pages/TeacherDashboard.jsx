@@ -11,14 +11,15 @@ import ConfirmDeleteModal from '@/features/lms/components/ConfirmDeleteModal'
 import GradebookReport from '@/features/lms/components/GradebookReport'
 import CompletionReport from '@/features/lms/components/CompletionReport'
 import CourseContentTab from '@/features/lms/components/CourseContentTab'
+import { GradeSubmissionForm, ReviewQuizAttemptForm } from '@/features/lms/components/GradingForms'
 import ChatThread from '@/features/lms/components/ChatThread'
 import AnimatedCounter from '@/shared/components/AnimatedCounter'
-import FormField, { errorInputStyle } from '@/shared/components/FormField'
 import AccountSettings from '@/shared/components/AccountSettings'
 import Avatar from '@/shared/components/Avatar'
+import Pagination, { paginate } from '@/shared/components/Pagination'
 import {
   BarChart2, GraduationCap, ClipboardCheck, Plus, Users,
-  BookOpen, Search, Paperclip, Mail, UserCog,
+  BookOpen, Search, Mail, UserCog,
 } from '@/shared/components/Icons'
 
 function todayISO() {
@@ -62,6 +63,13 @@ export default function TeacherDashboard({ theme, setTheme }) {
   const [coursesSort, setCoursesSort] = useState('name')
   const [coursesFilter, setCoursesFilter] = useState('all')
   const [openMenuId, setOpenMenuId] = useState(null)
+
+  // Paginación (10 por página) de cada lista larga del panel.
+  const [coursesPage, setCoursesPage] = useState(1)
+  const [gradingPage, setGradingPage] = useState(1)
+  const [quizGradingPage, setQuizGradingPage] = useState(1)
+  const [messagesPage, setMessagesPage] = useState(1)
+  const [participantsPage, setParticipantsPage] = useState(1)
 
   const [topicModal, setTopicModal] = useState(null)
   const [lessonModal, setLessonModal] = useState(null)
@@ -142,7 +150,7 @@ export default function TeacherDashboard({ theme, setTheme }) {
   const enrolledStudents = selectedCourse ? selectedCourse.studentIds.map(id => lms.directoryById(id)).filter(Boolean) : []
 
   const gradingRows = allTeacherSubmissions
-    .filter(s => gradingFilter === 'all' ? true : gradingFilter === 'pending' ? s.status !== 'graded' : s.status === 'graded')
+    .filter(s => gradingFilter === 'all' ? true : gradingFilter === 'pending' ? s.status === 'submitted' : s.status === 'graded')
     .map(sub => ({ sub, assignment: assignmentOf(sub) }))
     .map(row => ({ ...row, course: courseOf(row.assignment) }))
     .filter(row => {
@@ -150,6 +158,7 @@ export default function TeacherDashboard({ theme, setTheme }) {
       return !q || [lms.studentName(row.sub.studentId), row.assignment?.title, row.course?.name].some(v => v?.toLowerCase().includes(q))
     })
     .sort((a, b) => (b.sub.submittedAt ?? '').localeCompare(a.sub.submittedAt ?? ''))
+  const { pageItems: pagedGradingRows, totalPages: gradingTotalPages, safePage: gradingSafePage } = paginate(gradingRows, gradingPage)
 
   const gradingSubmission = gradingSubmissionId ? lms.submissions.find(s => s.id === gradingSubmissionId) : null
   const gradingAssignment = gradingSubmission ? assignmentOf(gradingSubmission) : null
@@ -174,14 +183,16 @@ export default function TeacherDashboard({ theme, setTheme }) {
       return !q || [lms.studentName(row.attempt.studentId), row.quiz?.title, row.course?.name].some(v => v?.toLowerCase().includes(q))
     })
     .sort((a, b) => (b.attempt.submittedAt ?? '').localeCompare(a.attempt.submittedAt ?? ''))
+  const { pageItems: pagedQuizGradingRows, totalPages: quizGradingTotalPages, safePage: quizGradingSafePage } = paginate(quizGradingRows, quizGradingPage)
 
-  const conversations = lms.teacherConversations(teacherId)
+  const conversations = lms.staffConversations(teacherId)
   const filteredConversations = conversations.filter(c => {
     if (!messagesSearch.trim()) return true
     const student = lms.directoryById(c.studentId)
     const q = messagesSearch.trim().toLowerCase()
     return student?.name?.toLowerCase().includes(q) || student?.email?.toLowerCase().includes(q)
   })
+  const { pageItems: pagedTeacherConversations, totalPages: teacherMessagesTotalPages, safePage: teacherMessagesSafePage } = paginate(filteredConversations, messagesPage)
   const gradingAttempt = gradingAttemptId ? lms.quizAttempts.find(a => a.id === gradingAttemptId) : null
   const gradingQuiz = gradingAttempt ? lms.quizzes.find(q => q.id === gradingAttempt.quizId) : null
   const gradingQuizCourse = gradingQuiz ? lms.courses.find(c => c.id === gradingQuiz.courseId) : null
@@ -192,6 +203,7 @@ export default function TeacherDashboard({ theme, setTheme }) {
     list = [...list].sort((a, b) => coursesSort === 'name' ? a.name.localeCompare(b.name) : (b.createdAt ?? '').localeCompare(a.createdAt ?? ''))
     return list
   }, [myCourses, coursesSearch, coursesFilter, coursesSort])
+  const { pageItems: pagedCourses, totalPages: coursesTotalPages, safePage: coursesSafePage } = paginate(displayedCourses, coursesPage)
 
   const sectionTitle = {
     dashboard: 'Panel del profesor',
@@ -199,6 +211,8 @@ export default function TeacherDashboard({ theme, setTheme }) {
     courseDetail: selectedCourse?.name ?? 'Curso',
     grading: 'Tareas por revisar',
     gradeSubmission: 'Calificar tarea',
+    gradeQuizAttempt: 'Revisar examen',
+    messages: 'Mensajes',
     settings: 'Configuración',
   }[section]
 
@@ -365,7 +379,7 @@ export default function TeacherDashboard({ theme, setTheme }) {
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {displayedCourses.map(c => (
+            {pagedCourses.map(c => (
               <div key={c.id} className="rounded-xl overflow-hidden relative" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
                 <div style={{ height: 8, backgroundColor: c.color ?? '#005187' }} />
                 <div className="p-4">
@@ -411,6 +425,7 @@ export default function TeacherDashboard({ theme, setTheme }) {
             ))}
             {displayedCourses.length === 0 && <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>Sin cursos para este filtro.</p>}
           </div>
+          <Pagination page={coursesSafePage} totalPages={coursesTotalPages} onChange={setCoursesPage} />
         </div>
       )}
 
@@ -499,7 +514,12 @@ export default function TeacherDashboard({ theme, setTheme }) {
                   </button>
                 ))}
               </div>
-              {participantsView === 'list' ? (
+              {participantsView === 'list' ? (() => {
+                const filteredParticipants = enrolledStudents
+                  .filter(s => !participantsSearch.trim() || [s.name, s.email].some(v => v?.toLowerCase().includes(participantsSearch.trim().toLowerCase())))
+                  .sort((a, b) => a.name.localeCompare(b.name))
+                const { pageItems: pagedParticipants, totalPages: participantsTotalPages, safePage: participantsSafePage } = paginate(filteredParticipants, participantsPage)
+                return (
                 <div>
                   <div className="flex items-center justify-between flex-wrap gap-3 mb-3">
                     <p className="text-xs" style={{ color: 'var(--muted-foreground)', maxWidth: 480 }}>
@@ -513,9 +533,7 @@ export default function TeacherDashboard({ theme, setTheme }) {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    {enrolledStudents
-                      .filter(s => !participantsSearch.trim() || [s.name, s.email].some(v => v?.toLowerCase().includes(participantsSearch.trim().toLowerCase())))
-                      .sort((a, b) => a.name.localeCompare(b.name))
+                    {pagedParticipants
                       .map(s => {
                         const progress = lms.progressForStudentCourse(s.id, selectedCourse.id)
                         const wg = lms.courseWeightedGrade(s.id, selectedCourse.id)
@@ -551,12 +569,14 @@ export default function TeacherDashboard({ theme, setTheme }) {
                         </div>
                         )
                       })}
-                    {enrolledStudents.length === 0 && (
+                    {filteredParticipants.length === 0 && (
                       <p className="text-sm px-4 py-6 text-center rounded-lg" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>Sin estudiantes inscritos.</p>
                     )}
                   </div>
+                  <Pagination page={participantsSafePage} totalPages={participantsTotalPages} onChange={setParticipantsPage} />
                 </div>
-              ) : (
+                )
+              })() : (
                 <CompletionReport courseId={selectedCourse.id} />
               )}
             </div>
@@ -586,7 +606,7 @@ export default function TeacherDashboard({ theme, setTheme }) {
               className="text-sm outline-none bg-transparent w-full" style={{ color: 'var(--foreground)' }} />
           </div>
           <div className="space-y-2">
-            {gradingRows.map(({ sub, assignment, course }) => {
+            {pagedGradingRows.map(({ sub, assignment, course }) => {
               const failed = sub.status === 'graded' && sub.grade < PASS_THRESHOLD
               const statusColor = sub.status === 'graded' ? (failed ? '#dc2626' : '#16a34a') : '#d97706'
               return (
@@ -621,6 +641,7 @@ export default function TeacherDashboard({ theme, setTheme }) {
               </p>
             )}
           </div>
+          <Pagination page={gradingSafePage} totalPages={gradingTotalPages} onChange={setGradingPage} />
 
           <div className="flex items-center justify-between flex-wrap gap-3 mb-1 mt-8">
             <h2 className="text-xl font-black pb-1.5" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)', borderBottom: '2px solid #b8860b', display: 'inline-block' }}>Exámenes</h2>
@@ -642,7 +663,7 @@ export default function TeacherDashboard({ theme, setTheme }) {
               className="text-sm outline-none bg-transparent w-full" style={{ color: 'var(--foreground)' }} />
           </div>
           <div className="space-y-2">
-            {quizGradingRows.map(({ attempt: a, quiz, course }) => {
+            {pagedQuizGradingRows.map(({ attempt: a, quiz, course }) => {
               const failed = a.reviewed && a.score < PASS_THRESHOLD
               const statusColor = !a.reviewed ? '#d97706' : (failed ? '#dc2626' : '#16a34a')
               return (
@@ -677,6 +698,7 @@ export default function TeacherDashboard({ theme, setTheme }) {
               </p>
             )}
           </div>
+          <Pagination page={quizGradingSafePage} totalPages={quizGradingTotalPages} onChange={setQuizGradingPage} />
         </div>
       )}
 
@@ -745,7 +767,7 @@ export default function TeacherDashboard({ theme, setTheme }) {
                   className="text-sm outline-none bg-transparent w-full" style={{ color: 'var(--foreground)' }} />
               </div>
               <div className="space-y-2">
-                {filteredConversations.map(c => {
+                {pagedTeacherConversations.map(c => {
                   const unread = c.unreadCount > 0
                   const fromTeacher = c.lastMessage.fromId === teacherId
                   return (
@@ -783,6 +805,7 @@ export default function TeacherDashboard({ theme, setTheme }) {
                   </p>
                 )}
               </div>
+              <Pagination page={teacherMessagesSafePage} totalPages={teacherMessagesTotalPages} onChange={setMessagesPage} />
             </>
           )}
         </div>
@@ -847,161 +870,5 @@ export default function TeacherDashboard({ theme, setTheme }) {
         <ConfirmDeleteModal label={deleteConfirm.label} onConfirm={handleDeleteConfirm} onClose={() => setDeleteConfirm(null)} />
       )}
     </DashboardShell>
-  )
-}
-
-function GradeSubmissionForm({ submission, assignment, course, studentName, onSave, onCancel }) {
-  const [grade, setGrade] = useState(submission.grade ?? '')
-  const [feedback, setFeedback] = useState(submission.feedback ?? '')
-  const [retryAllowed, setRetryAllowed] = useState(submission.retryAllowed ?? false)
-  const [gradeError, setGradeError] = useState('')
-  const maxScore = assignment?.maxScore ?? MAX_GRADE
-
-  return (
-    <div style={{ animation: 'fadeUp 0.4s ease', maxWidth: 640 }}>
-      <button onClick={onCancel} className="text-xs font-semibold mb-3" style={{ color: '#005187' }}>← Volver</button>
-      <h2 className="text-xl font-black mb-1" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
-        Calificar: {studentName} — {assignment?.title}
-      </h2>
-      <p className="text-sm mb-6" style={{ color: 'var(--muted-foreground)' }}>{course?.name}</p>
-
-      <div className="rounded-xl p-5 mb-5" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
-        <p className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--muted-foreground)' }}>Lo que entregó el estudiante</p>
-        {submission.fileName && (
-          <div className="mb-3">
-            {submission.fileData ? (
-              <a href={submission.fileData} download={submission.fileName}
-                className="flex items-start gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-colors max-w-full"
-                style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: '#005187', border: '1px solid rgba(0,81,135,0.2)' }}>
-                <Paperclip size={14} className="shrink-0 mt-0.5" />
-                <span className="wrap-break-word">
-                  {submission.fileName}{' '}
-                  <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>({(submission.fileSize / 1024).toFixed(0)} KB) — descargar</span>
-                </span>
-              </a>
-            ) : (
-              <p className="text-sm wrap-break-word" style={{ color: 'var(--foreground)' }}>Archivo: <strong>{submission.fileName}</strong> <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>(entrega antigua, sin archivo descargable)</span></p>
-            )}
-          </div>
-        )}
-        {submission.textResponse && (
-          <div className="mb-3">
-            <p className="text-xs font-semibold mb-1" style={{ color: 'var(--muted-foreground)' }}>Respuesta escrita</p>
-            <p className="text-sm whitespace-pre-wrap" style={{ color: 'var(--foreground)' }}>{submission.textResponse}</p>
-          </div>
-        )}
-        {submission.notes && (
-          <div className="mb-3">
-            <p className="text-xs font-semibold mb-1" style={{ color: 'var(--muted-foreground)' }}>Observaciones del estudiante</p>
-            <p className="text-sm" style={{ color: 'var(--foreground)' }}>{submission.notes}</p>
-          </div>
-        )}
-        {!submission.fileName && !submission.textResponse && (
-          <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>El estudiante no adjuntó archivo ni escribió una respuesta.</p>
-        )}
-        <p className="text-xs mt-1" style={{ color: 'var(--muted-foreground)' }}>Enviado: {submission.submittedAt ? new Date(submission.submittedAt).toLocaleString('es-CO') : '—'}</p>
-      </div>
-
-      <form onSubmit={e => {
-        e.preventDefault()
-        if (grade === '' || grade === null) { setGradeError('Ingrese una calificación.'); return }
-        const num = Math.round(Number(grade) * 10) / 10
-        if (Number.isNaN(num) || num < 0 || num > maxScore) { setGradeError(`Debe estar entre 0 y ${maxScore}.`); return }
-        setGradeError('')
-        onSave(num, feedback, retryAllowed)
-      }} className="space-y-4" noValidate>
-        <FormField label={`Calificación (sobre ${maxScore})`} required error={gradeError}
-          helperText={`Admite decimales, ej. 7.9. Se aprueba con ${PASS_THRESHOLD.toFixed(1)} o más.`}>
-          <input type="number" min={0} max={maxScore} step={0.1} value={grade}
-            onChange={e => { setGrade(e.target.value); setGradeError('') }}
-            className="w-40 px-3 py-2.5 rounded-lg text-sm outline-none"
-            style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)', ...errorInputStyle(!!gradeError) }} />
-        </FormField>
-        <div>
-          <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--foreground)' }}>Feedback</label>
-          <textarea rows={5} value={feedback} onChange={e => setFeedback(e.target.value)}
-            className="w-full px-3 py-2.5 rounded-lg text-sm outline-none resize-none"
-            style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }} />
-        </div>
-        <label className="flex items-center gap-2 text-sm" style={{ color: 'var(--foreground)' }}>
-          <input type="checkbox" checked={retryAllowed} onChange={e => setRetryAllowed(e.target.checked)} />
-          Permitir que el estudiante reintente esta actividad
-        </label>
-        <div className="flex gap-3">
-          <button type="button" onClick={onCancel} className="flex-1 py-2.5 rounded-lg text-sm font-bold" style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>Cancelar</button>
-          <button type="submit" className="flex-1 py-2.5 rounded-lg text-sm font-bold text-white" style={{ backgroundColor: '#005187' }}>Guardar</button>
-        </div>
-      </form>
-    </div>
-  )
-}
-
-function ReviewQuizAttemptForm({ attempt, quiz, course, studentName, onSave, onCancel }) {
-  const [score, setScore] = useState(attempt.score ?? '')
-  const [feedback, setFeedback] = useState(attempt.feedback ?? '')
-  const [retryAllowed, setRetryAllowed] = useState(attempt.retryAllowed ?? false)
-  const [gradeError, setGradeError] = useState('')
-
-  return (
-    <div style={{ animation: 'fadeUp 0.4s ease', maxWidth: 640 }}>
-      <button onClick={onCancel} className="text-xs font-semibold mb-3" style={{ color: '#005187' }}>← Volver</button>
-      <h2 className="text-xl font-black mb-1" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
-        Revisar examen: {studentName} — {quiz.title}
-      </h2>
-      <p className="text-sm mb-6" style={{ color: 'var(--muted-foreground)' }}>{course?.name}</p>
-
-      <div className="rounded-xl p-5 mb-5" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
-        <p className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--muted-foreground)' }}>Respuestas del estudiante</p>
-        {quiz.questions.map((q, qi) => (
-          <div key={q.id} className="mb-3 pb-3" style={{ borderBottom: qi < quiz.questions.length - 1 ? '1px solid var(--border)' : 'none' }}>
-            <p className="text-sm font-semibold mb-1" style={{ color: 'var(--foreground)' }}>{qi + 1}. {q.text}</p>
-            {q.type === 'open' ? (
-              <p className="text-sm whitespace-pre-wrap px-3 py-2 rounded-lg" style={{ backgroundColor: 'var(--muted)', color: 'var(--foreground)' }}>
-                {attempt.answers[qi]?.trim() ? attempt.answers[qi] : '(sin respuesta)'}
-              </p>
-            ) : (
-              <p className="text-xs" style={{ color: attempt.answers[qi] === q.correctIndex ? '#16a34a' : '#dc2626' }}>
-                Respondió: {q.options[attempt.answers[qi]] ?? '(sin responder)'}
-                {attempt.answers[qi] === q.correctIndex ? ' ✓' : ` — correcta: ${q.options[q.correctIndex]}`}
-              </p>
-            )}
-          </div>
-        ))}
-        <p className="text-xs mt-1" style={{ color: 'var(--muted-foreground)' }}>
-          Nota automática de la parte de selección múltiple: {attempt.score}/{MAX_GRADE}. Ajusta la nota final abajo teniendo en cuenta las respuestas abiertas.
-        </p>
-      </div>
-
-      <form onSubmit={e => {
-        e.preventDefault()
-        if (score === '' || score === null) { setGradeError('Ingrese una calificación final.'); return }
-        const num = Math.round(Number(score) * 10) / 10
-        if (Number.isNaN(num) || num < 0 || num > MAX_GRADE) { setGradeError(`Debe estar entre 0 y ${MAX_GRADE}.`); return }
-        setGradeError('')
-        onSave(num, feedback, retryAllowed)
-      }} className="space-y-4" noValidate>
-        <FormField label={`Calificación final (sobre ${MAX_GRADE})`} required error={gradeError}
-          helperText={`Admite decimales, ej. 7.9. Se aprueba con ${PASS_THRESHOLD.toFixed(1)} o más.`}>
-          <input type="number" min={0} max={MAX_GRADE} step={0.1} value={score}
-            onChange={e => { setScore(e.target.value); setGradeError('') }}
-            className="w-40 px-3 py-2.5 rounded-lg text-sm outline-none"
-            style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)', ...errorInputStyle(!!gradeError) }} />
-        </FormField>
-        <div>
-          <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--foreground)' }}>Feedback</label>
-          <textarea rows={4} value={feedback} onChange={e => setFeedback(e.target.value)}
-            className="w-full px-3 py-2.5 rounded-lg text-sm outline-none resize-none"
-            style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }} />
-        </div>
-        <label className="flex items-center gap-2 text-sm" style={{ color: 'var(--foreground)' }}>
-          <input type="checkbox" checked={retryAllowed} onChange={e => setRetryAllowed(e.target.checked)} />
-          Permitir que el estudiante reintente este examen
-        </label>
-        <div className="flex gap-3">
-          <button type="button" onClick={onCancel} className="flex-1 py-2.5 rounded-lg text-sm font-bold" style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>Cancelar</button>
-          <button type="submit" className="flex-1 py-2.5 rounded-lg text-sm font-bold text-white" style={{ backgroundColor: '#005187' }}>Guardar calificación</button>
-        </div>
-      </form>
-    </div>
   )
 }

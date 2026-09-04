@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react'
+import { apiLogin, apiRegister } from '@/shared/lib/api'
 
 const AuthContext = createContext(null)
 const USERS_KEY = 'lidessa_users'
@@ -66,27 +67,23 @@ export function AuthProvider({ children }) {
     localStorage.setItem(USERS_KEY, JSON.stringify(users))
   }, [users])
 
+  // Login real contra la API (Lidessa-Backend). El directorio mock (`users`,
+  // `allUsers`, `registeredStudents`) sigue viviendo aparte en localStorage —
+  // el backend todavía no tiene endpoints para listar/gestionar usuarios, así
+  // que un usuario autenticado por esta vía no aparece ahí (ver AuthContext
+  // en la conversación: gap conocido, aceptado mientras se agregan esos
+  // endpoints).
   async function login(email, password) {
-    await new Promise(r => setTimeout(r, 900))
-    const found = users.find(u => u.email === email && u.password === password)
-    if (!found) throw new Error('Credenciales incorrectas')
-    const { password: _pw, ...safe } = found
+    const data = await apiLogin(email, password)
+    const safe = { ...data.user, id: String(data.user.id), token: data.token, unreadNotifications: 0 }
     setUser(safe)
     sessionStorage.setItem('lidessa_user', JSON.stringify(safe))
   }
 
   async function register({ name, email, password, phone }) {
-    await new Promise(r => setTimeout(r, 700))
-    if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
-      throw new Error('Ya existe una cuenta registrada con ese correo.')
-    }
-    const newUser = {
-      id: `s${Date.now()}`,
-      name, email, password, role: 'estudiante', phone: phone ?? '',
-      unreadNotifications: 0,
-    }
-    setUsers(prev => [...prev, newUser])
-    const { password: _pw, ...safe } = newUser
+    await apiRegister({ name, email, password, phone, role: 'estudiante' })
+    const data = await apiLogin(email, password)
+    const safe = { ...data.user, id: String(data.user.id), token: data.token, unreadNotifications: 0 }
     setUser(safe)
     sessionStorage.setItem('lidessa_user', JSON.stringify(safe))
     return safe

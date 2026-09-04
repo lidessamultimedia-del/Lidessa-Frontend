@@ -1,12 +1,7 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState } from 'react'
 import { servicesData as seedServices } from '../data/servicesData'
 
 const ServicesDataContext = createContext(null)
-// v2: agrega el campo `locked` para proteger el contenido de los 16 servicios
-// originales. Se cambia la clave para que las sesiones con datos de la v1
-// (sin ese campo) reseeden en vez de quedar sin la protección.
-const STORAGE_KEY = 'lidessa_services_data_v2'
-const CATEGORIES_KEY = 'lidessa_service_categories'
 
 // Categorías originales del sitio (cada una con tarjeta/imagen propia en
 // "Nuestros Servicios"). El admin puede agregar más desde el panel; esas
@@ -19,8 +14,8 @@ export const SERVICE_CATEGORIES = [
   'Supervisión e interventoría',
 ]
 
-// Antes las categorías eran solo strings (sin estado). Si en localStorage
-// queda ese formato viejo, se migran a objetos { name, active } al vuelo.
+// Antes las categorías eran solo strings (sin estado); se normalizan a
+// objetos { name, active }.
 function normalizeCategories(list) {
   return list.map(c => typeof c === 'string' ? { name: c, active: true } : c)
 }
@@ -54,32 +49,8 @@ export function buildInfoTab(description, extraSections = []) {
 }
 
 export function ServicesDataProvider({ children }) {
-  const [services, setServices] = useState(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY)
-      if (stored) return JSON.parse(stored)
-    } catch {
-      // ignore malformed data
-    }
-    return seedServices.map(s => ({ active: true, locked: true, ...s }))
-  })
-  const [categories, setCategories] = useState(() => {
-    try {
-      const stored = localStorage.getItem(CATEGORIES_KEY)
-      if (stored) return normalizeCategories(JSON.parse(stored))
-    } catch {
-      // ignore malformed data
-    }
-    return normalizeCategories(SERVICE_CATEGORIES)
-  })
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(services))
-  }, [services])
-
-  useEffect(() => {
-    localStorage.setItem(CATEGORIES_KEY, JSON.stringify(categories))
-  }, [categories])
+  const [services, setServices] = useState(() => seedServices.map(s => ({ active: true, locked: true, ...s })))
+  const [categories, setCategories] = useState(() => normalizeCategories(SERVICE_CATEGORIES))
 
   function addCategory(name) {
     const clean = name.trim()

@@ -1,22 +1,10 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState } from 'react'
 import { blogPosts as defaultPosts } from '../data/blogPosts'
 
 const BlogContext = createContext(null)
-const STORAGE_KEY = 'lidessa_blog_posts'
 
 export function BlogProvider({ children }) {
-  const [posts, setPosts] = useState(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY)
-      return stored ? JSON.parse(stored) : defaultPosts
-    } catch {
-      return defaultPosts
-    }
-  })
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(posts))
-  }, [posts])
+  const [posts, setPosts] = useState(defaultPosts)
 
   function addPost(post) {
     const newPost = { ...post, id: Date.now() }

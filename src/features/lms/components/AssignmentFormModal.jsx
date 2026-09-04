@@ -11,9 +11,9 @@ function toDatetimeLocal(value) {
   return value.includes('T') ? value : `${value}T00:00`
 }
 
-// El material se guarda como base64 directo en el navegador (localStorage),
-// que tiene un límite total de unos 5-10 MB compartido entre todo el sitio —
-// por eso se limita el tamaño de cada archivo individual.
+// El material se guarda como base64 directo en memoria (sin backend de
+// archivos todavía) — se limita el tamaño de cada archivo para no inflar el
+// estado de la página.
 const MAX_FILE_MB = 3
 const MAX_FILE_BYTES = MAX_FILE_MB * 1024 * 1024
 

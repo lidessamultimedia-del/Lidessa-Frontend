@@ -25,9 +25,9 @@ const inputStyle = { backgroundColor: 'var(--muted)', border: '1px solid var(--b
 function focusRing(e) { e.target.style.borderColor = '#4d82bc' }
 function blurRing(e) { e.target.style.borderColor = 'var(--border)' }
 
-// La imagen se guarda como base64 directo en el navegador (localStorage), que
-// tiene un límite total de unos 5-10 MB compartido entre todo el sitio — por
-// eso se limita el tamaño de cada foto individual.
+// La imagen se guarda como base64 directo en memoria (sin backend de
+// archivos todavía) — se limita el tamaño de cada foto para no inflar el
+// estado de la página.
 const MAX_IMAGE_MB = 1.5
 const MAX_IMAGE_BYTES = MAX_IMAGE_MB * 1024 * 1024
 

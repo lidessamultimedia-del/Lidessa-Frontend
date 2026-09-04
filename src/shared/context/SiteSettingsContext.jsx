@@ -1,7 +1,6 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState } from 'react'
 
 const SiteSettingsContext = createContext(null)
-const SETTINGS_KEY = 'lidessa_site_settings'
 
 // Valores por defecto = lo que el footer mostraba antes de conectarse a este
 // panel, para que activarlo no cambie nada visible hasta que el admin edite.
@@ -13,18 +12,7 @@ export const defaultSiteSettings = {
 }
 
 export function SiteSettingsProvider({ children }) {
-  const [settings, setSettings] = useState(() => {
-    try {
-      const stored = localStorage.getItem(SETTINGS_KEY)
-      return stored ? { ...defaultSiteSettings, ...JSON.parse(stored) } : defaultSiteSettings
-    } catch {
-      return defaultSiteSettings
-    }
-  })
-
-  useEffect(() => {
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings))
-  }, [settings])
+  const [settings, setSettings] = useState(defaultSiteSettings)
 
   return (
     <SiteSettingsContext.Provider value={{ settings, setSettings }}>

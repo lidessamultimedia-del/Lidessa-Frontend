@@ -3,14 +3,9 @@ import {
   seedDirectory, seedCourses, seedTopics, seedLessons, seedAssignments, seedSubmissions, seedLessonProgress,
   seedQuizzes, seedQuizAttempts,
 } from '../data/seed'
-import { useToast } from '@/shared/context/ToastContext'
 import { useAuth } from '@/features/auth/context/AuthContext'
 
 const LMSContext = createContext(null)
-// v6: calificaciones pasan de escala 0-100 a escala 0-10 (con decimales), y el
-// examen pesa el doble que una actividad en la nota final ponderada del curso.
-// Se cambia la clave para que las sesiones con datos de v1-v5 reseeden.
-const STORAGE_KEY = 'lidessa_lms_v6'
 
 function todayISO() {
   return new Date().toISOString().slice(0, 10)
@@ -49,41 +44,8 @@ const defaultState = {
 }
 
 export function LMSProvider({ children }) {
-  const { toast } = useToast()
   const { registeredStudents, allUsers } = useAuth()
-  const [state, setState] = useState(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY)
-      // Se fusiona con defaultState para que, si se agrega una clave nueva más
-      // adelante (como `messages`), las sesiones ya guardadas no se rompan por
-      // no tenerla — simplemente arrancan con el valor por defecto de esa clave.
-      return stored ? { ...defaultState, ...JSON.parse(stored) } : defaultState
-    } catch {
-      return defaultState
-    }
-  })
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
-    } catch (err) {
-      console.error('No se pudo guardar el LMS en localStorage:', err)
-      toast('error', 'No se pudo guardar', 'El almacenamiento del navegador está lleno (probablemente por imágenes muy pesadas). El cambio se ve en pantalla pero no quedó guardado — usa una imagen más liviana o borra alguna existente.')
-    }
-  }, [state])
-
-  useEffect(() => {
-    const onStorage = (e) => {
-      if (e.key !== STORAGE_KEY || !e.newValue) return
-      try {
-        setState(JSON.parse(e.newValue))
-      } catch {
-        // ignore malformed data from another tab
-      }
-    }
-    window.addEventListener('storage', onStorage)
-    return () => window.removeEventListener('storage', onStorage)
-  }, [])
+  const [state, setState] = useState(defaultState)
 
   const { directory, courses, topics, lessons, assignments, submissions, lessonProgress, quizzes, quizAttempts, documentTypes, messages, certifications } = state
 

@@ -26,22 +26,13 @@ export default function DashboardShell({ roleLabel, navItems, activeSection, onS
   // ocupa la mayoría del ancho y deja el contenido apretado en una franja.
   const [sidebarOpen, setSidebarOpen] = useState(() => typeof window === 'undefined' || window.innerWidth >= 768)
   const [bellOpen, setBellOpen] = useState(false)
-  const seenKey = `lidessa_seen_notifications_${user?.id ?? 'anon'}`
-  const [seenIds, setSeenIds] = useState(() => {
-    try {
-      const stored = localStorage.getItem(seenKey)
-      return stored ? new Set(JSON.parse(stored)) : new Set()
-    } catch {
-      return new Set()
-    }
-  })
+  const [seenIds, setSeenIds] = useState(() => new Set())
   const unreadNotifications = notifications.filter(n => !seenIds.has(n.id))
 
   function markAllSeen() {
     setSeenIds(prev => {
       const next = new Set(prev)
       notifications.forEach(n => next.add(n.id))
-      localStorage.setItem(seenKey, JSON.stringify([...next]))
       return next
     })
   }

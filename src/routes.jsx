@@ -59,11 +59,7 @@ function ProtectedRoute({ roles, children }) {
 }
 
 export default function AppRoutes() {
-  const [theme, setTheme] = useState(() => {
-    const stored = localStorage.getItem('lidessa_theme')
-    if (stored === 'light' || stored === 'dark' || stored === 'system') return stored
-    return 'system'
-  })
+  const [theme, setTheme] = useState('system')
 
   useEffect(() => {
     const root = document.documentElement
@@ -75,7 +71,6 @@ export default function AppRoutes() {
     }
 
     applyTheme()
-    localStorage.setItem('lidessa_theme', theme)
 
     if (theme === 'system') {
       if (media.addEventListener) media.addEventListener('change', applyTheme)

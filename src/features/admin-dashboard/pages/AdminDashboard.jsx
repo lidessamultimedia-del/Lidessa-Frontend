@@ -134,22 +134,13 @@ export default function AdminDashboard({ theme, setTheme }) {
       .map(n => ({ ...n, time: relativeTime(n.date) }))
   }, [pqrsfTickets, catalogCourses, lms.directory, lms.courses, lms.submissions, lms.quizAttempts, lms.certifications])
 
-  const notifSeenKey = `lidessa_admin_seen_notifications_${user?.id ?? 'anon'}`
-  const [notifSeenIds, setNotifSeenIds] = useState(() => {
-    try {
-      const stored = localStorage.getItem(notifSeenKey)
-      return stored ? new Set(JSON.parse(stored)) : new Set()
-    } catch {
-      return new Set()
-    }
-  })
+  const [notifSeenIds, setNotifSeenIds] = useState(() => new Set())
   const unreadNotifications = notifications.filter(n => !notifSeenIds.has(n.id))
 
   function markAllNotificationsSeen() {
     setNotifSeenIds(prev => {
       const next = new Set(prev)
       notifications.forEach(n => next.add(n.id))
-      localStorage.setItem(notifSeenKey, JSON.stringify([...next]))
       return next
     })
   }

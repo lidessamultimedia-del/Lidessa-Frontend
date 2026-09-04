@@ -1,4 +1,4 @@
-// Datos iniciales del LMS. Se cargan una sola vez si no hay nada en localStorage.
+// Datos iniciales del LMS. Se cargan en memoria al arrancar la app.
 // IDs de docentes/estudiantes coinciden con los usuarios demo de AuthContext
 // (profesor@lidessa.co -> 't1', estudiante@lidessa.co -> 's1') para que el
 // login de cada rol vea datos ya poblados desde el primer render.

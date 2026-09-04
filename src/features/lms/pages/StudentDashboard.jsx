@@ -1006,21 +1006,11 @@ function QuizAttemptForm({ quiz, course, existingAttempt, studentId, onSubmit, o
   answersRef.current = answers
 
   const timeLimitMs = quiz.timeLimitMinutes ? quiz.timeLimitMinutes * 60 * 1000 : null
-  const startKey = `lidessa_quiz_start_${quiz.id}_${studentId}`
-  const [remainingMs, setRemainingMs] = useState(() => {
-    if (!timeLimitMs || locked) return null
-    let startedAt = localStorage.getItem(startKey)
-    if (!startedAt) {
-      startedAt = Date.now().toString()
-      localStorage.setItem(startKey, startedAt)
-    }
-    return Math.max(0, timeLimitMs - (Date.now() - Number(startedAt)))
-  })
+  const [remainingMs, setRemainingMs] = useState(() => (timeLimitMs && !locked ? timeLimitMs : null))
 
   useEffect(() => {
     if (remainingMs === null) return
     if (remainingMs <= 0) {
-      localStorage.removeItem(startKey)
       onSubmit(answersRef.current)
       onTimeUp?.()
       onCancel()
@@ -1030,7 +1020,6 @@ function QuizAttemptForm({ quiz, course, existingAttempt, studentId, onSubmit, o
       setRemainingMs(ms => {
         if (ms === null || ms > 1000) return ms === null ? ms : ms - 1000
         clearInterval(id)
-        localStorage.removeItem(startKey)
         onSubmit(answersRef.current)
         onTimeUp?.()
         onCancel()
@@ -1075,7 +1064,6 @@ function QuizAttemptForm({ quiz, course, existingAttempt, studentId, onSubmit, o
     const missing = quiz.questions.some((q, i) => q.type === 'open' ? !answers[i]?.trim() : answers[i] === null)
     if (missing) { setError('Responde todas las preguntas antes de entregar.'); return }
     setError('')
-    localStorage.removeItem(startKey)
     onSubmit(answers)
     onCancel()
   }

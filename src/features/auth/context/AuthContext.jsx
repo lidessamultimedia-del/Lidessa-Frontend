@@ -2,7 +2,6 @@ import { createContext, useContext, useState, useEffect } from 'react'
 import { apiLogin, apiRegister } from '@/shared/lib/api'
 
 const AuthContext = createContext(null)
-const USERS_KEY = 'lidessa_users'
 
 const BASE_USERS = [
   {
@@ -41,38 +40,24 @@ export const ROLE_HOME = {
 }
 
 export function AuthProvider({ children }) {
-  const [users, setUsers] = useState(() => {
-    try {
-      const stored = localStorage.getItem(USERS_KEY)
-      if (stored) return JSON.parse(stored)
-    } catch {
-      // ignore malformed data
-    }
-    return BASE_USERS
-  })
+  const [users, setUsers] = useState(BASE_USERS)
   const [user, setUser] = useState(null)
   const [initialized, setInitialized] = useState(false)
   const [resetCodes, setResetCodes] = useState({})
 
   useEffect(() => {
-    // La sesión vive en sessionStorage (no localStorage) a propósito: así se
-    // olvida sola al cerrar la pestaña/navegador en vez de quedar iniciada
-    // para siempre, mientras que la lista de cuentas (USERS_KEY) sí persiste.
+    // La sesión vive en sessionStorage a propósito: así se olvida sola al
+    // cerrar la pestaña/navegador en vez de quedar iniciada para siempre.
     const stored = sessionStorage.getItem('lidessa_user')
     if (stored) setUser(JSON.parse(stored))
     setInitialized(true)
   }, [])
 
-  useEffect(() => {
-    localStorage.setItem(USERS_KEY, JSON.stringify(users))
-  }, [users])
-
   // Login real contra la API (Lidessa-Backend). El directorio mock (`users`,
-  // `allUsers`, `registeredStudents`) sigue viviendo aparte en localStorage —
+  // `allUsers`, `registeredStudents`) sigue siendo estado en memoria aparte —
   // el backend todavía no tiene endpoints para listar/gestionar usuarios, así
-  // que un usuario autenticado por esta vía no aparece ahí (ver AuthContext
-  // en la conversación: gap conocido, aceptado mientras se agregan esos
-  // endpoints).
+  // que un usuario autenticado por esta vía no aparece ahí (gap conocido,
+  // aceptado mientras se agregan esos endpoints).
   async function login(email, password) {
     const data = await apiLogin(email, password)
     const safe = { ...data.user, id: String(data.user.id), token: data.token, unreadNotifications: 0 }

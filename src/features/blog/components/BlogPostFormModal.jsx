@@ -16,9 +16,9 @@ function todayFormatted() {
   return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`
 }
 
-// La imagen se guarda como base64 directo en el navegador (localStorage), que
-// tiene un límite total de unos 5-10 MB compartido entre todo el sitio — por
-// eso se limita el tamaño de cada foto individual.
+// La imagen se guarda como base64 directo en memoria (sin backend de
+// archivos todavía) — se limita el tamaño de cada foto para no inflar el
+// estado de la página.
 const MAX_IMAGE_MB = 1.5
 const MAX_IMAGE_BYTES = MAX_IMAGE_MB * 1024 * 1024
 

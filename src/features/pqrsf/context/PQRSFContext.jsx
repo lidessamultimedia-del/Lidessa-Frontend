@@ -1,7 +1,6 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState } from 'react'
 
 const PQRSFContext = createContext(null)
-const STORAGE_KEY = 'lidessa_pqrsf'
 
 // Un ticket es "identificado" cuando hay una forma real de contactar a quien
 // escribió — quedó vinculado a una cuenta real (accountId) o dejó un correo
@@ -21,34 +20,7 @@ const defaultTickets = [
 ]
 
 export function PQRSFProvider({ children }) {
-  const [tickets, setTickets] = useState(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY)
-      return stored ? JSON.parse(stored) : defaultTickets
-    } catch {
-      return defaultTickets
-    }
-  })
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(tickets))
-  }, [tickets])
-
-  // Keep other open tabs/windows (e.g. the admin panel) in sync when a
-  // PQRSF is submitted from a different tab, since localStorage writes
-  // don't trigger a re-render on their own.
-  useEffect(() => {
-    const onStorage = (e) => {
-      if (e.key !== STORAGE_KEY || !e.newValue) return
-      try {
-        setTickets(JSON.parse(e.newValue))
-      } catch {
-        // ignore malformed data from another tab
-      }
-    }
-    window.addEventListener('storage', onStorage)
-    return () => window.removeEventListener('storage', onStorage)
-  }, [])
+  const [tickets, setTickets] = useState(defaultTickets)
 
   // `user` es la cuenta autenticada (si la hay) desde donde se envía el
   // PQRSF — si existe, el ticket queda ligado a esa cuenta real aunque el

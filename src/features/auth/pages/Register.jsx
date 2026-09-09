@@ -4,6 +4,7 @@ import { useAuth, ROLE_HOME } from '../context/AuthContext'
 import { useLMS } from '@/features/lms/context/LMSContext'
 import { useToast } from '@/shared/context/ToastContext'
 import FormField, { errorInputStyle } from '@/shared/components/FormField'
+import { Eye, EyeOff } from '@/shared/components/Icons'
 
 const EMAIL_RE = /^\S+@\S+\.\S+$/
 
@@ -134,13 +135,13 @@ export default function Register() {
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-2.5" noValidate>
-            <Field label="Nombre completo" type="text" placeholder="Su nombre y apellido"
+            <Field label="Nombre completo" type="text" placeholder="Su nombre y apellido" autoComplete="name"
               value={form.name} error={fieldErrors.name} onChange={v => set('name', v)} />
-            <Field label="Correo electrónico" type="email" placeholder="correo@ejemplo.com"
+            <Field label="Correo electrónico" type="email" placeholder="correo@ejemplo.com" autoComplete="email"
               value={form.email} error={fieldErrors.email} onChange={v => set('email', v)} />
 
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Teléfono (opcional)" type="tel" placeholder="+57 300 000 0000"
+              <Field label="Teléfono (opcional)" type="tel" placeholder="+57 300 000 0000" autoComplete="tel"
                 value={form.phone} error={fieldErrors.phone} onChange={v => set('phone', v)} />
               <FormField label="Curso de interés">
                 <select value={form.courseInterest} onChange={e => set('courseInterest', e.target.value)}
@@ -158,15 +159,15 @@ export default function Register() {
               </p>
             )}
             {needsCoursePassword && (
-              <Field label="Contraseña del curso" type="password" placeholder="Provista por Lidessa"
+              <Field label="Contraseña del curso" type="password" placeholder="Provista por Lidessa" autoComplete="off"
                 value={form.enrollPassword} error={fieldErrors.enrollPassword} onChange={v => set('enrollPassword', v)} />
             )}
 
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Contraseña" type="password" placeholder="Mínimo 6 caracteres"
+              <Field label="Contraseña" type="password" placeholder="Mínimo 6 caracteres" autoComplete="new-password"
                 helperText="Mínimo 6 caracteres."
                 value={form.password} error={fieldErrors.password} onChange={v => set('password', v)} />
-              <Field label="Confirmar" type="password" placeholder=""
+              <Field label="Confirmar" type="password" placeholder="" autoComplete="new-password"
                 value={form.confirmPassword} error={fieldErrors.confirmPassword} onChange={v => set('confirmPassword', v)} />
             </div>
 
@@ -195,19 +196,32 @@ export default function Register() {
   )
 }
 
-function Field({ label, type, placeholder, value, error, helperText, onChange }) {
+function Field({ label, type, placeholder, value, error, helperText, onChange, autoComplete }) {
+  const [visible, setVisible] = useState(false)
+  const isPassword = type === 'password'
   return (
     <FormField label={label} error={error} helperText={helperText}>
-      <input
-        type={type}
-        placeholder={placeholder}
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        className="w-full px-3 py-2 rounded-lg text-sm outline-none transition-all"
-        style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)', ...errorInputStyle(!!error) }}
-        onFocus={e => { if (!error) e.target.style.borderColor = 'var(--accent)' }}
-        onBlur={e => { if (!error) e.target.style.borderColor = 'var(--border)' }}
-      />
+      <div className="relative">
+        <input
+          type={isPassword && visible ? 'text' : type}
+          placeholder={placeholder}
+          value={value}
+          autoComplete={autoComplete}
+          onChange={e => onChange(e.target.value)}
+          className="w-full px-3 py-2 rounded-lg text-sm outline-none transition-all"
+          style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)', paddingRight: isPassword ? 34 : undefined, ...errorInputStyle(!!error) }}
+          onFocus={e => { if (!error) e.target.style.borderColor = 'var(--accent)' }}
+          onBlur={e => { if (!error) e.target.style.borderColor = 'var(--border)' }}
+        />
+        {isPassword && (
+          <button type="button" onClick={() => setVisible(v => !v)} tabIndex={-1}
+            className="absolute right-2 top-1/2 -translate-y-1/2"
+            style={{ color: 'var(--muted-foreground)' }}
+            aria-label={visible ? 'Ocultar contraseña' : 'Mostrar contraseña'}>
+            {visible ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
+        )}
+      </div>
     </FormField>
   )
 }

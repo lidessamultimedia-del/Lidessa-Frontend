@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth, ROLE_HOME } from '../context/AuthContext'
 import { useToast } from '@/shared/context/ToastContext'
 import FormField, { errorInputStyle } from '@/shared/components/FormField'
+import { Eye, EyeOff } from '@/shared/components/Icons'
 
 const EMAIL_RE = /^\S+@\S+\.\S+$/
 
@@ -98,10 +99,10 @@ export default function Login() {
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-            <Field label="Correo electrónico" type="email" placeholder="correo@empresa.com"
+            <Field label="Correo electrónico" type="email" placeholder="correo@empresa.com" autoComplete="username"
               value={form.email} error={fieldErrors.email}
               onChange={v => { setForm(f => ({ ...f, email: v })); setFieldErrors(f => ({ ...f, email: null })) }} />
-            <Field label="Contraseña" type="password" placeholder=""
+            <Field label="Contraseña" type="password" placeholder="" autoComplete="current-password"
               value={form.password} error={fieldErrors.password}
               onChange={v => { setForm(f => ({ ...f, password: v })); setFieldErrors(f => ({ ...f, password: null })) }} />
             <div className="text-right">
@@ -140,19 +141,32 @@ export default function Login() {
   )
 }
 
-function Field({ label, type, placeholder, value, error, onChange }) {
+function Field({ label, type, placeholder, value, error, onChange, autoComplete }) {
+  const [visible, setVisible] = useState(false)
+  const isPassword = type === 'password'
   return (
     <FormField label={label} error={error}>
-      <input
-        type={type}
-        placeholder={placeholder}
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        className="w-full px-4 py-2.5 rounded-lg text-sm outline-none transition-all"
-        style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)', ...errorInputStyle(!!error) }}
-        onFocus={e => { if (!error) e.target.style.borderColor = 'var(--accent)' }}
-        onBlur={e => { if (!error) e.target.style.borderColor = 'var(--border)' }}
-      />
+      <div className="relative">
+        <input
+          type={isPassword && visible ? 'text' : type}
+          placeholder={placeholder}
+          value={value}
+          autoComplete={autoComplete}
+          onChange={e => onChange(e.target.value)}
+          className="w-full px-4 py-2.5 rounded-lg text-sm outline-none transition-all"
+          style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)', paddingRight: isPassword ? 36 : undefined, ...errorInputStyle(!!error) }}
+          onFocus={e => { if (!error) e.target.style.borderColor = 'var(--accent)' }}
+          onBlur={e => { if (!error) e.target.style.borderColor = 'var(--border)' }}
+        />
+        {isPassword && (
+          <button type="button" onClick={() => setVisible(v => !v)} tabIndex={-1}
+            className="absolute right-3 top-1/2 -translate-y-1/2"
+            style={{ color: 'var(--muted-foreground)' }}
+            aria-label={visible ? 'Ocultar contraseña' : 'Mostrar contraseña'}>
+            {visible ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
+        )}
+      </div>
     </FormField>
   )
 }

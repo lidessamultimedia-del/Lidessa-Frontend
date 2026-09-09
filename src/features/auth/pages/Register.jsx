@@ -4,6 +4,7 @@ import { useAuth, ROLE_HOME } from '../context/AuthContext'
 import { useLMS } from '@/features/lms/context/LMSContext'
 import { useToast } from '@/shared/context/ToastContext'
 import FormField, { errorInputStyle } from '@/shared/components/FormField'
+import { Eye, EyeOff } from '@/shared/components/Icons'
 
 const EMAIL_RE = /^\S+@\S+\.\S+$/
 
@@ -196,19 +197,31 @@ export default function Register() {
 }
 
 function Field({ label, type, placeholder, value, error, helperText, onChange, autoComplete }) {
+  const [visible, setVisible] = useState(false)
+  const isPassword = type === 'password'
   return (
     <FormField label={label} error={error} helperText={helperText}>
-      <input
-        type={type}
-        placeholder={placeholder}
-        value={value}
-        autoComplete={autoComplete}
-        onChange={e => onChange(e.target.value)}
-        className="w-full px-3 py-2 rounded-lg text-sm outline-none transition-all"
-        style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)', ...errorInputStyle(!!error) }}
-        onFocus={e => { if (!error) e.target.style.borderColor = 'var(--accent)' }}
-        onBlur={e => { if (!error) e.target.style.borderColor = 'var(--border)' }}
-      />
+      <div className="relative">
+        <input
+          type={isPassword && visible ? 'text' : type}
+          placeholder={placeholder}
+          value={value}
+          autoComplete={autoComplete}
+          onChange={e => onChange(e.target.value)}
+          className="w-full px-3 py-2 rounded-lg text-sm outline-none transition-all"
+          style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)', paddingRight: isPassword ? 34 : undefined, ...errorInputStyle(!!error) }}
+          onFocus={e => { if (!error) e.target.style.borderColor = 'var(--accent)' }}
+          onBlur={e => { if (!error) e.target.style.borderColor = 'var(--border)' }}
+        />
+        {isPassword && (
+          <button type="button" onClick={() => setVisible(v => !v)} tabIndex={-1}
+            className="absolute right-2 top-1/2 -translate-y-1/2"
+            style={{ color: 'var(--muted-foreground)' }}
+            aria-label={visible ? 'Ocultar contraseña' : 'Mostrar contraseña'}>
+            {visible ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
+        )}
+      </div>
     </FormField>
   )
 }

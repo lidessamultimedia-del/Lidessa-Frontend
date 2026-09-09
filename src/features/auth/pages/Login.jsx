@@ -98,10 +98,10 @@ export default function Login() {
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-            <Field label="Correo electrónico" type="email" placeholder="correo@empresa.com"
+            <Field label="Correo electrónico" type="email" placeholder="correo@empresa.com" autoComplete="username"
               value={form.email} error={fieldErrors.email}
               onChange={v => { setForm(f => ({ ...f, email: v })); setFieldErrors(f => ({ ...f, email: null })) }} />
-            <Field label="Contraseña" type="password" placeholder=""
+            <Field label="Contraseña" type="password" placeholder="" autoComplete="current-password"
               value={form.password} error={fieldErrors.password}
               onChange={v => { setForm(f => ({ ...f, password: v })); setFieldErrors(f => ({ ...f, password: null })) }} />
             <div className="text-right">
@@ -140,13 +140,14 @@ export default function Login() {
   )
 }
 
-function Field({ label, type, placeholder, value, error, onChange }) {
+function Field({ label, type, placeholder, value, error, onChange, autoComplete }) {
   return (
     <FormField label={label} error={error}>
       <input
         type={type}
         placeholder={placeholder}
         value={value}
+        autoComplete={autoComplete}
         onChange={e => onChange(e.target.value)}
         className="w-full px-4 py-2.5 rounded-lg text-sm outline-none transition-all"
         style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)', ...errorInputStyle(!!error) }}

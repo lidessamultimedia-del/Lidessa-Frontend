@@ -688,10 +688,14 @@ export default function AdminDashboard({ theme, setTheme }) {
                   },
                   { label: 'Estudiantes por certificar', value: lms.studentsReadyToCertify().length, icon: ShieldCheck, color: '#16a34a' },
                 ].map(s => (
-                  <div key={s.label} className="rounded-xl p-5"
+                  <div key={s.label} className="rounded-2xl p-5"
                     style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
                     <div className="flex items-center justify-between mb-3">
-                      <span style={{ color: s.color }}><s.icon size={26} /></span>
+                      <span style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        width: 44, height: 44, borderRadius: '50%',
+                        backgroundColor: `${s.color}1a`, color: s.color,
+                      }}><s.icon size={22} /></span>
                       <AnimatedCounter target={s.value} suffix="" style={{ fontSize: 32, fontFamily: 'var(--font-display)', color: s.color, fontWeight: 900 }} />
                     </div>
                     <p className="text-xs font-medium" style={{ color: 'var(--muted-foreground)' }}>{s.label}</p>
@@ -708,12 +712,16 @@ export default function AdminDashboard({ theme, setTheme }) {
                   { label: 'Ver PQRSF', icon: Send, section: 'pqrsf' },
                 ].map(a => (
                   <button key={a.label} onClick={() => setSection(a.section)}
-                    className="rounded-xl p-4 text-left transition-all hover:shadow-md"
+                    className="rounded-2xl p-4 text-left transition-all hover:shadow-md"
                     style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}
                     onMouseEnter={e => { e.currentTarget.style.borderColor = '#4d82bc' }}
                     onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)' }}
                   >
-                    <span style={{ display: 'block', marginBottom: 8, color: 'var(--primary)' }}><a.icon size={22} /></span>
+                    <span style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      width: 38, height: 38, borderRadius: '50%', marginBottom: 10,
+                      backgroundColor: 'color-mix(in srgb, var(--primary) 12%, transparent)', color: 'var(--primary)',
+                    }}><a.icon size={18} /></span>
                     <span className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{a.label}</span>
                   </button>
                 ))}

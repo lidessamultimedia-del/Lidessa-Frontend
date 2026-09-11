@@ -115,11 +115,6 @@ export default function Login() {
                 {error}
               </p>
             )}
-            <div className="text-xs space-y-0.5" style={{ color: 'var(--muted-foreground)' }}>
-              <p>Demo admin: <code>admin@lidessa.co</code> / <code>admin123</code></p>
-              <p>Demo profesor: <code>profesor@lidessa.co</code> / <code>profesor123</code></p>
-              <p>Demo estudiante: <code>estudiante@lidessa.co</code> / <code>estudiante123</code></p>
-            </div>
             <button
               type="submit"
               disabled={loading}

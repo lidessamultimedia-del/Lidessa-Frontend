@@ -12,9 +12,7 @@ export function ToastProvider({ children }) {
   const toast = useCallback((type, title, message) => {
     const id = Math.random().toString(36).slice(2)
     setToasts(prev => [...prev, { id, type, title, message }])
-    if (type !== 'error') {
-      setTimeout(() => dismiss(id), 2500)
-    }
+    setTimeout(() => dismiss(id), type === 'error' ? 4000 : 2500)
   }, [dismiss])
 
   return (

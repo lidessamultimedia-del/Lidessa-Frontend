@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/features/auth/context/AuthContext'
 import { useToast } from '@/shared/context/ToastContext'
@@ -26,8 +26,17 @@ export default function DashboardShell({ roleLabel, navItems, activeSection, onS
   // ocupa la mayoría del ancho y deja el contenido apretado en una franja.
   const [sidebarOpen, setSidebarOpen] = useState(() => typeof window === 'undefined' || window.innerWidth >= 768)
   const [bellOpen, setBellOpen] = useState(false)
+  const bellRef = useRef(null)
   const [seenIds, setSeenIds] = useState(() => new Set())
   const unreadNotifications = notifications.filter(n => !seenIds.has(n.id))
+
+  useEffect(() => {
+    function handleClick(e) {
+      if (bellRef.current && !bellRef.current.contains(e.target)) setBellOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
 
   function markAllSeen() {
     setSeenIds(prev => {
@@ -148,7 +157,7 @@ export default function DashboardShell({ roleLabel, navItems, activeSection, onS
           </h1>
           <div className="flex items-center gap-2 sm:gap-4 shrink-0">
             <ThemeToggle theme={theme} setTheme={setTheme} />
-            <div style={{ position: 'relative' }}>
+            <div ref={bellRef} style={{ position: 'relative' }}>
               <button onClick={() => {
                 const next = !bellOpen
                 setBellOpen(next)

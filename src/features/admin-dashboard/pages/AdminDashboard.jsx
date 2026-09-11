@@ -97,6 +97,15 @@ export default function AdminDashboard({ theme, setTheme }) {
   // ocupa la mayoría del ancho y deja el contenido apretado en una franja.
   const [sidebarOpen, setSidebarOpen] = useState(() => typeof window === 'undefined' || window.innerWidth >= 768)
   const [bellOpen, setBellOpen] = useState(false)
+  const bellRef = useRef(null)
+
+  useEffect(() => {
+    function handleClick(e) {
+      if (bellRef.current && !bellRef.current.contains(e.target)) setBellOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
 
   // Notificaciones reales, armadas a partir del estado actual (antes eran
   // texto fijo inventado que nunca cambiaba): PQRSF prioritarios pendientes,
@@ -573,7 +582,7 @@ export default function AdminDashboard({ theme, setTheme }) {
           <div className="flex items-center gap-2 sm:gap-4 shrink-0">
             <ThemeToggle theme={theme} setTheme={setTheme} />
             {/* Bell */}
-            <div style={{ position: 'relative' }}>
+            <div ref={bellRef} style={{ position: 'relative' }}>
               <button onClick={() => {
                 const next = !bellOpen
                 setBellOpen(next)

@@ -17,7 +17,7 @@ export default function Blog() {
       <section className="py-16 overflow-hidden" style={{ background: 'linear-gradient(135deg, #10294d 0%, #071426 55%, #0c0c0c 100%)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 grid lg:grid-cols-5 gap-6 items-stretch">
           <div
-            className="lg:col-span-3 rounded-3xl p-8 sm:p-12 flex flex-col justify-center reveal relative overflow-hidden"
+            className="lg:col-span-3 rounded-3xl p-6 sm:p-8 flex flex-col justify-center reveal relative overflow-hidden"
             style={{
               backgroundImage: 'url("/assets/converge1.png")',
               backgroundSize: 'cover',
@@ -28,22 +28,22 @@ export default function Blog() {
             <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(16,41,77,0.45) 0%, rgba(7,20,38,0.4) 100%)' }} />
             <div className="relative">
             <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: GOLD }}>Converge</p>
-            <h1 className="text-4xl sm:text-5xl font-black mb-4 leading-tight" style={{ fontFamily: 'var(--font-display)' }}>
+            <h1 className="text-3xl sm:text-4xl font-black mb-3 leading-tight" style={{ fontFamily: 'var(--font-display)' }}>
               <span style={{ color: 'white' }}>¡Bienvenidos a</span><br />
               <span style={{ color: GOLD }}>Converge!</span>
             </h1>
-            <div className="w-16 h-0.5 mb-5 rounded-full" style={{ backgroundColor: GOLD, opacity: 0.6 }} />
-            <p className="text-sm sm:text-base leading-relaxed mb-5" style={{ color: 'rgba(255,255,255,0.88)' }}>
+            <div className="w-16 h-0.5 mb-4 rounded-full" style={{ backgroundColor: GOLD, opacity: 0.6 }} />
+            <p className="text-sm leading-relaxed mb-4" style={{ color: 'rgba(255,255,255,0.88)' }}>
               Nos alegra que se una a nuestra comunidad de información. En <span style={{ color: GOLD, fontWeight: 600 }}>Converge</span> estamos comprometidos a ofrecerle las <span style={{ color: GOLD, fontWeight: 600 }}>noticias más actuales, relevantes y confiables</span> del panorama empresarial, normativo e institucional, para mantenerlo siempre al tanto de lo que más importa.
             </p>
 
-            <div className="rounded-2xl p-4 mb-5 flex gap-3 items-start" style={{ backgroundColor: 'rgba(0,0,0,0.3)', border: '1px solid rgba(232,199,102,0.25)' }}>
+            <div className="rounded-2xl p-3 mb-4 flex gap-3 items-start" style={{ backgroundColor: 'rgba(0,0,0,0.3)', border: '1px solid rgba(232,199,102,0.25)' }}>
               <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ border: `1.5px solid ${GOLD}` }}>
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
                 </svg>
               </div>
-              <p className="text-sm sm:text-base leading-relaxed" style={{ color: 'rgba(255,255,255,0.88)' }}>
+              <p className="text-sm leading-relaxed" style={{ color: 'rgba(255,255,255,0.88)' }}>
                 Aquí no solo reportamos noticias: también fomentamos el <span style={{ color: GOLD, fontWeight: 600 }}>diálogo</span> y la <span style={{ color: GOLD, fontWeight: 600 }}>reflexión</span>. Queremos ser su fuente de información confiable y su espacio para el <span style={{ color: GOLD, fontWeight: 600 }}>intercambio de ideas</span>.
               </p>
             </div>
@@ -55,7 +55,7 @@ export default function Blog() {
                   <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
                 </svg>
               </div>
-              <p className="text-sm sm:text-base leading-relaxed">
+              <p className="text-sm leading-relaxed">
                 <span style={{ color: 'rgba(255,255,255,0.88)' }}>Gracias por confiar en nosotros para mantenerlo informado.</span>
                 <span style={{ color: GOLD, fontWeight: 700 }}>¡Vamos a converger en la verdad y el conocimiento!</span>
               </p>
@@ -65,22 +65,13 @@ export default function Blog() {
 
           <div
             className="lg:col-span-2 rounded-3xl overflow-hidden min-h-65 reveal-scale relative flex items-center justify-center"
-            style={{ background: 'radial-gradient(ellipse 75% 65% at 50% 42%, #10294d 0%, #071426 55%, #020712 100%)' }}
+            style={{
+              backgroundImage: 'url("/assets/grabacion.png")',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+            }}
           >
-            {/* Glow ring */}
-            <div
-              className="absolute pointer-events-none"
-              style={{
-                width: '94%',
-                height: '76%',
-                top: '9%',
-                left: '3%',
-                borderRadius: '50%',
-                border: '1.5px solid rgba(232,199,102,0.55)',
-                boxShadow: '0 0 70px 12px rgba(232,199,102,0.3), inset 0 0 45px rgba(232,199,102,0.12)',
-                transform: 'rotate(-4deg)',
-              }}
-            />
+            <div className="absolute inset-0" style={{ background: 'radial-gradient(ellipse 75% 65% at 50% 42%, rgba(16,41,77,0.4) 0%, rgba(7,20,38,0.5) 55%, rgba(2,7,18,0.6) 100%)' }} />
             {/* Pedestal glow */}
             <div
               className="absolute pointer-events-none"

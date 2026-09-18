@@ -17,9 +17,16 @@ export default function Blog() {
       <section className="py-16 overflow-hidden" style={{ background: 'linear-gradient(135deg, #10294d 0%, #071426 55%, #0c0c0c 100%)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 grid lg:grid-cols-5 gap-6 items-stretch">
           <div
-            className="lg:col-span-3 rounded-3xl p-8 sm:p-12 flex flex-col justify-center reveal"
-            style={{ backgroundColor: 'rgba(0,0,0,0.35)', border: '1px solid rgba(232,199,102,0.18)' }}
+            className="lg:col-span-3 rounded-3xl p-8 sm:p-12 flex flex-col justify-center reveal relative overflow-hidden"
+            style={{
+              backgroundImage: 'url("/assets/converge1.png")',
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              border: '1px solid rgba(232,199,102,0.18)',
+            }}
           >
+            <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(16,41,77,0.45) 0%, rgba(7,20,38,0.4) 100%)' }} />
+            <div className="relative">
             <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: GOLD }}>Converge</p>
             <h1 className="text-4xl sm:text-5xl font-black mb-4 leading-tight" style={{ fontFamily: 'var(--font-display)' }}>
               <span style={{ color: 'white' }}>¡Bienvenidos a</span><br />
@@ -30,7 +37,7 @@ export default function Blog() {
               Nos alegra que se una a nuestra comunidad de información. En <span style={{ color: GOLD, fontWeight: 600 }}>Converge</span> estamos comprometidos a ofrecerle las <span style={{ color: GOLD, fontWeight: 600 }}>noticias más actuales, relevantes y confiables</span> del panorama empresarial, normativo e institucional, para mantenerlo siempre al tanto de lo que más importa.
             </p>
 
-            <div className="rounded-2xl p-4 mb-5 flex gap-3 items-start" style={{ backgroundColor: 'rgba(232,199,102,0.06)', border: '1px solid rgba(232,199,102,0.25)' }}>
+            <div className="rounded-2xl p-4 mb-5 flex gap-3 items-start" style={{ backgroundColor: 'rgba(0,0,0,0.3)', border: '1px solid rgba(232,199,102,0.25)' }}>
               <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ border: `1.5px solid ${GOLD}` }}>
                 <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
@@ -52,6 +59,7 @@ export default function Blog() {
                 <span style={{ color: 'rgba(255,255,255,0.88)' }}>Gracias por confiar en nosotros para mantenerlo informado.</span>
                 <span style={{ color: GOLD, fontWeight: 700 }}>¡Vamos a converger en la verdad y el conocimiento!</span>
               </p>
+            </div>
             </div>
           </div>
 

@@ -160,13 +160,13 @@ const team = [
     name: 'Lina Maria Aristizabal',
     role: 'Gerente',
     bio: 'Gerente y Fundadora de Lidessa, especialista en Diseño Curricular para IFTDH e IES, conferencista y especialista en SISTEMAS DE GESTIÓN. Se ha desempeñado como directora de IFTDH, Cogestora y Cofundadora de más de 10 Instituciones de educación para el trabajo y el desarrollo humano a nivel nacional y 7 de educación Formal, y de más de 10 empresas en otros sectores. Ha sido consultora en Gestión y Desarrollo de las Organizaciones en más de 70 empresas. Cuenta con experiencia como consultora en Diseño e implementación de Sistemas de Gestión de Calidad de diferentes sectores empresariales, como auditora de Sistemas de Gestión Ambientales, Calidad y SST, directora y rectora de diversas instituciones educativas, presidenta de la mesa Nacional de Consultoría Empresarial del SENA, evaluadora de Normas de competencia laboral y partícipe activa de otras mesas como Gestión del Riesgo, PYMES, BPO-KPO, y educativa.',
-    image: '/assets/LINACEO-square.png',
+    image: '/assets/Gerente.png',
   },
   {
     name: 'Diego Alonso Pérez',
     role: 'Sub Gerente',
     bio: 'Gerente y fundador de Hydrobombas S.A.S con Experiencia de 17 años en puestos directivos, desde hace 4 años asumió el rol de subgerente de Lidessa. Tecnólogo e ingeniero mecánico de profesión, con amplios conocimientos en neumática, hidráulica, manejo de herramientas técnicas y desarrollo de mediciones del campo. Ha recibido y perfeccionado sus habilidades con entrenamientos en enfermería, espacios confinados, trabajo en alturas, seguridad vial y manejo de extintores y protocolos contra incendios. Actualmente cuenta con certificaciones en primeros auxilios, supervisor de espacios confinados y coordinador de alturas, además de ser tallerista y conferencista en estas áreas. Su amplia experiencia le ha permitido especializarse en redes contra incendios RCI y mecanismos de prevención y control, esta misma trayectoria le ha aportado madurez y sólidas estructuras en la gestión del recurso humano, llevándolo a considerarse más que un líder, un miembro más de los equipos de intervención, y auto caracterizándose en tres palabras: "Conocimiento, experiencia y humanidad".',
-    image: '/assets/CeoD.png',
+    image: '/assets/Sudgerente.png',
   },
 ]
 
@@ -268,64 +268,23 @@ export default function About() {
 
       {/* Hero */}
       <section
-        className="relative min-h-[80vh] flex items-center overflow-hidden py-20"
-        style={{ background: 'linear-gradient(135deg, #10294d 0%, #071426 55%, #0c0c0c 100%)' }}
+        className="py-20 relative"
+        style={{
+          backgroundImage: 'url("/assets/nosotros.png")',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
       >
-        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', top: '20%', right: '10%', width: 350, height: 350, borderRadius: '50%', background: 'radial-gradient(circle, rgba(77,130,188,0.2) 0%, transparent 70%)', animation: 'orb1 12s ease-in-out infinite' }} />
-        </div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 w-full grid lg:grid-cols-2 gap-14 items-center">
-          <div style={{ animation: 'fadeUp 0.7s ease forwards' }}>
-            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#84b6f4', fontFamily: 'var(--font-display)' }}>Conózcanos</p>
-            <h1 className="font-black text-white mb-5" style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(2.2rem, 5vw, 3.4rem)' }}>
-              Más que consultoría,<br />
-              <span style={{ color: '#84b6f4' }}>resultados que transforman</span>
-            </h1>
-            <p className="text-lg max-w-xl" style={{ color: '#c4dafa', fontFamily: 'var(--font-display)' }}>
-              15 años ayudando a empresas e instituciones colombianas a cumplir la norma y alcanzar la excelencia organizacional.
-            </p>
-          </div>
-
-          <div className="flex justify-center reveal-scale">
-            <div style={{ position: 'relative', width: 'min(400px, 85vw)', height: 'min(400px, 85vw)' }}>
-              {/* Glow ring */}
-              <div
-                className="pointer-events-none"
-                style={{
-                  position: 'absolute',
-                  inset: '-6px',
-                  borderRadius: '50%',
-                  border: '3px solid #e8c766',
-                  boxShadow: '0 0 90px 18px rgba(232,199,102,0.5), inset 0 0 45px rgba(232,199,102,0.2)',
-                }}
-              />
-              {/* Pedestal glow */}
-              <div
-                className="pointer-events-none"
-                style={{
-                  position: 'absolute',
-                  bottom: '-4%',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  width: '65%',
-                  height: '13%',
-                  borderRadius: '50%',
-                  background: 'radial-gradient(ellipse at center, rgba(232,199,102,0.45), transparent 70%)',
-                  filter: 'blur(6px)',
-                }}
-              />
-              <div style={{ position: 'relative', width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden', boxShadow: '0 25px 60px rgba(0,0,0,0.4)' }}>
-                <img
-                  src="/assets/nosotros-hero.png"
-                  alt="Lidessa"
-                  className="w-full h-full object-cover"
-                  style={{ transition: 'transform 0.4s ease' }}
-                  onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.08)'}
-                  onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-                />
-              </div>
-            </div>
-          </div>
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(16,41,77,0.55) 0%, rgba(7,20,38,0.4) 100%)' }} />
+        <div className="relative max-w-3xl mx-auto px-4 sm:px-6 text-center">
+          <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#e8c766', fontFamily: 'var(--font-display)' }}>Conózcanos</p>
+          <h1 className="font-black mb-5" style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(2.2rem, 5vw, 3.4rem)', color: '#e8c766' }}>
+            Más que consultoría,<br />
+            <span style={{ color: '#e8c766' }}>resultados que transforman</span>
+          </h1>
+          <p className="text-lg mx-auto" style={{ color: '#cbb98a', fontFamily: 'var(--font-display)' }}>
+            15 años ayudando a empresas e instituciones colombianas a cumplir la norma y alcanzar la excelencia organizacional.
+          </p>
         </div>
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 50, overflow: 'hidden' }}>
           <svg viewBox="0 0 1440 50" preserveAspectRatio="none" style={{ width: '100%', height: '100%' }}>

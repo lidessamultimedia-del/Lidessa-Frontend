@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect, useRef } from 'react'
 import { useAuth } from '@/features/auth/context/AuthContext'
 import { useLMS, MAX_GRADE, PASS_THRESHOLD } from '@/features/lms/context/LMSContext'
 import { useToast } from '@/shared/context/ToastContext'
+import { apiUploadAttachment, toFileUrl } from '@/shared/lib/api'
 import DashboardShell from '@/features/lms/components/DashboardShell'
 import ChatThread from '@/features/lms/components/ChatThread'
 import AnimatedCounter from '@/shared/components/AnimatedCounter'
@@ -57,6 +58,7 @@ export default function StudentDashboard({ theme, setTheme }) {
   const [selectedCourseId, setSelectedCourseId] = useState(null)
   const [courseTab, setCourseTab] = useState('general')
   const [submitAssignmentId, setSubmitAssignmentId] = useState(null)
+  const [submitLoading, setSubmitLoading] = useState(false)
   const [openQuizId, setOpenQuizId] = useState(null)
   const [messageTarget, setMessageTarget] = useState(null)
   const [messagesSearch, setMessagesSearch] = useState('')
@@ -119,9 +121,19 @@ export default function StudentDashboard({ theme, setTheme }) {
     setSection('courseDetail')
   }
 
-  function openSubmit(assignmentId) {
+  // Carga el borrador/entrega ya existente (si hay) desde el backend antes de
+  // mostrar el formulario, para que el estudiante siga donde lo dejó.
+  async function openSubmit(assignmentId) {
     setSubmitAssignmentId(assignmentId)
     setSection('submit')
+    setSubmitLoading(true)
+    try {
+      await lms.loadSubmission(assignmentId)
+    } catch (err) {
+      toast('error', 'No se pudo cargar tu entrega anterior', err.message)
+    } finally {
+      setSubmitLoading(false)
+    }
   }
 
   function openQuiz(quizId) {
@@ -582,14 +594,18 @@ export default function StudentDashboard({ theme, setTheme }) {
       )}
 
       {/* ── ENVIAR TAREA ── */}
-      {section === 'submit' && submitAssignment && (
+      {section === 'submit' && submitAssignment && submitLoading && (
+        <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>Cargando tu entrega…</p>
+      )}
+      {section === 'submit' && submitAssignment && !submitLoading && (
         <SubmitAssignmentForm
           assignment={submitAssignment}
           course={submitCourse}
           existing={submitExisting}
+          token={user.token}
           onCancel={() => setSection('courseDetail')}
-          onSubmit={(data, draft) => {
-            lms.submitAssignment({ assignmentId: submitAssignment.id, studentId, ...data, draft })
+          onSubmit={async (data, draft) => {
+            await lms.submitAssignment({ assignmentId: submitAssignment.id, ...data, draft })
             toast('success', draft ? 'Borrador guardado' : 'Tarea enviada', submitAssignment.title)
             setSection('courseDetail')
           }}
@@ -1137,36 +1153,50 @@ function QuizAttemptForm({ quiz, course, existingAttempt, studentId, onSubmit, o
   )
 }
 
-function SubmitAssignmentForm({ assignment, course, existing, onSubmit, onCancel }) {
+function SubmitAssignmentForm({ assignment, course, existing, token, onSubmit, onCancel }) {
   const [fileName, setFileName] = useState(existing?.fileName ?? '')
-  const [fileData, setFileData] = useState(existing?.fileData ?? '')
+  const [fileUrl, setFileUrl] = useState(existing?.fileUrl ?? '')
   const [fileSize, setFileSize] = useState(existing?.fileSize ?? 0)
   const [textResponse, setTextResponse] = useState(existing?.textResponse ?? '')
   const [notes, setNotes] = useState(existing?.notes ?? '')
   const [confirmed, setConfirmed] = useState(false)
   const [submitError, setSubmitError] = useState('')
+  const [uploading, setUploading] = useState(false)
+  const [saving, setSaving] = useState(false)
 
   const hasFile = !!fileName
+  const busy = uploading || saving
 
-  function handleFileChange(e) {
+  async function handleFileChange(e) {
     const f = e.target.files?.[0]
     e.target.value = ''
     if (!f) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      setFileName(f.name); setFileData(reader.result); setFileSize(f.size)
-      setConfirmed(false); setSubmitError('')
+    setSubmitError('')
+    setUploading(true)
+    try {
+      const result = await apiUploadAttachment(f, token)
+      setFileName(result.fileName); setFileUrl(result.url); setFileSize(result.sizeBytes)
+      setConfirmed(false)
+    } catch (err) {
+      setSubmitError(err.message)
+    } finally {
+      setUploading(false)
     }
-    reader.readAsDataURL(f)
   }
 
-  function handle(draft) {
+  async function handle(draft) {
     if (!draft && !hasFile && !textResponse.trim()) {
       setSubmitError('Adjunta un archivo o escribe una respuesta antes de entregar.')
       return
     }
     setSubmitError('')
-    onSubmit({ fileName, fileData, fileSize, textResponse, notes }, draft)
+    setSaving(true)
+    try {
+      await onSubmit({ fileName, fileUrl, fileSize, textResponse, notes }, draft)
+    } catch (err) {
+      setSubmitError(err.message)
+      setSaving(false)
+    }
   }
 
   return (
@@ -1195,9 +1225,16 @@ function SubmitAssignmentForm({ assignment, course, existing, onSubmit, onCancel
           <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--foreground)' }}>Cargar archivo (PDF, DOC, DOCX)</label>
           <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg" style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)' }}>
             <Upload size={16} style={{ color: 'var(--muted-foreground)' }} />
-            <input type="file" accept=".pdf,.doc,.docx" onChange={handleFileChange} className="text-sm" style={{ color: 'var(--foreground)' }} />
+            <input type="file" accept=".pdf,.doc,.docx" onChange={handleFileChange} disabled={busy} className="text-sm" style={{ color: 'var(--foreground)' }} />
           </div>
-          {hasFile && <p className="text-xs mt-1" style={{ color: 'var(--muted-foreground)' }}>Archivo actual: {fileName} ({(fileSize / 1024).toFixed(0)} KB)</p>}
+          {uploading && <p className="text-xs mt-1" style={{ color: 'var(--muted-foreground)' }}>Subiendo archivo…</p>}
+          {!uploading && hasFile && (
+            <p className="text-xs mt-1" style={{ color: 'var(--muted-foreground)' }}>
+              Archivo actual: {fileUrl ? (
+                <a href={toFileUrl(fileUrl)} target="_blank" rel="noreferrer" style={{ color: 'var(--accent)' }}>{fileName}</a>
+              ) : fileName} ({(fileSize / 1024).toFixed(0)} KB)
+            </p>
+          )}
         </div>
         <div>
           <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--foreground)' }}>O escribir respuesta</label>
@@ -1226,11 +1263,14 @@ function SubmitAssignmentForm({ assignment, course, existing, onSubmit, onCancel
           ⚠ Una vez entregues no podrás hacer cambios visibles como pendiente. Revisa bien antes de enviar.
         </p>
         <div className="flex gap-3">
-          <button onClick={onCancel} className="flex-1 py-2.5 rounded-lg text-sm font-bold" style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>Cancelar</button>
-          <button onClick={() => handle(true)} className="flex-1 py-2.5 rounded-lg text-sm font-bold" style={{ border: '1px solid var(--border)', color: 'var(--accent)' }}>Guardar borrador</button>
-          <button onClick={() => handle(false)} disabled={hasFile && !confirmed}
+          <button onClick={onCancel} disabled={busy} className="flex-1 py-2.5 rounded-lg text-sm font-bold disabled:opacity-50" style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>Cancelar</button>
+          <button onClick={() => handle(true)} disabled={busy}
+            className="flex-1 py-2.5 rounded-lg text-sm font-bold disabled:opacity-50" style={{ border: '1px solid var(--border)', color: 'var(--accent)' }}>
+            {saving ? 'Guardando…' : 'Guardar borrador'}
+          </button>
+          <button onClick={() => handle(false)} disabled={busy || (hasFile && !confirmed)}
             className="flex-1 py-2.5 rounded-lg text-sm font-bold text-white disabled:opacity-50" style={{ backgroundColor: '#005187' }}>
-            Entregar Tarea
+            {saving ? 'Enviando…' : 'Entregar Tarea'}
           </button>
         </div>
       </div>

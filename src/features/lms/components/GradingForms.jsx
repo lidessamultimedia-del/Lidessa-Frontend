@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { MAX_GRADE, PASS_THRESHOLD } from '../context/LMSContext'
 import FormField, { errorInputStyle } from '@/shared/components/FormField'
 import { Paperclip } from '@/shared/components/Icons'
+import { toFileUrl } from '@/shared/lib/api'
 
 // Calificar una tarea entregada y revisar un examen con preguntas de
 // respuesta abierta — usados tanto por el profesor como por el admin
@@ -13,6 +14,8 @@ export function GradeSubmissionForm({ submission, assignment, course, studentNam
   const [retryAllowed, setRetryAllowed] = useState(submission.retryAllowed ?? false)
   const [gradeError, setGradeError] = useState('')
   const maxScore = assignment?.maxScore ?? MAX_GRADE
+  // fileData = entregas mock (base64); fileUrl = entregas reales del backend.
+  const downloadHref = submission.fileData || (submission.fileUrl ? toFileUrl(submission.fileUrl) : '')
 
   return (
     <div style={{ animation: 'fadeUp 0.4s ease', maxWidth: 640 }}>
@@ -26,8 +29,8 @@ export function GradeSubmissionForm({ submission, assignment, course, studentNam
         <p className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--muted-foreground)' }}>Lo que entregó el estudiante</p>
         {submission.fileName && (
           <div className="mb-3">
-            {submission.fileData ? (
-              <a href={submission.fileData} download={submission.fileName}
+            {downloadHref ? (
+              <a href={downloadHref} download={submission.fileName}
                 className="flex items-start gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-colors max-w-full"
                 style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: 'var(--accent)', border: '1px solid rgba(0,81,135,0.2)' }}>
                 <Paperclip size={14} className="shrink-0 mt-0.5" />

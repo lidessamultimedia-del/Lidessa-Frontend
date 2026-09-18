@@ -4,6 +4,7 @@ import {
   seedQuizzes, seedQuizAttempts,
 } from '../data/seed'
 import { useAuth } from '@/features/auth/context/AuthContext'
+import { apiGetSubmission, apiSaveSubmission } from '@/shared/lib/api'
 
 const LMSContext = createContext(null)
 
@@ -43,8 +44,33 @@ const defaultState = {
   certifications: [],
 }
 
+// Traduce una Submission real del backend (Lidessa.Api) al shape que ya usa
+// toda la UI del LMS — el resto del LMS (cursos, tareas, inscripciones)
+// sigue en datos mock, así que este es el único punto donde algo "de
+// submissions" viene de la API real en vez del seed.
+function fromApiSubmission(s) {
+  return {
+    id: `sub_api_${s.id}`,
+    remoteId: s.id,
+    assignmentId: s.assignmentId,
+    studentId: String(s.studentId),
+    fileName: s.attachmentFileName ?? '',
+    fileUrl: s.attachmentUrl ?? '',
+    fileSize: s.attachmentSizeBytes ?? 0,
+    textResponse: s.textResponse ?? '',
+    notes: s.notes ?? '',
+    status: s.status,
+    submittedAt: s.submittedAt,
+    grade: s.grade,
+    feedback: s.feedback ?? '',
+    gradedAt: s.gradedAt,
+    retryAllowed: s.retryAllowed,
+    seen: false,
+  }
+}
+
 export function LMSProvider({ children }) {
-  const { registeredStudents, allUsers } = useAuth()
+  const { registeredStudents, allUsers, user } = useAuth()
   const [state, setState] = useState(defaultState)
 
   const { directory, courses, topics, lessons, assignments, submissions, lessonProgress, quizzes, quizAttempts, documentTypes, messages, certifications } = state
@@ -360,23 +386,45 @@ export function LMSProvider({ children }) {
   }
 
   // ── Submissions ──
-  function submitAssignment({ assignmentId, studentId, fileName = '', fileData = '', fileSize = 0, textResponse = '', notes = '', draft = false }) {
-    setState(s => {
-      const existing = s.submissions.find(sub => sub.assignmentId === assignmentId && sub.studentId === studentId)
-      const payload = {
-        fileName, fileData, fileSize, textResponse, notes,
-        status: draft ? 'draft' : 'submitted',
-        submittedAt: draft ? (existing?.submittedAt ?? null) : new Date().toISOString(),
-        // Cada envío consume el permiso de reintento — para volver a
-        // intentarlo el profesor tiene que autorizarlo de nuevo.
-        ...(draft ? {} : { retryAllowed: false }),
-      }
-      if (existing) {
-        return { ...s, submissions: s.submissions.map(sub => sub.id === existing.id ? { ...sub, ...payload } : sub) }
-      }
-      const submission = { id: `sub${Date.now()}`, assignmentId, studentId, grade: null, feedback: '', gradedAt: null, retryAllowed: false, ...payload }
-      return { ...s, submissions: [...s.submissions, submission] }
-    })
+  // Guardar borrador y entregar ya hablan con el backend real
+  // (SubmissionsController: PUT /api/assignments/{id}/submissions/me), que
+  // aplica la máquina de estados draft → submitted. El resto del LMS (cursos,
+  // tareas, inscripciones) sigue en mock, así que esto solo funciona de
+  // verdad contra un assignmentId que exista en la base de datos.
+  function upsertLocalSubmission(mapped) {
+    setState(s => ({
+      ...s,
+      submissions: [
+        ...s.submissions.filter(sub => !(sub.assignmentId === mapped.assignmentId && sub.studentId === mapped.studentId)),
+        mapped,
+      ],
+    }))
+  }
+
+  // Trae el borrador/entrega existente del estudiante para una tarea, si hay
+  // una. Se llama al abrir el formulario de entrega para no partir de cero.
+  async function loadSubmission(assignmentId) {
+    if (!user?.token) return null
+    const result = await apiGetSubmission(assignmentId, user.token)
+    if (!result) return null
+    const mapped = fromApiSubmission(result)
+    upsertLocalSubmission(mapped)
+    return mapped
+  }
+
+  async function submitAssignment({ assignmentId, fileName = '', fileUrl = '', fileSize = 0, textResponse = '', notes = '', draft = false }) {
+    const payload = {
+      textResponse,
+      notes,
+      attachmentFileName: fileName || null,
+      attachmentUrl: fileUrl || null,
+      attachmentSizeBytes: fileSize || null,
+      submit: !draft,
+    }
+    const result = await apiSaveSubmission(assignmentId, payload, user.token)
+    const mapped = fromApiSubmission(result)
+    upsertLocalSubmission(mapped)
+    return mapped
   }
   function gradeSubmission(id, grade, feedback, retryAllowed = false) {
     setState(s => ({
@@ -604,7 +652,7 @@ export function LMSProvider({ children }) {
     addLesson, updateLesson, deleteLesson, markLessonComplete,
     addAssignment, updateAssignment, deleteAssignment,
     addQuiz, updateQuiz, deleteQuiz, submitQuizAttempt,
-    submitAssignment, gradeSubmission,
+    submitAssignment, loadSubmission, gradeSubmission,
     directoryById, teacherName, studentName,
     coursesByTeacher, coursesByStudent, listedCourses, publicCourses, isPublished, isAssignedTo, lessonsByCourse, assignmentsByCourse, submissionFor,
     quizzesByCourse, attemptFor,

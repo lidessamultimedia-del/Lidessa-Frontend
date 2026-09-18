@@ -277,12 +277,12 @@ export default function About() {
       >
         <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(16,41,77,0.55) 0%, rgba(7,20,38,0.4) 100%)' }} />
         <div className="relative max-w-3xl mx-auto px-4 sm:px-6 text-center">
-          <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: '#e8c766', fontFamily: 'var(--font-display)' }}>Conózcanos</p>
-          <h1 className="font-black mb-5" style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(2.2rem, 5vw, 3.4rem)', color: '#e8c766' }}>
+          <p className="text-xs font-bold uppercase tracking-widest mb-3 reveal" style={{ color: '#e8c766', fontFamily: 'var(--font-display)' }}>Conózcanos</p>
+          <h1 className="font-black mb-5 reveal stagger-1" style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(2.2rem, 5vw, 3.4rem)', color: '#e8c766' }}>
             Más que consultoría,<br />
             <span style={{ color: '#e8c766' }}>resultados que transforman</span>
           </h1>
-          <p className="text-lg mx-auto" style={{ color: '#cbb98a', fontFamily: 'var(--font-display)' }}>
+          <p className="text-lg mx-auto reveal stagger-2" style={{ color: '#cbb98a', fontFamily: 'var(--font-display)' }}>
             15 años ayudando a empresas e instituciones colombianas a cumplir la norma y alcanzar la excelencia organizacional.
           </p>
         </div>

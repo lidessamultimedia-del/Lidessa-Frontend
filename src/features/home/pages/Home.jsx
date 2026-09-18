@@ -172,10 +172,10 @@ export default function Home() {
                 }}
               >
                 <img
-                  src="/assets/DD.png"
+                  src="/assets/portadalidessa1.jpeg"
                   alt="Equipo Lidessa"
                   className="w-full h-full object-cover"
-                  style={{ transition: 'transform 0.4s ease' }}
+                  style={{ transition: 'transform 0.4s ease', objectPosition: 'center 15%' }}
                   onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.08)'}
                   onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
                 />

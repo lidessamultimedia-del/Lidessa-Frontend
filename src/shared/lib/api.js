@@ -56,6 +56,19 @@ export function apiSaveSubmission(assignmentId, payload, token) {
   })
 }
 
+export function apiMarkSubmissionSeen(id, token) {
+  return request(`/api/submissions/${id}/seen`, { method: 'PUT', headers: authHeaders(token) })
+}
+
+// payload: { grade, feedback, retryAllowed }
+export function apiGradeSubmission(id, payload, token) {
+  return request(`/api/submissions/${id}/grade`, {
+    method: 'PUT',
+    headers: authHeaders(token),
+    body: JSON.stringify(payload),
+  })
+}
+
 export function apiUploadAttachment(file, token) {
   const formData = new FormData()
   formData.append('file', file)

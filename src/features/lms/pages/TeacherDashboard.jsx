@@ -709,10 +709,14 @@ export default function TeacherDashboard({ theme, setTheme }) {
           assignment={gradingAssignment}
           course={gradingCourse}
           studentName={lms.studentName(gradingSubmission.studentId)}
-          onSave={(grade, feedback, retryAllowed) => {
-            lms.gradeSubmission(gradingSubmission.id, grade, feedback, retryAllowed)
-            toast('success', 'Calificación guardada', `${lms.studentName(gradingSubmission.studentId)} — ${gradingAssignment?.title}`)
-            setSection('grading')
+          onSave={async (grade, feedback, retryAllowed) => {
+            try {
+              await lms.gradeSubmission(gradingSubmission.id, grade, feedback, retryAllowed)
+              toast('success', 'Calificación guardada', `${lms.studentName(gradingSubmission.studentId)} — ${gradingAssignment?.title}`)
+              setSection('grading')
+            } catch (err) {
+              toast('error', 'No se pudo guardar la calificación', err.message)
+            }
           }}
           onCancel={() => setSection('grading')}
         />

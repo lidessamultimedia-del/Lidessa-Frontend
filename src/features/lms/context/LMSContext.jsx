@@ -4,7 +4,7 @@ import {
   seedQuizzes, seedQuizAttempts,
 } from '../data/seed'
 import { useAuth } from '@/features/auth/context/AuthContext'
-import { apiGetSubmission, apiSaveSubmission } from '@/shared/lib/api'
+import { apiGetSubmission, apiSaveSubmission, apiMarkSubmissionSeen, apiGradeSubmission } from '@/shared/lib/api'
 
 const LMSContext = createContext(null)
 
@@ -65,7 +65,7 @@ function fromApiSubmission(s) {
     feedback: s.feedback ?? '',
     gradedAt: s.gradedAt,
     retryAllowed: s.retryAllowed,
-    seen: false,
+    seen: s.seen ?? false,
   }
 }
 
@@ -426,19 +426,36 @@ export function LMSProvider({ children }) {
     upsertLocalSubmission(mapped)
     return mapped
   }
-  function gradeSubmission(id, grade, feedback, retryAllowed = false) {
+  // Si la entrega viene del backend real (tiene remoteId) califica contra
+  // PUT /api/submissions/{id}/grade y refresca el estado con la respuesta;
+  // el resto (entregas mock del seed) sigue calificándose solo en local.
+  async function gradeSubmission(id, grade, feedback, retryAllowed = false) {
+    const sub = submissions.find(s => s.id === id)
+    if (sub?.remoteId) {
+      const result = await apiGradeSubmission(sub.remoteId, { grade, feedback, retryAllowed }, user.token)
+      upsertLocalSubmission(fromApiSubmission(result))
+      return
+    }
+
     setState(s => ({
       ...s,
       submissions: s.submissions.map(sub => sub.id === id
         ? { ...sub, grade, feedback, status: 'graded', gradedAt: new Date().toISOString(), seen: false, retryAllowed } : sub),
     }))
   }
+  // Actualiza el estado local al toque (así la campanita se limpia de
+  // inmediato) y, si la entrega viene del backend real (tiene remoteId),
+  // persiste el "visto" con PUT /api/submissions/{id}/seen.
   function markGradeSeen(kind, id) {
-    setState(s => (
-      kind === 'assignment'
-        ? { ...s, submissions: s.submissions.map(sub => sub.id === id ? { ...sub, seen: true } : sub) }
-        : { ...s, quizAttempts: s.quizAttempts.map(a => a.id === id ? { ...a, seen: true } : a) }
-    ))
+    if (kind === 'assignment') {
+      const sub = submissions.find(s => s.id === id)
+      setState(s => ({ ...s, submissions: s.submissions.map(sub => sub.id === id ? { ...sub, seen: true } : sub) }))
+      if (sub?.remoteId && user?.token) {
+        apiMarkSubmissionSeen(sub.remoteId, user.token).catch(() => {})
+      }
+    } else {
+      setState(s => ({ ...s, quizAttempts: s.quizAttempts.map(a => a.id === id ? { ...a, seen: true } : a) }))
+    }
   }
 
   // ── Selectores (funciones simples, dataset pequeño así que no hace falta memoizar) ──

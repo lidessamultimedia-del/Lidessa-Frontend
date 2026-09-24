@@ -4,7 +4,13 @@ import {
   seedQuizzes, seedQuizAttempts,
 } from '../data/seed'
 import { useAuth } from '@/features/auth/context/AuthContext'
-import { apiGetSubmission, apiSaveSubmission, apiMarkSubmissionSeen, apiGradeSubmission } from '@/shared/lib/api'
+import {
+  apiGetSubmission, apiSaveSubmission, apiMarkSubmissionSeen, apiGradeSubmission,
+  apiGetQuizAttempt, apiSubmitQuizAttempt, apiReviewQuizAttempt, apiAllowQuizRetry, apiMarkQuizAttemptSeen,
+  apiStartQuizAttempt, apiGetQuizAttempts,
+  apiGetMyCourses, apiGetTopics, apiCreateTopic, apiUpdateTopic, apiDeleteTopic,
+  apiGetQuizzes, apiCreateQuiz, apiUpdateQuiz, apiDeleteQuiz,
+} from '@/shared/lib/api'
 
 const LMSContext = createContext(null)
 
@@ -69,6 +75,129 @@ function fromApiSubmission(s) {
   }
 }
 
+// Traduce un QuizAttempt del backend al shape de la UI. `localQuizId` es el
+// id con el que el examen vive en el estado del LMS (puede no ser el id
+// numérico del backend mientras cursos/exámenes sigan en mock).
+function fromApiQuizAttempt(a, localQuizId) {
+  return {
+    id: `qa_api_${a.id}`,
+    remoteId: a.id,
+    quizId: localQuizId,
+    studentId: String(a.studentId),
+    answers: a.answers ?? [],
+    score: Number(a.score),
+    feedback: a.feedback ?? '',
+    reviewed: a.reviewed,
+    retryAllowed: a.retryAllowed,
+    seen: a.seen ?? false,
+    submittedAt: a.submittedAt,
+  }
+}
+
+// ── Datos reales del backend ──
+// Cursos, temas y exámenes del backend conviven con los mock del seed. Lo que
+// viene de la API lleva `remoteId` (el id numérico real) y su `id` local es
+// ese mismo número como string — los mock usan ids con letras ('c1', 't1_1',
+// 'q1'), así que no chocan. Las funciones de abajo usan `remoteId` para saber
+// si tienen que hablar con la API o solo tocar el estado local.
+function fromApiCourse(c) {
+  return {
+    id: String(c.id),
+    remoteId: c.id,
+    name: c.name,
+    shortName: c.shortName ?? '',
+    description: c.description ?? '',
+    category: c.category ?? '',
+    teacherId: c.teacherId ? String(c.teacherId) : null,
+    studentIds: (c.students ?? []).map(s => String(s.id)),
+    createdAt: c.createdAt?.slice(0, 10) ?? '',
+    published: c.published,
+    visible: true,
+    startDate: '',
+    endDate: '',
+    format: c.format,
+    completionTrackingEnabled: true,
+    requiresPassword: c.requiresPassword,
+    password: '',
+    selfEnrollment: c.selfEnrollment,
+    guestAccess: c.guestAccess,
+    capacity: c.capacity,
+    color: c.color ?? '#005187',
+    listed: c.listed,
+    image: c.image ?? '',
+    duration: '',
+    modality: '',
+    certified: false,
+  }
+}
+
+function fromApiTopic(t) {
+  return { id: String(t.id), remoteId: t.id, courseId: String(t.courseId), title: t.title, order: t.sortOrder }
+}
+
+function fromApiQuiz(q) {
+  return {
+    id: String(q.id),
+    remoteId: q.id,
+    courseId: String(q.courseId),
+    topicId: q.topicId ? String(q.topicId) : null,
+    title: q.title,
+    description: q.description ?? '',
+    // Fecha y hora límite (el form usa datetime-local: 'YYYY-MM-DDTHH:mm').
+    dueDate: q.dueDate?.slice(0, 16) ?? '',
+    publishAt: q.publishAt ?? null,
+    timeLimitMinutes: q.timeLimitMinutes ?? null,
+    order: q.sortOrder,
+    assignedStudentIds: (q.assignedStudentIds ?? []).map(String),
+    // Al estudiante el backend le manda correctIndex en null.
+    questions: (q.questions ?? []).map(x => ({
+      id: String(x.id), type: x.type, text: x.text, options: x.options ?? [], correctIndex: x.correctIndex,
+    })),
+  }
+}
+
+// Personas que aparecen en los cursos reales (profesor + inscritos), para que
+// studentName/teacherName las encuentren en el directorio del LMS.
+function directoryEntriesFromApiCourses(apiCourses) {
+  const byId = new Map()
+  apiCourses.forEach(c => {
+    if (c.teacherId && !byId.has(String(c.teacherId))) {
+      byId.set(String(c.teacherId), { id: String(c.teacherId), name: c.teacherName ?? 'Profesor', email: '', phone: '', role: 'profesor', active: true, joined: '' })
+    }
+    ;(c.students ?? []).forEach(s => {
+      if (!byId.has(String(s.id))) {
+        byId.set(String(s.id), { id: String(s.id), name: s.name, email: s.email ?? '', phone: '', role: 'estudiante', active: true, joined: '' })
+      }
+    })
+  })
+  return [...byId.values()]
+}
+
+// Trae todo lo real que le corresponde al usuario: sus cursos, los temas y
+// exámenes de cada uno, y los intentos (todos si es staff; solo el propio si
+// es estudiante).
+async function fetchRemoteLms(user) {
+  const token = user.token
+  const apiCourses = await apiGetMyCourses(token)
+  const perCourse = await Promise.all(apiCourses.map(async c => {
+    const [courseTopics, courseQuizzes] = await Promise.all([apiGetTopics(c.id, token), apiGetQuizzes(c.id, token)])
+    return { courseTopics, courseQuizzes }
+  }))
+  const apiQuizzes = perCourse.flatMap(p => p.courseQuizzes)
+  const isStaff = user.role === 'admin' || user.role === 'profesor'
+  // Un estudiante no asignado a un examen recibe 403 en su intento — se ignora.
+  const apiAttempts = isStaff
+    ? (await Promise.all(apiQuizzes.map(q => apiGetQuizAttempts(q.id, token)))).flat()
+    : (await Promise.all(apiQuizzes.map(q => apiGetQuizAttempt(q.id, token).catch(() => null)))).filter(Boolean)
+  return {
+    courses: apiCourses.map(fromApiCourse),
+    topics: perCourse.flatMap(p => p.courseTopics).map(fromApiTopic),
+    quizzes: apiQuizzes.map(fromApiQuiz),
+    quizAttempts: apiAttempts.map(a => fromApiQuizAttempt(a, String(a.quizId))),
+    people: directoryEntriesFromApiCourses(apiCourses),
+  }
+}
+
 export function LMSProvider({ children }) {
   const { registeredStudents, allUsers, user } = useAuth()
   const [state, setState] = useState(defaultState)
@@ -97,6 +226,35 @@ export function LMSProvider({ children }) {
       ],
     }))
   }, [registeredStudents, directory])
+
+  // Al iniciar sesión (hay token) se cargan los cursos/temas/exámenes reales
+  // y se reemplazan los que ya hubiera de la API; los mock no se tocan. Si la
+  // API no responde, el LMS sigue funcionando solo con los datos mock.
+  const [remoteSyncError, setRemoteSyncError] = useState('')
+  useEffect(() => {
+    if (!user?.token) return
+    let cancelled = false
+    fetchRemoteLms(user)
+      .then(remote => {
+        if (cancelled) return
+        setRemoteSyncError('')
+        setState(s => {
+          const knownIds = new Set(s.directory.map(u => u.id))
+          return {
+            ...s,
+            courses: [...s.courses.filter(c => !c.remoteId), ...remote.courses],
+            topics: [...s.topics.filter(t => !t.remoteId), ...remote.topics],
+            quizzes: [...s.quizzes.filter(q => !q.remoteId), ...remote.quizzes],
+            quizAttempts: [...s.quizAttempts.filter(a => !a.remoteId), ...remote.quizAttempts],
+            directory: [...s.directory, ...remote.people.filter(p => !knownIds.has(p.id))],
+          }
+        })
+      })
+      .catch(err => { if (!cancelled) setRemoteSyncError(err.message) })
+    return () => { cancelled = true }
+    // Solo cuando cambia la sesión (token), no en cada render del usuario.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.token])
 
   // ── Directory (profesores / estudiantes) ──
   function addDirectoryUser(data) {
@@ -198,16 +356,36 @@ export function LMSProvider({ children }) {
   }
 
   // ── Topics ──
-  function addTopic(courseId, data) {
+  // En cursos reales (remoteId) se guardan en TopicsController; en los mock, solo en local.
+  async function addTopic(courseId, data) {
+    const course = courses.find(c => c.id === courseId)
+    if (course?.remoteId) {
+      const topic = fromApiTopic(await apiCreateTopic(course.remoteId, { title: data.title }, user.token))
+      setState(s => ({ ...s, topics: [...s.topics, topic] }))
+      return topic
+    }
+
     const order = topics.filter(t => t.courseId === courseId).length + 1
     const topic = { id: `t${Date.now()}`, courseId, order, ...data }
     setState(s => ({ ...s, topics: [...s.topics, topic] }))
     return topic
   }
-  function updateTopic(id, data) {
+  async function updateTopic(id, data) {
+    const topic = topics.find(t => t.id === id)
+    if (topic?.remoteId) {
+      const updated = fromApiTopic(await apiUpdateTopic(topic.remoteId, { title: data.title ?? topic.title }, user.token))
+      setState(s => ({ ...s, topics: s.topics.map(t => t.id === id ? updated : t) }))
+      return
+    }
+
     setState(s => ({ ...s, topics: s.topics.map(t => t.id === id ? { ...t, ...data } : t) }))
   }
-  function deleteTopic(id) {
+  async function deleteTopic(id) {
+    const topic = topics.find(t => t.id === id)
+    if (topic?.remoteId) {
+      await apiDeleteTopic(topic.remoteId, user.token)
+    }
+
     setState(s => ({
       ...s,
       topics: s.topics.filter(t => t.id !== id),
@@ -255,23 +433,108 @@ export function LMSProvider({ children }) {
   }
 
   // ── Cuestionarios (exámenes autocalificados) ──
-  function addQuiz(courseId, data) {
+  // Arma el QuizRequest que espera el backend a partir del shape de la UI.
+  // El QuizRequest siempre lleva el examen completo (preguntas incluidas).
+  function toApiQuizPayload(quiz) {
+    const topic = quiz.topicId ? topics.find(t => t.id === quiz.topicId) : null
+    return {
+      title: quiz.title,
+      description: quiz.description ?? '',
+      dueDate: quiz.dueDate,
+      topicId: topic?.remoteId ?? null,
+      publishAt: quiz.publishAt || null,
+      timeLimitMinutes: quiz.timeLimitMinutes || null,
+      assignedStudentIds: (quiz.assignedStudentIds ?? []).map(Number),
+      questions: (quiz.questions ?? []).map(q => {
+        const type = q.type ?? 'multiple'
+        return type === 'open'
+          ? { type, text: q.text, options: null, correctIndex: null }
+          : { type, text: q.text, options: q.options, correctIndex: q.correctIndex }
+      }),
+    }
+  }
+
+  // En cursos reales (remoteId) se guardan en QuizzesController; en los mock, solo en local.
+  async function addQuiz(courseId, data) {
+    const course = courses.find(c => c.id === courseId)
+    if (course?.remoteId) {
+      const quiz = fromApiQuiz(await apiCreateQuiz(course.remoteId, toApiQuizPayload(data), user.token))
+      setState(s => ({ ...s, quizzes: [...s.quizzes, quiz] }))
+      return quiz
+    }
+
     const quiz = { id: `q${Date.now()}`, courseId, questions: [], ...data }
     setState(s => ({ ...s, quizzes: [...s.quizzes, quiz] }))
     return quiz
   }
-  function updateQuiz(id, data) {
+  // Acepta cambios parciales (ej. solo publishAt desde el botón de publicar):
+  // para el backend se mezclan con el examen actual y se manda completo.
+  async function updateQuiz(id, data) {
+    const quiz = quizzes.find(q => q.id === id)
+    if (quiz?.remoteId) {
+      const updated = fromApiQuiz(await apiUpdateQuiz(quiz.remoteId, toApiQuizPayload({ ...quiz, ...data }), user.token))
+      setState(s => ({ ...s, quizzes: s.quizzes.map(q => q.id === id ? updated : q) }))
+      return
+    }
+
     setState(s => ({ ...s, quizzes: s.quizzes.map(q => q.id === id ? { ...q, ...data } : q) }))
   }
-  function deleteQuiz(id) {
+  async function deleteQuiz(id) {
+    const quiz = quizzes.find(q => q.id === id)
+    if (quiz?.remoteId) {
+      await apiDeleteQuiz(quiz.remoteId, user.token)
+    }
+
     setState(s => ({
       ...s,
       quizzes: s.quizzes.filter(q => q.id !== id),
       quizAttempts: s.quizAttempts.filter(a => a.quizId !== id),
     }))
   }
-  function submitQuizAttempt({ quizId, studentId, answers }) {
+  function upsertLocalQuizAttempt(mapped) {
+    setState(s => ({
+      ...s,
+      quizAttempts: [
+        ...s.quizAttempts.filter(a => !(a.quizId === mapped.quizId && a.studentId === mapped.studentId)),
+        mapped,
+      ],
+    }))
+  }
+
+  // Trae el intento existente del estudiante para un examen del backend real.
+  async function loadQuizAttempt(quizId) {
     const quiz = quizzes.find(q => q.id === quizId)
+    if (!quiz?.remoteId || !user?.token) return null
+    const result = await apiGetQuizAttempt(quiz.remoteId, user.token)
+    if (!result) return null
+    const mapped = fromApiQuizAttempt(result, quizId)
+    upsertLocalQuizAttempt(mapped)
+    return mapped
+  }
+
+  // Abre un examen real: el servidor registra la hora de inicio y responde
+  // cuánto tiempo queda (en ms, o null si no tiene límite). Para exámenes
+  // mock devuelve undefined y el formulario usa su cronómetro local.
+  async function startQuizAttempt(quizId) {
+    const quiz = quizzes.find(q => q.id === quizId)
+    if (!quiz?.remoteId || !user?.token) return undefined
+    const result = await apiStartQuizAttempt(quiz.remoteId, user.token)
+    return result.remainingSeconds == null ? null : result.remainingSeconds * 1000
+  }
+
+  // Si el examen viene del backend real (tiene remoteId), la calificación la
+  // hace QuizAttemptsController (PUT /api/quizzes/{id}/attempts/me) — el
+  // estudiante ya no recibe correctIndex. Los exámenes mock del seed siguen
+  // calificándose en local. Devuelve la nota.
+  async function submitQuizAttempt({ quizId, studentId, answers }) {
+    const quiz = quizzes.find(q => q.id === quizId)
+    if (quiz?.remoteId) {
+      const result = await apiSubmitQuizAttempt(quiz.remoteId, answers, user.token)
+      const mapped = fromApiQuizAttempt(result, quizId)
+      upsertLocalQuizAttempt(mapped)
+      return mapped.score
+    }
+
     // Las preguntas de respuesta abierta no se autocalifican — solo cuentan
     // las de selección múltiple para la nota automática. Si el examen tiene
     // alguna pregunta abierta, el intento queda pendiente de revisión manual
@@ -294,7 +557,15 @@ export function LMSProvider({ children }) {
   }
 
   // El profesor lee las respuestas abiertas y ajusta la nota final del intento.
-  function reviewQuizAttempt(attemptId, score, feedback, retryAllowed = false) {
+  // Con remoteId se guarda en PUT /api/quiz-attempts/{id}/review.
+  async function reviewQuizAttempt(attemptId, score, feedback, retryAllowed = false) {
+    const attempt = quizAttempts.find(a => a.id === attemptId)
+    if (attempt?.remoteId) {
+      const result = await apiReviewQuizAttempt(attempt.remoteId, { score, feedback, retryAllowed }, user.token)
+      upsertLocalQuizAttempt(fromApiQuizAttempt(result, attempt.quizId))
+      return
+    }
+
     setState(s => ({
       ...s,
       quizAttempts: s.quizAttempts.map(a => a.id === attemptId ? { ...a, score, feedback, reviewed: true, seen: false, retryAllowed } : a),
@@ -302,7 +573,15 @@ export function LMSProvider({ children }) {
   }
   // El profesor autoriza puntualmente que el estudiante reintente una
   // actividad o examen ya reprobado, sin tener que volver a calificarlo.
+  // Si el intento de examen viene del backend real, además se persiste con
+  // PUT /api/quiz-attempts/{id}/allow-retry (mismo esquema que markGradeSeen).
   function allowRetry(kind, id) {
+    if (kind === 'quiz') {
+      const attempt = quizAttempts.find(a => a.id === id)
+      if (attempt?.remoteId && user?.token) {
+        apiAllowQuizRetry(attempt.remoteId, user.token).catch(() => {})
+      }
+    }
     setState(s => (
       kind === 'assignment'
         ? { ...s, submissions: s.submissions.map(sub => sub.id === id ? { ...sub, retryAllowed: true } : sub) }
@@ -454,7 +733,11 @@ export function LMSProvider({ children }) {
         apiMarkSubmissionSeen(sub.remoteId, user.token).catch(() => {})
       }
     } else {
+      const attempt = quizAttempts.find(a => a.id === id)
       setState(s => ({ ...s, quizAttempts: s.quizAttempts.map(a => a.id === id ? { ...a, seen: true } : a) }))
+      if (attempt?.remoteId && user?.token) {
+        apiMarkQuizAttemptSeen(attempt.remoteId, user.token).catch(() => {})
+      }
     }
   }
 
@@ -668,7 +951,7 @@ export function LMSProvider({ children }) {
     addTopic, updateTopic, deleteTopic,
     addLesson, updateLesson, deleteLesson, markLessonComplete,
     addAssignment, updateAssignment, deleteAssignment,
-    addQuiz, updateQuiz, deleteQuiz, submitQuizAttempt,
+    addQuiz, updateQuiz, deleteQuiz, submitQuizAttempt, loadQuizAttempt, startQuizAttempt, remoteSyncError,
     submitAssignment, loadSubmission, gradeSubmission,
     directoryById, teacherName, studentName,
     coursesByTeacher, coursesByStudent, listedCourses, publicCourses, isPublished, isAssignedTo, lessonsByCourse, assignmentsByCourse, submissionFor,

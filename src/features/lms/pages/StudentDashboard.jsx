@@ -60,6 +60,8 @@ export default function StudentDashboard({ theme, setTheme }) {
   const [submitAssignmentId, setSubmitAssignmentId] = useState(null)
   const [submitLoading, setSubmitLoading] = useState(false)
   const [openQuizId, setOpenQuizId] = useState(null)
+  // Tiempo restante que dio el servidor al abrir un examen real (ms); undefined = usar el cronómetro local.
+  const [quizRemainingMs, setQuizRemainingMs] = useState(undefined)
   const [messageTarget, setMessageTarget] = useState(null)
   const [messagesSearch, setMessagesSearch] = useState('')
   const [lessonViewModal, setLessonViewModal] = useState(null)
@@ -115,6 +117,13 @@ export default function StudentDashboard({ theme, setTheme }) {
     ? Math.round((overallGrades.reduce((sum, r) => sum + r.grade, 0) / overallGrades.length) * 10) / 10
     : 0
 
+  // Al salir de una tarea/examen se vuelve a su curso. Si se abrió desde el
+  // Dashboard no había curso seleccionado y el detalle quedaba en blanco.
+  function backToCourse(courseId) {
+    setSelectedCourseId(courseId)
+    setSection('courseDetail')
+  }
+
   function openCourseDetail(courseId, tab = 'general') {
     setSelectedCourseId(courseId)
     setCourseTab(tab)
@@ -136,7 +145,29 @@ export default function StudentDashboard({ theme, setTheme }) {
     }
   }
 
-  function openQuiz(quizId) {
+  // Trae el intento existente del backend (si el examen es real) ANTES de
+  // mostrar el formulario: QuizAttemptForm decide al montar si está bloqueado
+  // y si arranca el cronómetro.
+  async function openQuiz(quizId) {
+    let attempt = null
+    try {
+      attempt = await lms.loadQuizAttempt(quizId)
+    } catch (err) {
+      toast('error', 'No se pudo cargar tu intento anterior', err.message)
+    }
+    // Solo se "abre" en el servidor (arranca el tiempo) si el estudiante
+    // realmente puede presentarlo — mismo criterio que `locked` en el form.
+    const canTake = !attempt || (attempt.reviewed && attempt.score < PASS_THRESHOLD && attempt.retryAllowed)
+    let remaining
+    if (canTake) {
+      try {
+        remaining = await lms.startQuizAttempt(quizId)
+      } catch (err) {
+        toast('error', 'No se pudo abrir el examen', err.message)
+        return
+      }
+    }
+    setQuizRemainingMs(remaining)
     setOpenQuizId(quizId)
     setSection('quiz')
   }
@@ -603,11 +634,11 @@ export default function StudentDashboard({ theme, setTheme }) {
           course={submitCourse}
           existing={submitExisting}
           token={user.token}
-          onCancel={() => setSection('courseDetail')}
+          onCancel={() => backToCourse(submitAssignment.courseId)}
           onSubmit={async (data, draft) => {
             await lms.submitAssignment({ assignmentId: submitAssignment.id, ...data, draft })
             toast('success', draft ? 'Borrador guardado' : 'Tarea enviada', submitAssignment.title)
-            setSection('courseDetail')
+            backToCourse(submitAssignment.courseId)
           }}
         />
       )}
@@ -615,14 +646,20 @@ export default function StudentDashboard({ theme, setTheme }) {
       {/* ── RESPONDER EXAMEN ── */}
       {section === 'quiz' && currentQuiz && (
         <QuizAttemptForm
+          key={currentQuiz.id}
           quiz={currentQuiz}
           course={currentQuizCourse}
           existingAttempt={currentQuizAttempt}
+          initialRemainingMs={quizRemainingMs}
           studentId={studentId}
-          onCancel={() => setSection('courseDetail')}
-          onSubmit={answers => {
-            const score = lms.submitQuizAttempt({ quizId: currentQuiz.id, studentId, answers })
-            toast('success', 'Examen entregado', `${currentQuiz.title} — ${score}/${MAX_GRADE}`)
+          onCancel={() => backToCourse(currentQuiz.courseId)}
+          onSubmit={async answers => {
+            try {
+              const score = await lms.submitQuizAttempt({ quizId: currentQuiz.id, studentId, answers })
+              toast('success', 'Examen entregado', `${currentQuiz.title} — ${score}/${MAX_GRADE}`)
+            } catch (err) {
+              toast('error', 'No se pudo entregar el examen', err.message)
+            }
           }}
           onTimeUp={() => toast('warning', 'Se acabó el tiempo', 'Tu examen se entregó automáticamente con las respuestas que tenías.')}
         />
@@ -1013,7 +1050,7 @@ function formatCountdown(ms) {
   return `${m}:${s.toString().padStart(2, '0')}`
 }
 
-function QuizAttemptForm({ quiz, course, existingAttempt, studentId, onSubmit, onCancel, onTimeUp }) {
+function QuizAttemptForm({ quiz, course, existingAttempt, initialRemainingMs, studentId, onSubmit, onCancel, onTimeUp }) {
   const pendingReview = existingAttempt && existingAttempt.reviewed === false
   const locked = existingAttempt && (pendingReview || existingAttempt.score >= PASS_THRESHOLD || !existingAttempt.retryAllowed)
   const [answers, setAnswers] = useState(() => quiz.questions.map(q => q.type === 'open' ? '' : null))
@@ -1022,7 +1059,8 @@ function QuizAttemptForm({ quiz, course, existingAttempt, studentId, onSubmit, o
   answersRef.current = answers
 
   const timeLimitMs = quiz.timeLimitMinutes ? quiz.timeLimitMinutes * 60 * 1000 : null
-  const [remainingMs, setRemainingMs] = useState(() => (timeLimitMs && !locked ? timeLimitMs : null))
+  // En exámenes reales el tiempo lo manda el servidor (recargar no lo reinicia).
+  const [remainingMs, setRemainingMs] = useState(() => (timeLimitMs && !locked ? (initialRemainingMs ?? timeLimitMs) : null))
 
   useEffect(() => {
     if (remainingMs === null) return

@@ -129,21 +129,25 @@ export default function TeacherDashboard({ theme, setTheme }) {
     setSection('gradeQuizAttempt')
   }
 
-  function handleDeleteConfirm() {
+  async function handleDeleteConfirm() {
     const { type, id, label } = deleteConfirm
-    if (type === 'course') {
-      lms.deleteCourse(id)
-      if (selectedCourseId === id) { setSelectedCourseId(null); setSection('courses') }
-    } else if (type === 'topic') {
-      lms.deleteTopic(id)
-    } else if (type === 'lesson') {
-      lms.deleteLesson(id)
-    } else if (type === 'assignment') {
-      lms.deleteAssignment(id)
-    } else if (type === 'quiz') {
-      lms.deleteQuiz(id)
+    try {
+      if (type === 'course') {
+        lms.deleteCourse(id)
+        if (selectedCourseId === id) { setSelectedCourseId(null); setSection('courses') }
+      } else if (type === 'topic') {
+        await lms.deleteTopic(id)
+      } else if (type === 'lesson') {
+        lms.deleteLesson(id)
+      } else if (type === 'assignment') {
+        lms.deleteAssignment(id)
+      } else if (type === 'quiz') {
+        await lms.deleteQuiz(id)
+      }
+      toast('success', 'Eliminado', label)
+    } catch (err) {
+      toast('error', 'No se pudo eliminar', err.message)
     }
-    toast('success', 'Eliminado', label)
     setDeleteConfirm(null)
   }
 
@@ -489,13 +493,18 @@ export default function TeacherDashboard({ theme, setTheme }) {
                 toast(next ? 'success' : 'warning', next ? 'Material publicado' : 'Publicación cancelada', lesson.title)
               }}
               onPublishAssignment={assignment => {
-                const next = assignment.publishAt ? '' : todayISO()
+                const next = assignment.publishAt ? null : todayISO()
                 lms.updateAssignment(assignment.id, { publishAt: next })
                 toast(next ? 'success' : 'warning', next ? 'Tarea publicada' : 'Publicación cancelada', assignment.title)
               }}
-              onPublishQuiz={quiz => {
-                const next = quiz.publishAt ? '' : todayISO()
-                lms.updateQuiz(quiz.id, { publishAt: next })
+              onPublishQuiz={async quiz => {
+                const next = quiz.publishAt ? null : todayISO()
+                try {
+                  await lms.updateQuiz(quiz.id, { publishAt: next })
+                } catch (err) {
+                  toast('error', 'No se pudo cambiar la publicación', err.message)
+                  return
+                }
                 toast(next ? 'success' : 'warning', next ? 'Examen publicado' : 'Publicación cancelada', quiz.title)
               }}
             />
@@ -729,10 +738,14 @@ export default function TeacherDashboard({ theme, setTheme }) {
           quiz={gradingQuiz}
           course={gradingQuizCourse}
           studentName={lms.studentName(gradingAttempt.studentId)}
-          onSave={(score, feedback, retryAllowed) => {
-            lms.reviewQuizAttempt(gradingAttempt.id, score, feedback, retryAllowed)
-            toast('success', 'Examen revisado', `${lms.studentName(gradingAttempt.studentId)} — ${gradingQuiz.title}`)
-            setSection('grading')
+          onSave={async (score, feedback, retryAllowed) => {
+            try {
+              await lms.reviewQuizAttempt(gradingAttempt.id, score, feedback, retryAllowed)
+              toast('success', 'Examen revisado', `${lms.studentName(gradingAttempt.studentId)} — ${gradingQuiz.title}`)
+              setSection('grading')
+            } catch (err) {
+              toast('error', 'No se pudo guardar la revisión', err.message)
+            }
           }}
           onCancel={() => setSection('grading')}
         />
@@ -821,10 +834,14 @@ export default function TeacherDashboard({ theme, setTheme }) {
       {topicModal && selectedCourse && (
         <TopicFormModal
           topic={topicModal.mode === 'edit' ? topicModal.topic : null}
-          onSave={form => {
-            if (topicModal.mode === 'edit') { lms.updateTopic(topicModal.topic.id, form); toast('success', 'Tema actualizado', form.title) }
-            else { lms.addTopic(selectedCourse.id, form); toast('success', 'Tema creado', form.title) }
-            setTopicModal(null)
+          onSave={async form => {
+            try {
+              if (topicModal.mode === 'edit') { await lms.updateTopic(topicModal.topic.id, form); toast('success', 'Tema actualizado', form.title) }
+              else { await lms.addTopic(selectedCourse.id, form); toast('success', 'Tema creado', form.title) }
+              setTopicModal(null)
+            } catch (err) {
+              toast('error', 'No se pudo guardar el tema', err.message)
+            }
           }}
           onClose={() => setTopicModal(null)}
         />
@@ -862,10 +879,14 @@ export default function TeacherDashboard({ theme, setTheme }) {
           topics={lms.topicsByCourse(selectedCourse.id)}
           students={selectedCourse.studentIds.map(id => lms.directoryById(id)).filter(Boolean)}
           initialTopicId={quizModal.topicId}
-          onSave={form => {
-            if (quizModal.mode === 'edit') { lms.updateQuiz(quizModal.quiz.id, form); toast('success', 'Examen actualizado', form.title) }
-            else { lms.addQuiz(selectedCourse.id, form); toast('success', 'Examen creado', form.title) }
-            setQuizModal(null)
+          onSave={async form => {
+            try {
+              if (quizModal.mode === 'edit') { await lms.updateQuiz(quizModal.quiz.id, form); toast('success', 'Examen actualizado', form.title) }
+              else { await lms.addQuiz(selectedCourse.id, form); toast('success', 'Examen creado', form.title) }
+              setQuizModal(null)
+            } catch (err) {
+              toast('error', 'No se pudo guardar el examen', err.message)
+            }
           }}
           onClose={() => setQuizModal(null)}
         />

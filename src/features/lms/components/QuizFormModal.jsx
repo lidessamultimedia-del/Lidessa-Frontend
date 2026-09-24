@@ -79,8 +79,9 @@ export default function QuizFormModal({ quiz, topics = [], students = [], initia
     setErrors(errs)
     if (Object.keys(errs).length > 0) return
     onSave({
-      title: form.title, description: form.description, dueDate: form.dueDate, publishAt: form.publishAt,
-      timeLimitMinutes: form.timeLimitMinutes ? Number(form.timeLimitMinutes) : null, topicId: form.topicId,
+      // La API espera null (no '') para "sin fecha de publicación" / "sin tema".
+      title: form.title, description: form.description, dueDate: form.dueDate, publishAt: form.publishAt || null,
+      timeLimitMinutes: form.timeLimitMinutes ? Number(form.timeLimitMinutes) : null, topicId: form.topicId || null,
       assignedStudentIds: form.assignedStudentIds,
       questions: form.questions.map(({ id, type, text, options, correctIndex }) => (
         type === 'open'

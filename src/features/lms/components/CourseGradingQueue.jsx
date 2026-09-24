@@ -95,10 +95,14 @@ export default function CourseGradingQueue({ courseId }) {
         quiz={gradingQuiz}
         course={course}
         studentName={lms.studentName(gradingAttempt.studentId)}
-        onSave={(score, feedback, retryAllowed) => {
-          lms.reviewQuizAttempt(gradingAttempt.id, score, feedback, retryAllowed)
-          toast('success', 'Examen revisado', `${lms.studentName(gradingAttempt.studentId)} — ${gradingQuiz.title}`)
-          setGradingAttemptId(null)
+        onSave={async (score, feedback, retryAllowed) => {
+          try {
+            await lms.reviewQuizAttempt(gradingAttempt.id, score, feedback, retryAllowed)
+            toast('success', 'Examen revisado', `${lms.studentName(gradingAttempt.studentId)} — ${gradingQuiz.title}`)
+            setGradingAttemptId(null)
+          } catch (err) {
+            toast('error', 'No se pudo guardar la revisión', err.message)
+          }
         }}
         onCancel={() => setGradingAttemptId(null)}
       />

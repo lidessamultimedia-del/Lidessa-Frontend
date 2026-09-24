@@ -74,3 +74,86 @@ export function apiUploadAttachment(file, token) {
   formData.append('file', file)
   return request('/api/files/attachments', { method: 'POST', headers: authHeaders(token), body: formData })
 }
+
+// ── Intentos de examen ──
+// null cuando el estudiante todavía no ha presentado ese examen.
+export function apiGetQuizAttempt(quizId, token) {
+  return request(`/api/quizzes/${quizId}/attempts/me`, { headers: authHeaders(token) }, { allow404: true })
+}
+
+// answers: alineado por posición con las preguntas — índice (multiple), texto (open) o null.
+// El backend califica y devuelve el intento con la nota.
+export function apiSubmitQuizAttempt(quizId, answers, token) {
+  return request(`/api/quizzes/${quizId}/attempts/me`, {
+    method: 'PUT',
+    headers: authHeaders(token),
+    body: JSON.stringify({ answers }),
+  })
+}
+
+// payload: { score, feedback, retryAllowed }
+export function apiReviewQuizAttempt(id, payload, token) {
+  return request(`/api/quiz-attempts/${id}/review`, {
+    method: 'PUT',
+    headers: authHeaders(token),
+    body: JSON.stringify(payload),
+  })
+}
+
+export function apiAllowQuizRetry(id, token) {
+  return request(`/api/quiz-attempts/${id}/allow-retry`, { method: 'PUT', headers: authHeaders(token) })
+}
+
+export function apiMarkQuizAttemptSeen(id, token) {
+  return request(`/api/quiz-attempts/${id}/seen`, { method: 'PUT', headers: authHeaders(token) })
+}
+
+// Abre el examen: el servidor registra la hora de inicio y devuelve
+// { startedAt, timeLimitMinutes, remainingSeconds } para armar el cronómetro.
+export function apiStartQuizAttempt(quizId, token) {
+  return request(`/api/quizzes/${quizId}/attempts/me/start`, { method: 'POST', headers: authHeaders(token) })
+}
+
+// Todos los intentos de un examen (admin / profesor dueño).
+export function apiGetQuizAttempts(quizId, token) {
+  return request(`/api/quizzes/${quizId}/attempts`, { headers: authHeaders(token) })
+}
+
+// ── LMS: cursos, temas y exámenes ──
+// Cursos del usuario logueado (admin: todos; profesor: los suyos; estudiante:
+// en los que está inscrito), cada uno con sus estudiantes en `students`.
+export function apiGetMyCourses(token) {
+  return request('/api/courses/mine', { headers: authHeaders(token) })
+}
+
+export function apiGetTopics(courseId, token) {
+  return request(`/api/courses/${courseId}/topics`, { headers: authHeaders(token) })
+}
+
+export function apiCreateTopic(courseId, payload, token) {
+  return request(`/api/courses/${courseId}/topics`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify(payload) })
+}
+
+export function apiUpdateTopic(id, payload, token) {
+  return request(`/api/topics/${id}`, { method: 'PUT', headers: authHeaders(token), body: JSON.stringify(payload) })
+}
+
+export function apiDeleteTopic(id, token) {
+  return request(`/api/topics/${id}`, { method: 'DELETE', headers: authHeaders(token) })
+}
+
+export function apiGetQuizzes(courseId, token) {
+  return request(`/api/courses/${courseId}/quizzes`, { headers: authHeaders(token) })
+}
+
+export function apiCreateQuiz(courseId, payload, token) {
+  return request(`/api/courses/${courseId}/quizzes`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify(payload) })
+}
+
+export function apiUpdateQuiz(id, payload, token) {
+  return request(`/api/quizzes/${id}`, { method: 'PUT', headers: authHeaders(token), body: JSON.stringify(payload) })
+}
+
+export function apiDeleteQuiz(id, token) {
+  return request(`/api/quizzes/${id}`, { method: 'DELETE', headers: authHeaders(token) })
+}

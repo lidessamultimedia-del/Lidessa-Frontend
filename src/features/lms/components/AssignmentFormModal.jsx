@@ -43,7 +43,8 @@ export default function AssignmentFormModal({ assignment, topics = [], students 
     const errs = validate()
     setErrors(errs)
     if (Object.keys(errs).length > 0) return
-    onSave({ ...form, maxScore: MAX_GRADE })
+    // La API espera null (no '') para "sin fecha de publicación" / "sin tema".
+    onSave({ ...form, publishAt: form.publishAt || null, topicId: form.topicId || null, maxScore: MAX_GRADE })
   }
 
   return (

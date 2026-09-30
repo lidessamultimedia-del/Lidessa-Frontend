@@ -656,7 +656,10 @@ export default function StudentDashboard({ theme, setTheme }) {
           onSubmit={async answers => {
             try {
               const score = await lms.submitQuizAttempt({ quizId: currentQuiz.id, studentId, answers })
-              toast('success', 'Examen entregado', `${currentQuiz.title} — ${score}/${MAX_GRADE}`)
+              const hasOpen = currentQuiz.questions.some(q => q.type === 'open')
+              toast('success', 'Examen entregado', hasOpen
+                ? `${currentQuiz.title} — pendiente de revisión del profesor`
+                : `${currentQuiz.title} — ${score}/${MAX_GRADE}`)
             } catch (err) {
               toast('error', 'No se pudo entregar el examen', err.message)
             }
@@ -1140,7 +1143,10 @@ function QuizAttemptForm({ quiz, course, existingAttempt, initialRemainingMs, st
         <p className="text-sm mb-2" style={{ color: 'var(--foreground)' }}>{quiz.description}</p>
         <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
           Fecha límite: {formatDate(quiz.dueDate)} · {daysUntil(quiz.dueDate)}
-          {quiz.timeLimitMinutes ? ` · Tienes ${quiz.timeLimitMinutes} minutos desde que abres el examen` : ''} · Se califica automáticamente al entregar
+          {quiz.timeLimitMinutes ? ` · Tienes ${quiz.timeLimitMinutes} minutos desde que abres el examen` : ''}
+          {quiz.questions.some(q => q.type === 'open')
+            ? ' · Tiene preguntas abiertas: el profesor las revisa y te pone la nota final'
+            : ' · Se califica automáticamente al entregar'}
         </p>
       </div>
 

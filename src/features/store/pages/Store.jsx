@@ -6,7 +6,14 @@ import { useSupplies } from '@/features/supplies/context/SuppliesContext'
 import { useAuth } from '@/features/auth/context/AuthContext'
 import { useScrollReveal } from '@/shared/hooks/useScrollReveal'
 import { formatAmountInput, parseAmountInput } from '@/shared/lib/money'
-import { ShoppingCart, Plus, Minus, Trash, Check, ImageIcon } from '@/shared/components/Icons'
+import ComingSoon from '@/shared/components/ComingSoon'
+import { ShoppingCart, Plus, Minus, Trash, Check, ImageIcon, Package, ShieldCheck, MessageCircle } from '@/shared/components/Icons'
+
+// El catálogo público todavía no está disponible: mientras sea false se
+// muestra el bloque "Próximamente" en su lugar. Toda la lógica del catálogo
+// (filtros, carrito, checkout) se conserva intacta para reactivarlo
+// cambiando solo esta bandera.
+const CATALOG_ENABLED = false
 
 function formatCOP(value) {
   return value.toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })
@@ -92,7 +99,7 @@ export default function Store() {
               className="inline-flex items-center gap-2 px-5 py-3 rounded-lg text-sm font-bold text-white reveal stagger-3 transition-opacity hover:opacity-90"
               style={{ backgroundColor: '#005187' }}
             >
-              <ShoppingCart size={16} /> Ver catálogo y comprar
+              <ShoppingCart size={16} /> {CATALOG_ENABLED ? 'Ver catálogo y comprar' : 'Ver catálogo'}
             </a>
           </div>
 
@@ -176,6 +183,25 @@ export default function Store() {
 
       {/* Catálogo de productos */}
       <section id="catalogo" className="py-14 max-w-7xl mx-auto px-4 sm:px-6">
+        {!CATALOG_ENABLED ? (
+          <ComingSoon
+            icon={Package}
+            eyebrow="Catálogo de productos"
+            title="Nuestra tienda en línea está en camino"
+            description="Estamos preparando un catálogo completo de elementos de protección personal y suministros de seguridad para que pueda consultarlos y pedirlos directamente desde aquí. Mientras tanto, nuestro equipo le atiende de forma personalizada."
+            features={[
+              { icon: Package, label: 'Catálogo completo', detail: 'EPP y suministros por nivel de riesgo.' },
+              { icon: ShieldCheck, label: 'Productos certificados', detail: 'Alineados con la normativa vigente.' },
+              { icon: ShoppingCart, label: 'Pedidos en línea', detail: 'Compre y haga seguimiento a sus pedidos.' },
+            ]}
+            cta={{
+              label: <><MessageCircle size={16} /> Cotizar por WhatsApp</>,
+              href: 'https://wa.me/573332371006?text=Hola, quisiera cotizar elementos de protección personal y suministros de V2 Suministros',
+              note: 'Asesoría gratuita y sin compromiso.',
+            }}
+          />
+        ) : (
+        <>
         <div className="text-center mb-8 reveal">
           <h2 className="text-2xl sm:text-3xl font-black mb-3" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
             Catálogo de productos
@@ -201,7 +227,7 @@ export default function Store() {
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Buscar por nombre..."
-                className="flex-1 min-w-[180px] text-sm px-3 py-2 rounded-lg outline-none"
+                className="flex-1 min-w-45 text-sm px-3 py-2 rounded-lg outline-none"
                 style={{ border: '1px solid var(--border)', backgroundColor: 'var(--card)', color: 'var(--foreground)' }}
               />
               <input
@@ -274,6 +300,8 @@ export default function Store() {
             ))}
             </div>
           </>
+        )}
+        </>
         )}
       </section>
 

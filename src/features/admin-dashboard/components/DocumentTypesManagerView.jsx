@@ -34,7 +34,7 @@ export default function DocumentTypesManagerView({ documentTypes, directory, onA
     <div>
       <div className="flex items-center justify-between gap-3 mb-5">
         <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
-          Cree, renombre o elimine los tipos de documento disponibles al crear o editar un profesor.
+          Cree, renombre o elimine los tipos de documento disponibles al crear o editar usuarios (profesores, estudiantes y clientes).
         </p>
         <button onClick={() => setAddModalOpen(true)}
           className="shrink-0 px-3.5 py-2 rounded-lg text-sm font-bold text-white flex items-center gap-1.5 transition-transform"
@@ -80,7 +80,7 @@ export default function DocumentTypesManagerView({ documentTypes, directory, onA
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold truncate" style={{ color: 'var(--foreground)' }}>{dt.name}</p>
                     <p className="text-xs truncate" style={{ color: 'var(--muted-foreground)' }}>
-                      {inUse} profesor{inUse === 1 ? '' : 'es'}
+                      {inUse === 0 ? 'Sin usuarios' : `${inUse} usuario${inUse === 1 ? '' : 's'}`}
                     </p>
                   </div>
 

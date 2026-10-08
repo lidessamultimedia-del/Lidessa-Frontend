@@ -53,4 +53,19 @@ export const blogPosts = [
     author: 'Ing. Andrés Castillo',
     phone: '+57 300 123 4567',
   },
+  // ── Publicaciones de ejemplo adicionales (para probar paginación) ──
+  ...[
+    ['Cómo preparar a su empresa para una auditoría del SG-SST', '5 octubre 2026', '/assets/SG-SST.png', 'Ing. Paola Cárdenas'],
+    ['Primeros auxilios: lo que todo trabajador debería saber', '1 octubre 2026', '/assets/sst.png', 'Dr. Jorge Salazar'],
+    ['Residuos sólidos: claves del PMIRS para 2026', '22 septiembre 2026', '/assets/PMIRS.png', 'Ing. Diana Rojas'],
+    ['El rol del COPASST en la prevención de accidentes', '10 septiembre 2026', '/assets/seguridad_salud_trabajo.png', 'Ing. Luis Pineda'],
+    ['Bienestar laboral y riesgo psicosocial: guía práctica', '28 agosto 2026', '/assets/formacion.png', 'Psic. Natalia Giraldo'],
+    ['Elementos de protección personal según el nivel de riesgo', '14 agosto 2026', '/assets/insumos.png', 'Ing. Catalina Herrera'],
+    ['Capacitación continua: por qué es una inversión', '30 julio 2026', '/assets/Capacitacion.png', 'Dra. Carolina Mejía'],
+    ['Plan de emergencias: pasos para construirlo desde cero', '15 julio 2026', '/assets/SG-SST.png', 'Ing. Andrés Restrepo'],
+  ].map(([title, date, image, author], i) => ({
+    id: 100 + i, title, date, image, author,
+    excerpt: `${title}. Un resumen práctico preparado por el equipo de Lidessa para empresas e instituciones.`,
+    phone: '+57 300 123 4567',
+  })),
 ]

@@ -26,8 +26,8 @@ export default function ClientDetailModal({ client, orders, onClose }) {
             <p style={{ color: 'var(--foreground)' }}>{client.phone || '—'}</p>
           </div>
           <div>
-            <p className="text-xs font-bold uppercase tracking-wide mb-0.5" style={{ color: 'var(--muted-foreground)' }}>N° de documento</p>
-            <p style={{ color: 'var(--foreground)' }}>{client.documentNumber || '—'}</p>
+            <p className="text-xs font-bold uppercase tracking-wide mb-0.5" style={{ color: 'var(--muted-foreground)' }}>Documento</p>
+            <p style={{ color: 'var(--foreground)' }}>{client.documentNumber ? `${client.documentType ? `${client.documentType} ` : ''}${client.documentNumber}` : '—'}</p>
           </div>
           <div className="col-span-2">
             <p className="text-xs font-bold uppercase tracking-wide mb-0.5" style={{ color: 'var(--muted-foreground)' }}>Dirección</p>

@@ -27,12 +27,8 @@ export default function Footer() {
 
   const socialLinks = [
     { label: 'Facebook', icon: icons.facebook, href: 'https://www.facebook.com/lidessa.co' },
-    { label: 'X', icon: icons.x, href: 'https://x.com/lidessa_co' },
     { label: 'Instagram', icon: icons.instagram, href: 'https://www.instagram.com/lidessa.co' },
-    { label: 'LinkedIn', icon: icons.linkedin, href: 'https://www.linkedin.com/company/lidessa' },
-    { label: 'Linktree', asterisk: true, href: 'https://linktr.ee/lidessa' },
     { label: 'YouTube', icon: icons.youtube, href: 'https://www.youtube.com/channel/UCoHXkPDBTLhk3LuOCxaPNlA' },
-    { label: 'TikTok', icon: icons.tiktok, href: 'https://www.tiktok.com/@lidessa' },
   ]
 
   const institutionalLinks = [

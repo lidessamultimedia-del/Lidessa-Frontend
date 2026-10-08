@@ -30,6 +30,8 @@ const defaultDocumentTypes = [
   { name: 'Cédula de extranjería' },
   { name: 'Pasaporte' },
   { name: 'Tarjeta de identidad' },
+  // Para clientes de V2 Suministros que compran como empresa.
+  { name: 'NIT' },
 ]
 
 const defaultState = {

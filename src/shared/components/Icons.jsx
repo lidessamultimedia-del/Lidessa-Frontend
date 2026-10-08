@@ -50,6 +50,10 @@ import {
   Image as LucideImage,
   Minus as LucideMinus,
   LogOut as LucideLogOut,
+  Truck as LucideTruck,
+  CreditCard as LucideCreditCard,
+  ChevronRight as LucideChevronRight,
+  Headset as LucideHeadset,
 } from 'lucide-react'
 
 function withDefaultSize(LucideIcon) {
@@ -105,3 +109,7 @@ export const ShoppingCart = withDefaultSize(LucideShoppingCart)
 export const ImageIcon = withDefaultSize(LucideImage)
 export const Minus = withDefaultSize(LucideMinus)
 export const LogOut = withDefaultSize(LucideLogOut)
+export const Truck = withDefaultSize(LucideTruck)
+export const CreditCard = withDefaultSize(LucideCreditCard)
+export const ChevronRight = withDefaultSize(LucideChevronRight)
+export const Headset = withDefaultSize(LucideHeadset)

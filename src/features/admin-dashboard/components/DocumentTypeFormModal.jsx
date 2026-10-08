@@ -30,7 +30,7 @@ export default function DocumentTypeFormModal({ documentTypes, onSave, onClose }
           Nuevo tipo de documento
         </h3>
         <p className="text-xs mb-5 leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
-          Quedará disponible como opción al crear o editar un profesor.
+          Quedará disponible como opción al crear o editar usuarios (profesores, estudiantes y clientes).
         </p>
         <form onSubmit={handleSubmit} className="space-y-4" noValidate>
           <FormField label="Nombre del tipo de documento" required error={error}>

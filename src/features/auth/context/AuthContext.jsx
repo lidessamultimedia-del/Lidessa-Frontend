@@ -31,7 +31,118 @@ const BASE_USERS = [
     phone: '+57 302 555 0199',
     unreadNotifications: 2,
   },
+  // Clientes de ejemplo de V2 Suministros (contraseña: cliente123).
+  {
+    id: 'cl-demo',
+    name: 'Cliente Lidessa',
+    firstName: 'Cliente',
+    lastName: 'Lidessa',
+    email: 'cliente@lidessa.co',
+    password: 'cliente123',
+    role: 'cliente',
+    phone: '+57 303 555 0144',
+    documentType: 'Cédula de ciudadanía',
+    documentNumber: '1012345678',
+    address: 'Calle 100 # 15-20, Bogotá',
+    unreadNotifications: 0,
+  },
+  {
+    id: 'cl-ejemplo-1',
+    name: 'Constructora Andina S.A.S.',
+    email: 'compras@constructoraandina.co',
+    password: 'cliente123',
+    role: 'cliente',
+    phone: '+57 310 555 2048',
+    documentType: 'NIT',
+    documentNumber: '900123456-7',
+    address: 'Calle 45 # 12-30, Bodega 3, Bogotá',
+    unreadNotifications: 0,
+  },
+  {
+    id: 'cl-ejemplo-2',
+    name: 'María Fernanda López',
+    firstName: 'María Fernanda',
+    lastName: 'López',
+    email: 'maria.lopez@correo.co',
+    password: 'cliente123',
+    role: 'cliente',
+    phone: '+57 315 555 7781',
+    documentType: 'Cédula de ciudadanía',
+    documentNumber: '52345678',
+    address: 'Carrera 7 # 72-41, Apto 502, Bogotá',
+    unreadNotifications: 0,
+  },
+  {
+    id: 'cl-ejemplo-3',
+    name: 'Colegio San Rafael',
+    email: 'administracion@colegiosanrafael.edu.co',
+    password: 'cliente123',
+    role: 'cliente',
+    phone: '+57 604 555 3320',
+    documentType: 'NIT',
+    documentNumber: '860045123-1',
+    address: 'Calle 10 Sur # 43-15, Medellín',
+    unreadNotifications: 0,
+  },
+  // ── Cuentas de ejemplo adicionales (contraseña: demo123) ──
+  // Profesores y estudiantes coinciden (id/correo) con el directorio del LMS.
+  ...[
+    ['t3', 'Andrés Felipe Restrepo', 'andres.restrepo@lidessa.co', 'profesor'],
+    ['t4', 'Paola Andrea Cárdenas', 'paola.cardenas@lidessa.co', 'profesor'],
+    ['t5', 'Jorge Iván Salazar', 'jorge.salazar@lidessa.co', 'profesor'],
+    ['t6', 'Diana Marcela Rojas', 'diana.rojas@lidessa.co', 'profesor'],
+    ['t7', 'Luis Eduardo Pineda', 'luis.pineda@lidessa.co', 'profesor'],
+    ['s5', 'Camilo Andrés Torres', 'camilo.torres@correo.co', 'estudiante'],
+    ['s6', 'Valentina Ríos Arango', 'valentina.rios@correo.co', 'estudiante'],
+    ['s7', 'Santiago Morales Gil', 'santiago.morales@correo.co', 'estudiante'],
+    ['s8', 'Daniela Patiño Zapata', 'daniela.patino@correo.co', 'estudiante'],
+    ['s9', 'Juan David Londoño', 'juandavid.londono@correo.co', 'estudiante'],
+  ].map(([id, name, email, role], i) => ({
+    id, name, email, password: 'demo123', role,
+    phone: role === 'profesor' ? `+57 31${i} 555 ${String(1200 + i * 37).padStart(4, '0')}` : `+57 32${i - 5} 555 ${String(3400 + (i - 5) * 53).padStart(4, '0')}`,
+    documentType: 'Cédula de ciudadanía',
+    documentNumber: role === 'profesor' ? String(79000000 + i * 104729) : String(1000000000 + (i - 5) * 7919311),
+    unreadNotifications: 0,
+  })),
+  ...[
+    ['cl-ejemplo-4', 'Ferretería El Tornillo', 'gerencia@eltornillo.co', 'NIT', '901234567-1', 'Cra. 50 # 30-12, Itagüí'],
+    ['cl-ejemplo-5', 'Clínica Los Álamos', 'sst@clinicaalamos.co', 'NIT', '890456789-3', 'Av. 80 # 25-40, Medellín'],
+    ['cl-ejemplo-6', 'Transportes Andinos S.A.', 'talento@transandinos.co', 'NIT', '800987654-2', 'Calle 13 # 68-90, Bogotá'],
+    ['cl-ejemplo-7', 'Héctor Valencia', 'hector.valencia@correo.co', 'Cédula de ciudadanía', '71654321', 'Calle 33 # 70-15, Medellín'],
+    ['cl-ejemplo-8', 'Restaurante La Cosecha', 'admin@lacosecha.co', 'NIT', '901567890-4', 'Cra. 43A # 9-50, Medellín'],
+    ['cl-ejemplo-9', 'Liliana Mora', 'liliana.mora@correo.co', 'Cédula de ciudadanía', '43987654', 'Calle 5 # 38-20, Cali'],
+    ['cl-ejemplo-10', 'Conjunto Residencial Altos del Río', 'administracion@altosdelrio.co', 'NIT', '900765432-8', 'Calle 75 Sur # 52-30, Sabaneta'],
+    ['cl-ejemplo-11', 'Industrias Metálicas del Valle', 'compras@imvalle.co', 'NIT', '805123987-6', 'Zona Industrial Acopi, Yumbo'],
+  ].map(([id, name, email, documentType, documentNumber, address], i) => ({
+    id, name, email, password: 'cliente123', role: 'cliente',
+    phone: `+57 31${(i + 2) % 10} 555 ${String(5100 + i * 29).padStart(4, '0')}`,
+    documentType, documentNumber, address, unreadNotifications: 0,
+  })),
 ]
+
+// Las cuentas se guardan en el navegador (localStorage) para que lo que se
+// cree o edite desde el panel no desaparezca al recargar. Es una solución
+// temporal mientras el backend no tenga endpoints de usuarios/clientes.
+const USERS_STORAGE_KEY = 'lidessa_users'
+const USERS_SEED_VERSION_KEY = 'lidessa_users_seed'
+const USERS_SEED_VERSION = '4'
+
+function loadUsers() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(USERS_STORAGE_KEY) ?? 'null')
+    if (Array.isArray(stored) && stored.length > 0) {
+      // Si los datos guardados son de antes de agregar los clientes de
+      // ejemplo, se suman una sola vez (sin pisar lo ya editado). Después
+      // ya no se re-agregan, para que borrar uno de ejemplo sea definitivo.
+      if (localStorage.getItem(USERS_SEED_VERSION_KEY) === USERS_SEED_VERSION) return stored
+      const ids = new Set(stored.map(u => u.id))
+      const emails = new Set(stored.map(u => u.email?.toLowerCase()))
+      const missing = BASE_USERS.filter(u => !ids.has(u.id) && !emails.has(u.email.toLowerCase()))
+      return [...stored, ...missing]
+    }
+  } catch { /* almacenamiento no disponible o dañado */ }
+  return BASE_USERS
+}
 
 export const ROLE_HOME = {
   admin: '/admin',
@@ -41,7 +152,14 @@ export const ROLE_HOME = {
 }
 
 export function AuthProvider({ children }) {
-  const [users, setUsers] = useState(BASE_USERS)
+  const [users, setUsers] = useState(loadUsers)
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users))
+      localStorage.setItem(USERS_SEED_VERSION_KEY, USERS_SEED_VERSION)
+    } catch { /* sin almacenamiento */ }
+  }, [users])
   const [user, setUser] = useState(null)
   const [initialized, setInitialized] = useState(false)
   const [resetCodes, setResetCodes] = useState({})
@@ -109,13 +227,14 @@ export function AuthProvider({ children }) {
 
   // Crea una cuenta con acceso real (login) desde el panel de admin — a
   // diferencia del directorio del LMS, que solo guarda una ficha informativa.
-  function createUser({ id, name, email, password, phone, role, documentNumber, address }) {
+  function createUser({ id, name, firstName, lastName, email, password, phone, role, documentType, documentNumber, address }) {
     if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
       throw new Error('Ya existe una cuenta registrada con ese correo.')
     }
     const newUser = {
       id: id ?? `u${Date.now()}`, name, email, password, role,
-      phone: phone ?? '', documentNumber: documentNumber ?? '', address: address ?? '',
+      ...(firstName ? { firstName } : {}), ...(lastName ? { lastName } : {}),
+      phone: phone ?? '', documentType: documentType ?? '', documentNumber: documentNumber ?? '', address: address ?? '',
       unreadNotifications: 0,
     }
     setUsers(prev => [...prev, newUser])

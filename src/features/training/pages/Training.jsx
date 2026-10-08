@@ -2,6 +2,13 @@ import { useState } from 'react'
 import { useLMS } from '@/features/lms/context/LMSContext'
 import CourseModal from '../components/CourseModal'
 import { useScrollReveal } from '@/shared/hooks/useScrollReveal'
+import ComingSoon from '@/shared/components/ComingSoon'
+import { GraduationCap, ShieldCheck, Monitor, MessageCircle } from '@/shared/components/Icons'
+
+// Los cursos todavía no están abiertos al público: mientras sea false se
+// muestra el bloque "Próximamente" en lugar de la grilla. La grilla y el
+// modal de detalle se conservan para reactivarlos cambiando solo esta bandera.
+const COURSES_ENABLED = false
 
 export default function Training() {
   const { publicCourses: courses } = useLMS()
@@ -38,6 +45,24 @@ export default function Training() {
 
       {/* Filters + grid */}
       <section id="cursos" className="py-12 max-w-7xl mx-auto px-4 sm:px-6">
+        {!COURSES_ENABLED ? (
+          <ComingSoon
+            icon={GraduationCap}
+            eyebrow="Cursos CEET"
+            title="Nuestros cursos estarán disponibles muy pronto"
+            description="Estamos preparando la oferta de cursos y capacitaciones en SST, PMIRS y demás temas normativos, con inscripción y aula virtual desde esta misma página. Si necesita capacitar a su equipo ahora, le asesoramos directamente."
+            features={[
+              { icon: GraduationCap, label: 'Cursos especializados', detail: 'SST, PMIRS y normativa para empresas.' },
+              { icon: Monitor, label: 'Modalidad flexible', detail: 'Virtual, presencial o mixta.' },
+              { icon: ShieldCheck, label: 'Certificación', detail: 'Al finalizar y aprobar cada curso.' },
+            ]}
+            cta={{
+              label: <><MessageCircle size={16} /> Consultar por WhatsApp</>,
+              href: 'https://wa.me/573332371006?text=Hola, quisiera información sobre los próximos cursos de CEET',
+              note: 'Le avisaremos en cuanto abran las inscripciones.',
+            }}
+          />
+        ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {courses.map((course, i) => (
             <div key={course.id} className={`flip-card h-105 reveal-scale stagger-${i + 1}`}>
@@ -103,6 +128,7 @@ export default function Training() {
             </div>
           ))}
         </div>
+        )}
       </section>
 
       {/* CTA — formación a la medida */}

@@ -62,6 +62,41 @@ export function SuppliesProvider({ children }) {
     return order
   }
 
+  // Un pedido "aparta" stock mientras está pendiente o confirmado; enviado o
+  // completado ya salió del inventario, y rechazado ya lo devolvió.
+  const STOCK_HOLDING_STATUSES = ['pending', 'confirmed']
+
+  // Edición desde el panel admin (datos de contacto, artículos, comprobante).
+  // Si cambian los artículos de un pedido que aparta stock, se ajusta el
+  // inventario con la diferencia y se recalcula el total.
+  // (Se lee `orders` del render actual en vez de hacerlo dentro del updater
+  // de setOrders: así el ajuste de stock no se aplica dos veces en StrictMode.)
+  function updateOrder(id, data) {
+    const order = orders.find(o => o.id === id)
+    if (!order) return
+    const items = data.items ?? order.items
+    if (data.items && STOCK_HOLDING_STATUSES.includes(order.status)) {
+      const diff = {}
+      order.items.forEach(it => { diff[it.productId] = (diff[it.productId] ?? 0) + it.qty })
+      items.forEach(it => { diff[it.productId] = (diff[it.productId] ?? 0) - it.qty })
+      setProducts(ps => ps.map(p => diff[p.id] ? { ...p, stock: Math.max(0, p.stock + diff[p.id]) } : p))
+    }
+    const total = items.reduce((sum, it) => sum + it.price * it.qty, 0)
+    setOrders(prev => prev.map(o => o.id === id ? { ...o, ...data, items, total, updatedAt: new Date().toISOString() } : o))
+  }
+
+  // Elimina el pedido; si todavía apartaba stock, lo devuelve al inventario.
+  function deleteOrder(id) {
+    const order = orders.find(o => o.id === id)
+    if (order && STOCK_HOLDING_STATUSES.includes(order.status)) {
+      setProducts(ps => ps.map(p => {
+        const ordered = order.items.filter(it => it.productId === p.id).reduce((s, it) => s + it.qty, 0)
+        return ordered ? { ...p, stock: p.stock + ordered } : p
+      }))
+    }
+    setOrders(prev => prev.filter(o => o.id !== id))
+  }
+
   // Agrega una entrada al historial de estados del pedido — se usa desde
   // cada acción (confirmar, rechazar, despachar, completar) para que el
   // detalle del pedido pueda mostrar la línea de tiempo completa.
@@ -151,7 +186,7 @@ export function SuppliesProvider({ children }) {
   return (
     <SuppliesContext.Provider value={{
       products, activeProducts, addProduct, updateProduct, deleteProduct, toggleProductActive,
-      orders, createOrder, confirmOrder, rejectOrder, shipOrder, requestPaymentShortfall, completeOrder, pendingOrdersCount,
+      orders, createOrder, updateOrder, deleteOrder, confirmOrder, rejectOrder, shipOrder, requestPaymentShortfall, completeOrder, pendingOrdersCount,
       cart, addToCart, changeCartQty, removeFromCart, clearCart, cartCount, cartTotal,
     }}>
       {children}

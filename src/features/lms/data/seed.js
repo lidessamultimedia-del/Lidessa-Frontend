@@ -10,6 +10,41 @@ export const seedDirectory = [
   { id: 's2', name: 'Ana Martínez', email: 'ana.martinez@correo.co', role: 'estudiante', active: true, joined: '2025-05-18' },
   { id: 's3', name: 'Pedro Gómez', email: 'pedro.gomez@correo.co', role: 'estudiante', active: true, joined: '2025-06-01' },
   { id: 's4', name: 'Laura Sánchez', email: 'laura.sanchez@correo.co', role: 'estudiante', active: false, joined: '2025-06-15' },
+  // ── Datos de ejemplo adicionales (para probar búsquedas y paginación) ──
+  ...[
+    ['t3', 'Andrés Felipe Restrepo', 'andres.restrepo@lidessa.co', '2025-07-02'],
+    ['t4', 'Paola Andrea Cárdenas', 'paola.cardenas@lidessa.co', '2025-07-20'],
+    ['t5', 'Jorge Iván Salazar', 'jorge.salazar@lidessa.co', '2025-08-05'],
+    ['t6', 'Diana Marcela Rojas', 'diana.rojas@lidessa.co', '2025-08-22'],
+    ['t7', 'Luis Eduardo Pineda', 'luis.pineda@lidessa.co', '2025-09-10'],
+    ['t8', 'Catalina Herrera Vélez', 'catalina.herrera@lidessa.co', '2025-10-01'],
+    ['t9', 'Mauricio Ortega Díaz', 'mauricio.ortega@lidessa.co', '2025-11-14'],
+    ['t10', 'Natalia Giraldo Mejía', 'natalia.giraldo@lidessa.co', '2026-01-18'],
+    ['t11', 'Fernando Castaño Ruiz', 'fernando.castano@lidessa.co', '2026-03-09'],
+    ['t12', 'Sandra Milena Quintero', 'sandra.quintero@lidessa.co', '2026-05-27'],
+  ].map(([id, name, email, joined], i) => ({
+    id, name, email, role: 'profesor', active: i !== 6, joined,
+    phone: `+57 31${i} 555 ${String(1200 + i * 37).padStart(4, '0')}`,
+    documentType: 'Cédula de ciudadanía', documentNumber: String(79000000 + i * 104729),
+  })),
+  ...[
+    ['s5', 'Camilo Andrés Torres', 'camilo.torres@correo.co', '2025-07-08'],
+    ['s6', 'Valentina Ríos Arango', 'valentina.rios@correo.co', '2025-07-25'],
+    ['s7', 'Santiago Morales Gil', 'santiago.morales@correo.co', '2025-08-12'],
+    ['s8', 'Daniela Patiño Zapata', 'daniela.patino@correo.co', '2025-09-03'],
+    ['s9', 'Juan David Londoño', 'juandavid.londono@correo.co', '2025-09-28'],
+    ['s10', 'Mariana Echeverri Soto', 'mariana.echeverri@correo.co', '2025-10-19'],
+    ['s11', 'Sebastián Vargas León', 'sebastian.vargas@correo.co', '2025-12-02'],
+    ['s12', 'Isabella Montoya Ruiz', 'isabella.montoya@correo.co', '2026-02-11'],
+    ['s13', 'Tomás Aguirre Cano', 'tomas.aguirre@correo.co', '2026-04-06'],
+    ['s14', 'Gabriela Duque Franco', 'gabriela.duque@correo.co', '2026-06-21'],
+    ['s15', 'Nicolás Bedoya Marín', 'nicolas.bedoya@correo.co', '2026-08-30'],
+    ['s16', 'Sara Lucía Cifuentes', 'sara.cifuentes@correo.co', '2026-10-02'],
+  ].map(([id, name, email, joined], i) => ({
+    id, name, email, role: 'estudiante', active: i !== 4, joined,
+    phone: `+57 32${i % 10} 555 ${String(3400 + i * 53).padStart(4, '0')}`,
+    documentType: i % 5 === 3 ? 'Tarjeta de identidad' : 'Cédula de ciudadanía', documentNumber: String(1000000000 + i * 7919311),
+  })),
 ]
 
 export const seedCourses = [
@@ -127,6 +162,28 @@ export const seedCourses = [
       'Módulo 6 - Educación Disruptiva',
     ],
   },
+  // ── Cursos de ejemplo adicionales (para probar búsquedas y paginación) ──
+  ...[
+    ['c7', 'Trabajo seguro en alturas — nivel avanzado', 'SST', 't3', ['s5', 's6', 's7', 's8'], '/assets/SG-SST.png', '#d97706', true],
+    ['c8', 'Plan de Manejo Integral de Residuos Sólidos', 'Ambiental', 't4', ['s9', 's10', 's11'], '/assets/PMIRS.png', '#16a34a', true],
+    ['c9', 'Primeros auxilios en el entorno laboral', 'SST', 't5', ['s5', 's12', 's13', 's14', 's15'], '/assets/sst.png', '#dc2626', true],
+    ['c10', 'Brigadas de emergencia y evacuación', 'SST', 't6', ['s6', 's16'], '/assets/seguridad_salud_trabajo.png', '#d97706', false],
+    ['c11', 'Comité de Convivencia Laboral (COCOLA)', 'Gestión', 't7', ['s7', 's8', 's9'], '/assets/Capacitacion.png', '#005187', true],
+    ['c12', 'COPASST: funciones y responsabilidades', 'SST', 't8', ['s10', 's11'], '/assets/sst.png', '#d97706', true],
+    ['c13', 'Riesgo psicosocial y bienestar laboral', 'Bienestar', 't9', ['s12', 's13'], '/assets/formacion.png', '#7c3aed', false],
+    ['c14', 'Manejo seguro de sustancias químicas', 'SST', 't10', ['s14', 's15', 's16'], '/assets/SG-SST.png', '#dc2626', true],
+    ['c15', 'Liderazgo y comunicación asertiva', 'Liderazgo', 't11', ['s5', 's9'], '/assets/Capacitacion.png', '#005187', true],
+    ['c16', 'Gestión del cambio organizacional', 'Gestión', 't12', [], '/assets/formacion.png', '#4d82bc', false],
+  ].map(([id, name, category, teacherId, studentIds, image, color, published], i) => ({
+    id, name, shortName: `${category.slice(0, 3).toUpperCase()}-${String(i + 7).padStart(3, '0')}`,
+    description: `Curso práctico de ${name.toLowerCase()} orientado a empresas e instituciones.`, category,
+    teacherId, studentIds, createdAt: `2026-0${(i % 9) + 1}-1${i % 9}`,
+    published, visible: true, startDate: '2026-11-01', endDate: '2027-02-28',
+    format: 'topics', completionTrackingEnabled: true,
+    requiresPassword: false, password: '', selfEnrollment: true, guestAccess: false,
+    capacity: 60 + i * 10, color,
+    listed: true, image, duration: `${20 + (i % 4) * 10} horas`, modality: ['Virtual', 'Presencial', 'Mixta'][i % 3], certified: i % 2 === 0,
+  })),
 ]
 
 export const seedTopics = [

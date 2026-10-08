@@ -143,7 +143,7 @@ export default function ForgotPassword() {
         <div className="w-full max-w-sm">
           <Link to="/" className="lg:hidden flex items-center gap-2.5 mb-10">
             <img src="/assets/logolidessa.png" alt="Lidessa" style={{ width: 36, height: 36, objectFit: 'contain' }} />
-            <span className="text-xl font-black" style={{ fontFamily: 'var(--font-display)', color: '#005187' }}>
+            <span className="text-xl font-black" style={{ fontFamily: 'var(--font-display)', color: 'var(--primary)' }}>
               Lide<span style={{ color: '#4d82bc' }}>ssa</span>
             </span>
           </Link>

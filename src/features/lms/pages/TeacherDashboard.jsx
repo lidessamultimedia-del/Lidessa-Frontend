@@ -264,7 +264,7 @@ export default function TeacherDashboard({ theme, setTheme }) {
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             {[
-              { label: 'Mis Cursos', value: myCourses.length, icon: GraduationCap, color: '#005187' },
+              { label: 'Mis Cursos', value: myCourses.length, icon: GraduationCap, color: 'var(--primary)' },
               { label: 'Estudiantes Totales', value: totalStudents, icon: Users, color: '#16a34a' },
               { label: 'Tareas por Revisar', value: pendingSubmissions.length, icon: ClipboardCheck, color: '#d97706' },
               { label: 'Promedio de Calificación', value: averageGrade, empty: gradedSubmissions.length === 0, icon: BarChart2, color: '#7c3aed' },
@@ -436,7 +436,7 @@ export default function TeacherDashboard({ theme, setTheme }) {
       {/* ── DETALLE DE CURSO ── */}
       {section === 'courseDetail' && selectedCourse && (
         <div style={{ animation: 'fadeUp 0.4s ease' }}>
-          <button onClick={() => setSection('courses')} className="text-xs font-semibold mb-3" style={{ color: '#005187' }}>← Volver a mis cursos</button>
+          <button onClick={() => setSection('courses')} className="text-xs font-semibold mb-3" style={{ color: 'var(--primary)' }}>← Volver a mis cursos</button>
 
           <div className="rounded-xl overflow-hidden mb-5" style={{ border: '1px solid var(--border)' }}>
             <div style={{ height: 10, backgroundColor: selectedCourse.color ?? '#005187' }} />
@@ -633,7 +633,7 @@ export default function TeacherDashboard({ theme, setTheme }) {
                 </span>
                 {failed && !sub.retryAllowed && (
                   <button onClick={() => { lms.allowRetry('assignment', sub.id); toast('success', 'Reintento permitido', `${lms.studentName(sub.studentId)} — ${assignment?.title}`) }}
-                    className="text-xs px-3 py-1.5 rounded-lg font-bold shrink-0" style={{ border: '1px solid rgba(0,81,135,0.3)', color: '#005187' }}>
+                    className="text-xs px-3 py-1.5 rounded-lg font-bold shrink-0" style={{ border: '1px solid rgba(0,81,135,0.3)', color: 'var(--primary)' }}>
                     Permitir reintento
                   </button>
                 )}
@@ -690,7 +690,7 @@ export default function TeacherDashboard({ theme, setTheme }) {
                   </span>
                   {failed && !a.retryAllowed && (
                     <button onClick={() => { lms.allowRetry('quiz', a.id); toast('success', 'Reintento permitido', `${lms.studentName(a.studentId)} — ${quiz?.title}`) }}
-                      className="text-xs px-3 py-1.5 rounded-lg font-bold shrink-0" style={{ border: '1px solid rgba(0,81,135,0.3)', color: '#005187' }}>
+                      className="text-xs px-3 py-1.5 rounded-lg font-bold shrink-0" style={{ border: '1px solid rgba(0,81,135,0.3)', color: 'var(--primary)' }}>
                       Permitir reintento
                     </button>
                   )}

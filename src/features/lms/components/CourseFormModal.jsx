@@ -258,7 +258,7 @@ export default function CourseFormModal({ course, teachers, showTeacherSelect = 
                 )}
                 <label
                   className="flex-1 cursor-pointer text-xs px-3 py-2.5 rounded-lg text-center font-semibold transition-colors"
-                  style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: '#005187', border: '1px solid rgba(0,81,135,0.2)', opacity: imageProcessing ? 0.6 : 1, pointerEvents: imageProcessing ? 'none' : 'auto' }}
+                  style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: 'var(--primary)', border: '1px solid rgba(0,81,135,0.2)', opacity: imageProcessing ? 0.6 : 1, pointerEvents: imageProcessing ? 'none' : 'auto' }}
                 >
                   {imageProcessing ? 'Procesando…' : (form.image ? 'Cambiar' : 'Elegir foto…')}
                   <input type="file" accept="image/*" className="hidden" disabled={imageProcessing} onChange={async e => {

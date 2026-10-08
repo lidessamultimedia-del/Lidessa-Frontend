@@ -40,6 +40,10 @@
   --border: #c4dafa;
   --ring: #4d82bc;
   --radius: 10px;
+  /* V2 Suministros: superficie propia para tarjetas/modales de esta sección
+     — en modo oscuro usa el mismo azul marino de los heros de la marca en
+     vez del --card genérico (gris-café, pensado para el resto del sitio). */
+  --supplies-surface: #ffffff;
   /* brand extras */
   --blue-light: #84b6f4;
   --blue-xlight: #c4dafa;
@@ -63,6 +67,7 @@
   --accent-foreground: #000000;
   --border: #454546;
   --ring: #84b6f4;
+  --supplies-surface: #13223b;
 }
 
 * { box-sizing: border-box; }

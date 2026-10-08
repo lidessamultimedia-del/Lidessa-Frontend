@@ -87,7 +87,7 @@ export default function DocumentTypesManagerView({ documentTypes, directory, onA
                   <div className="flex items-center gap-2 shrink-0">
                     <button onClick={() => startEdit(i, dt.name)} title="Renombrar"
                       className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
-                      style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: '#005187', border: '1px solid rgba(0,81,135,0.2)' }}>
+                      style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: 'var(--primary)', border: '1px solid rgba(0,81,135,0.2)' }}>
                       <Edit2 size={13} />
                     </button>
                     <button onClick={() => onRequestDelete(dt.name, inUse)} title="Eliminar"

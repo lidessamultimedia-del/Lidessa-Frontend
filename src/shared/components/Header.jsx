@@ -133,7 +133,7 @@ export default function Header({ theme, setTheme }) {
                 className="font-black tracking-tight"
                 style={{
                   fontFamily: 'var(--font-display)',
-                  color: '#005187',
+                  color: 'var(--primary)',
                   fontSize: scrolled ? '18px' : '22px',
                   transition: 'font-size 0.3s ease',
                 }}
@@ -319,12 +319,12 @@ export default function Header({ theme, setTheme }) {
                   <Link
                     to="/servicios"
                     className="text-xs font-bold"
-                    style={{ color: '#005187' }}
+                    style={{ color: 'var(--primary)' }}
                   >
                     Ver todos los servicios →
                   </Link>
                   <a
-                    href="https://wa.me/573016280574?text=Hola, quisiera información sobre un servicio"
+                    href="https://wa.me/573332371006?text=Hola, quisiera información sobre un servicio"
                     target="_blank" rel="noreferrer"
                     className="text-xs font-bold px-3 py-1.5 rounded-lg text-white"
                     style={{ backgroundColor: '#25D366', transition: 'opacity 0.2s' }}
@@ -444,7 +444,7 @@ export default function Header({ theme, setTheme }) {
 
             <div style={{ maxHeight: mobileServicesOpen ? '600px' : '0', overflow: 'hidden', transition: 'max-height 0.3s ease' }}>
               <div className="pl-3 pb-2">
-                <Link to="/servicios" className="block py-1.5 pt-3 text-sm font-bold" style={{ color: '#005187' }}>
+                <Link to="/servicios" className="block py-1.5 pt-3 text-sm font-bold" style={{ color: 'var(--primary)' }}>
                   Ver todos los servicios →
                 </Link>
                 {megaMenu.map((cat, i) => (

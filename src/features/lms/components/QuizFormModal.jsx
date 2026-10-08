@@ -200,7 +200,7 @@ export default function QuizFormModal({ quiz, topics = [], students = [], initia
                     ))}
                     {q.options.length < 6 && (
                       <button type="button" onClick={() => addOption(qi)}
-                        className="text-xs font-semibold pl-6" style={{ color: '#005187' }}>
+                        className="text-xs font-semibold pl-6" style={{ color: 'var(--primary)' }}>
                         + Agregar opción
                       </button>
                     )}

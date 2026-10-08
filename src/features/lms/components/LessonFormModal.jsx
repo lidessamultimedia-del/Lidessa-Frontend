@@ -51,7 +51,7 @@ export default function LessonFormModal({ lesson, topics = [], initialTopicId, o
           <FormField label="Material adjunto (PDF, Word, PowerPoint, Excel, imagen)" error={errors.file}>
             {form.fileName ? (
               <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg" style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)' }}>
-                <FileText size={16} style={{ color: '#005187' }} />
+                <FileText size={16} style={{ color: 'var(--primary)' }} />
                 <span className="text-sm flex-1 truncate" style={{ color: 'var(--foreground)' }}>{form.fileName}</span>
                 <span className="text-xs shrink-0" style={{ color: 'var(--muted-foreground)' }}>{(form.fileSize / 1024).toFixed(0)} KB</span>
                 <button type="button" onClick={() => setForm(f => ({ ...f, fileName: '', fileData: '', fileSize: 0 }))}
@@ -62,7 +62,7 @@ export default function LessonFormModal({ lesson, topics = [], initialTopicId, o
             ) : (
               <label
                 className="flex items-center gap-2 cursor-pointer px-3 py-2.5 rounded-lg text-sm font-semibold transition-colors"
-                style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: '#005187', border: '1px solid rgba(0,81,135,0.2)' }}
+                style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: 'var(--primary)', border: '1px solid rgba(0,81,135,0.2)' }}
               >
                 <Upload size={15} /> Subir archivo…
                 <input type="file" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,image/*" className="hidden" onChange={e => {

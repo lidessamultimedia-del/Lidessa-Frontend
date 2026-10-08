@@ -45,6 +45,11 @@ import {
   UserCog as LucideUserCog,
   ShieldCheck as LucideShieldCheck,
   IdCard as LucideIdCard,
+  Package as LucidePackage,
+  ShoppingCart as LucideShoppingCart,
+  Image as LucideImage,
+  Minus as LucideMinus,
+  LogOut as LucideLogOut,
 } from 'lucide-react'
 
 function withDefaultSize(LucideIcon) {
@@ -95,3 +100,8 @@ export const Paperclip = withDefaultSize(LucidePaperclip)
 export const UserCog = withDefaultSize(LucideUserCog)
 export const ShieldCheck = withDefaultSize(LucideShieldCheck)
 export const IdCard = withDefaultSize(LucideIdCard)
+export const Package = withDefaultSize(LucidePackage)
+export const ShoppingCart = withDefaultSize(LucideShoppingCart)
+export const ImageIcon = withDefaultSize(LucideImage)
+export const Minus = withDefaultSize(LucideMinus)
+export const LogOut = withDefaultSize(LucideLogOut)

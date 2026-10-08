@@ -7,6 +7,7 @@ import { BlogProvider } from '@/features/blog/context/BlogContext'
 import { PQRSFProvider } from '@/features/pqrsf/context/PQRSFContext'
 import { LMSProvider } from '@/features/lms/context/LMSContext'
 import { ServicesDataProvider } from '@/features/services/context/ServicesDataContext'
+import { SuppliesProvider } from '@/features/supplies/context/SuppliesContext'
 import { SiteSettingsProvider } from '@/shared/context/SiteSettingsContext'
 import AppRoutes from './routes'
 
@@ -20,10 +21,12 @@ export default function App() {
             <PQRSFProvider>
               <LMSProvider>
                 <ServicesDataProvider>
-                  <SiteSettingsProvider>
-                    <AppRoutes />
-                    <ToastContainer />
-                  </SiteSettingsProvider>
+                  <SuppliesProvider>
+                    <SiteSettingsProvider>
+                      <AppRoutes />
+                      <ToastContainer />
+                    </SiteSettingsProvider>
+                  </SuppliesProvider>
                 </ServicesDataProvider>
               </LMSProvider>
             </PQRSFProvider>

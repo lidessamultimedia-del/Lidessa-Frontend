@@ -146,7 +146,7 @@ export default function CatalogCourseFormModal({ course, categories = [], onSave
               )}
               <label
                 className="flex-1 cursor-pointer text-xs px-3 py-2.5 rounded-lg text-center font-semibold transition-colors"
-                style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: '#005187', border: '1px solid rgba(0,81,135,0.2)' }}
+                style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: 'var(--primary)', border: '1px solid rgba(0,81,135,0.2)' }}
               >
                 {form.image ? 'Cambiar' : 'Elegir foto…'}
                 <input type="file" accept="image/*" className="hidden" onChange={e => {
@@ -188,7 +188,7 @@ export default function CatalogCourseFormModal({ course, categories = [], onSave
               ))}
               <button type="button" onClick={addObjective}
                 className="text-xs px-2 py-1 rounded-lg font-semibold flex items-center gap-1 transition-opacity hover:opacity-70"
-                style={{ color: '#005187' }}>
+                style={{ color: 'var(--primary)' }}>
                 <Plus size={11} /> Agregar objetivo
               </button>
             </div>

@@ -2,7 +2,7 @@ import { useRef, useEffect, useState } from 'react'
 import { useScrollReveal } from '@/shared/hooks/useScrollReveal'
 import { useIsDarkTheme } from '@/shared/hooks/useIsDarkTheme'
 import PQRSFModal from '@/shared/components/PQRSFModal'
-import { MessageCircle, Mail, MapPin, Phone, Check, Sparkle } from '@/shared/components/Icons'
+import { MessageCircle, Mail, MapPin, Phone, Check } from '@/shared/components/Icons'
 
 const whyChooseUs = [
   'Más de 15 años de experiencia acompañando organizaciones en Colombia.',
@@ -56,15 +56,6 @@ function TimelineItem({ image, title, text, side, bodyText }) {
   )
 }
 
-function highlightBrand(text) {
-  const parts = text.split(/(Lidessa|Hydrobombas S\.A\.S\.?)/g)
-  return parts.map((part, i) =>
-    /Lidessa|Hydrobombas/.test(part)
-      ? <strong key={i} style={{ color: '#b8860b' }}>{part}</strong>
-      : part
-  )
-}
-
 function CheckItem({ label, children }) {
   const isDark = useIsDarkTheme()
   const brandBlue = isDark ? '#84b6f4' : '#005187'
@@ -83,92 +74,6 @@ function CheckItem({ label, children }) {
     </div>
   )
 }
-
-function CeoModal({ person, onClose }) {
-  const isDark = useIsDarkTheme()
-  const brandBlue = isDark ? '#84b6f4' : '#005187'
-  const bodyText = isDark ? '#e4e4e7' : '#2a2a2a'
-
-  useEffect(() => {
-    document.body.style.overflow = 'hidden'
-    const handler = (e) => { if (e.key === 'Escape') onClose() }
-    window.addEventListener('keydown', handler)
-    return () => {
-      document.body.style.overflow = ''
-      window.removeEventListener('keydown', handler)
-    }
-  }, [onClose])
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6"
-      style={{
-        backgroundColor: 'rgba(0,0,0,0.7)',
-        backdropFilter: 'blur(4px)',
-        animation: 'fadeIn 0.25s ease',
-      }}
-      onClick={(e) => { if (e.target === e.currentTarget) onClose() }}
-    >
-      <div
-        className="relative rounded-2xl overflow-hidden shadow-2xl w-full max-w-2xl max-h-full overflow-y-auto"
-        style={{ backgroundColor: 'var(--card)', animation: 'modalPop 0.45s cubic-bezier(0.34, 1.4, 0.64, 1)' }}
-      >
-        <button
-          onClick={onClose}
-          aria-label="Cerrar"
-          className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-lg z-10"
-          style={{ backgroundColor: 'rgba(0,0,0,0.35)' }}
-        >
-          ×
-        </button>
-
-        <div className="flex flex-col sm:flex-row gap-6 p-6 sm:p-8">
-          <div className="shrink-0 flex sm:block justify-center">
-            <div
-              className="w-28 h-28 sm:w-32 sm:h-32 rounded-full overflow-hidden"
-              style={{ border: '4px solid #d4af37', boxShadow: '0 0 22px rgba(212,175,55,0.5)' }}
-            >
-              <img
-                src={person.image}
-                alt={person.name}
-                className="w-full h-full object-cover"
-                style={{ objectPosition: person.imagePosition || 'center' }}
-              />
-            </div>
-          </div>
-
-          <div className="min-w-0 text-center sm:text-left">
-            <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: '#4d82bc' }}>Equipo directivo</p>
-            <h2 className="text-xl font-black" style={{ fontFamily: 'var(--font-display)', color: brandBlue }}>
-              {person.name}
-            </h2>
-            <p className="text-sm font-semibold mb-3" style={{ fontFamily: 'var(--font-display)', color: '#b8860b' }}>
-              {person.role}
-            </p>
-            <p className="text-sm leading-relaxed" style={{ color: bodyText }}>
-              {person.bio}
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-const team = [
-  {
-    name: 'Lina Maria Aristizabal',
-    role: 'Gerente',
-    bio: 'Gerente y Fundadora de Lidessa, especialista en Diseño Curricular para IFTDH e IES, conferencista y especialista en SISTEMAS DE GESTIÓN. Se ha desempeñado como directora de IFTDH, Cogestora y Cofundadora de más de 10 Instituciones de educación para el trabajo y el desarrollo humano a nivel nacional y 7 de educación Formal, y de más de 10 empresas en otros sectores. Ha sido consultora en Gestión y Desarrollo de las Organizaciones en más de 70 empresas. Cuenta con experiencia como consultora en Diseño e implementación de Sistemas de Gestión de Calidad de diferentes sectores empresariales, como auditora de Sistemas de Gestión Ambientales, Calidad y SST, directora y rectora de diversas instituciones educativas, presidenta de la mesa Nacional de Consultoría Empresarial del SENA, evaluadora de Normas de competencia laboral y partícipe activa de otras mesas como Gestión del Riesgo, PYMES, BPO-KPO, y educativa.',
-    image: '/assets/Gerente.png',
-  },
-  {
-    name: 'Diego Alonso Pérez',
-    role: 'Sub Gerente',
-    bio: 'Gerente y fundador de Hydrobombas S.A.S con Experiencia de 17 años en puestos directivos, desde hace 4 años asumió el rol de subgerente de Lidessa. Tecnólogo e ingeniero mecánico de profesión, con amplios conocimientos en neumática, hidráulica, manejo de herramientas técnicas y desarrollo de mediciones del campo. Ha recibido y perfeccionado sus habilidades con entrenamientos en enfermería, espacios confinados, trabajo en alturas, seguridad vial y manejo de extintores y protocolos contra incendios. Actualmente cuenta con certificaciones en primeros auxilios, supervisor de espacios confinados y coordinador de alturas, además de ser tallerista y conferencista en estas áreas. Su amplia experiencia le ha permitido especializarse en redes contra incendios RCI y mecanismos de prevención y control, esta misma trayectoria le ha aportado madurez y sólidas estructuras en la gestión del recurso humano, llevándolo a considerarse más que un líder, un miembro más de los equipos de intervención, y auto caracterizándose en tres palabras: "Conocimiento, experiencia y humanidad".',
-    image: '/assets/Sudgerente.png',
-  },
-]
 
 const acronym = [
   { letter: 'L', value: 'Liderazgo', description: 'Guiamos a nuestros clientes con visión estratégica y resultados comprobados.' },
@@ -196,9 +101,7 @@ export default function About() {
   useScrollReveal('reveal-scale')
   const isDark = useIsDarkTheme()
   const brandBlue = isDark ? '#84b6f4' : '#005187'
-  const brandNavy = isDark ? '#84b6f4' : '#0a2540'
   const bodyText = isDark ? '#e4e4e7' : '#2a2a2a'
-  const [activeCeo, setActiveCeo] = useState(null)
   const [infoTab, setInfoTab] = useState('quienes')
   const [pqrsfOpen, setPqrsfOpen] = useState(false)
   const [tabIndicator, setTabIndicator] = useState({ left: 0, width: 0, opacity: 0 })
@@ -328,93 +231,6 @@ export default function About() {
               </div>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* Team */}
-      <section className="py-16 max-w-5xl mx-auto px-4 sm:px-6">
-        <div className="flex justify-center mb-12 reveal-scale">
-          <div className="rounded-2xl px-10 py-5 shadow-lg" style={{ background: 'linear-gradient(135deg, #005187 0%, #4d82bc 55%, #b8860b 100%)' }}>
-            <h2 className="text-2xl sm:text-3xl font-black text-center text-white" style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.4em' }}>
-              CEOS
-            </h2>
-          </div>
-        </div>
-        <div className="grid sm:grid-cols-2 gap-12">
-          {team.map((p, i) => (
-            <button
-              key={p.name}
-              onClick={() => setActiveCeo(p)}
-              className={`text-center reveal stagger-${i + 1}`}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, transition: 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)' }}
-              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-10px)' }}
-              onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)' }}
-            >
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <span style={{ width: 36, height: 1, backgroundColor: '#d4af37' }} />
-                <span style={{ color: '#d4af37' }}><Sparkle width={13} height={13} /></span>
-                <span style={{ width: 36, height: 1, backgroundColor: '#d4af37' }} />
-              </div>
-              <h3 className="font-black text-xl leading-tight" style={{ fontFamily: 'var(--font-display)', color: brandNavy }}>
-                {p.name}
-              </h3>
-              <div className="flex items-center justify-center gap-2 mt-1.5 mb-6">
-                <span style={{ width: 22, height: 1, backgroundColor: '#d4af37' }} />
-                <span className="text-xs font-bold uppercase tracking-widest" style={{ color: '#b8860b' }}>{p.role}</span>
-                <span style={{ width: 22, height: 1, backgroundColor: '#d4af37' }} />
-              </div>
-
-              <div className="relative mx-auto" style={{ width: 190, height: 210, marginTop: 14, marginBottom: 26 }}>
-                <div
-                  className="absolute"
-                  style={{ top: -14, left: -14, width: 190, height: 210, border: '2px solid #d4af37' }}
-                />
-                <div
-                  className="absolute overflow-hidden"
-                  style={{
-                    inset: 0,
-                    transition: 'box-shadow 0.4s ease, transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
-                    boxShadow: '0 8px 24px rgba(0,0,0,0.18)',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.04)' }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)' }}
-                >
-                  <img
-                    src={p.image}
-                    alt={p.name}
-                    className="w-full h-full object-cover"
-                    style={{ objectPosition: p.imagePosition || 'center' }}
-                  />
-                </div>
-                <span className="absolute" style={{ top: -12, left: -12, width: 26, height: 26, background: 'linear-gradient(135deg, #e6c158, #b8860b)' }} />
-                <span className="absolute" style={{ bottom: -12, right: -12, width: 26, height: 26, background: 'linear-gradient(135deg, #e6c158, #b8860b)' }} />
-              </div>
-
-              <div className="flex items-center justify-center gap-2 mb-4">
-                <span style={{ width: 28, height: 1, backgroundColor: '#d4af37' }} />
-                <span style={{ color: '#d4af37' }}><Sparkle width={11} height={11} /></span>
-                <span style={{ width: 28, height: 1, backgroundColor: '#d4af37' }} />
-              </div>
-
-              <p className="text-sm leading-relaxed max-w-md mx-auto" style={{ color: bodyText }}>
-                {highlightBrand(p.bio.slice(0, 130).trim())}…
-              </p>
-
-              <span
-                className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-full"
-                style={{ background: 'linear-gradient(135deg, #005187 0%, #4d82bc 55%, #b8860b 100%)', boxShadow: '0 4px 14px rgba(0,81,135,0.3)' }}
-              >
-                <span className="w-6 h-6 rounded-full flex items-center justify-center shrink-0" style={{ border: '1px solid rgba(255,255,255,0.6)' }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="8" r="4" />
-                    <path d="M4 20c0-4.4 3.6-7 8-7s8 2.6 8 7" />
-                  </svg>
-                </span>
-                <span className="text-xs font-bold uppercase tracking-widest text-white">Ver perfil completo</span>
-                <span className="text-white">→</span>
-              </span>
-            </button>
-          ))}
         </div>
       </section>
 
@@ -594,7 +410,7 @@ export default function About() {
                     Escríbanos y un asesor le atenderá a la brevedad para resolver sus dudas o iniciar su proceso de consultoría.
                   </p>
                   <div className="flex flex-wrap gap-3">
-                    <a href="https://wa.me/573016280574" target="_blank" rel="noreferrer"
+                    <a href="https://wa.me/573332371006" target="_blank" rel="noreferrer"
                       className="px-5 py-2.5 rounded-xl text-sm font-bold text-white"
                       style={{ backgroundColor: '#25D366', transition: 'opacity 0.2s' }}
                       onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
@@ -614,7 +430,7 @@ export default function About() {
                 </div>
                 <ul className="space-y-3 text-sm" style={{ color: bodyText }}>
                   <li className="flex items-start gap-2"><MapPin size={15} className="shrink-0 mt-0.5" /> Cra. 71 #46-28, Laureles, Medellín, Antioquia</li>
-                  <li className="flex items-start gap-2"><Phone size={15} className="shrink-0 mt-0.5" /> +57 301 628 0574</li>
+                  <li className="flex items-start gap-2"><Phone size={15} className="shrink-0 mt-0.5" /> +57 333 237 1006</li>
                   <li className="flex items-start gap-2"><Mail size={15} className="shrink-0 mt-0.5" /> comercial@lidessa.co</li>
                 </ul>
               </div>
@@ -668,7 +484,7 @@ export default function About() {
             <ul className="space-y-3 text-sm">
               {[
                 { icon: MapPin, text: 'Cra. 71 #46-28, Laureles, Medellín, Antioquia' },
-                { icon: Phone, text: '+57 301 628 0574', href: 'https://wa.me/573016280574' },
+                { icon: Phone, text: '+57 333 237 1006', href: 'https://wa.me/573332371006' },
                 { icon: Mail, text: 'comercial@lidessa.co', href: 'mailto:comercial@lidessa.co' },
               ].map(c => (
                 <li key={c.text}>
@@ -704,7 +520,6 @@ export default function About() {
         </div>
       </section>
 
-      {activeCeo && <CeoModal person={activeCeo} onClose={() => setActiveCeo(null)} />}
       {pqrsfOpen && <PQRSFModal onClose={() => setPqrsfOpen(false)} />}
     </div>
   )

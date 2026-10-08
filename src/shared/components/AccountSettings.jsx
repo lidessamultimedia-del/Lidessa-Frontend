@@ -27,11 +27,13 @@ export default function AccountSettings() {
 
   const directoryEntry = lms.directoryById(user.id)
   const isTeacher = directoryEntry?.role === 'profesor'
+  const isClient = user.role === 'cliente'
 
   const [profile, setProfile] = useState({
     name: user.name, email: user.email, phone: user.phone ?? '',
     documentType: directoryEntry?.documentType ?? '',
     documentNumber: directoryEntry?.documentNumber ?? '',
+    address: directoryEntry?.address ?? user.address ?? '',
   })
   const [profileErrors, setProfileErrors] = useState({})
   const avatarInputRef = useRef(null)
@@ -87,7 +89,10 @@ export default function AccountSettings() {
     }
     if (Object.keys(errors).length > 0) return setProfileErrors(errors)
     setProfileErrors({})
-    updateProfile({ name: profile.name, email: profile.email, phone: profile.phone })
+    updateProfile({
+      name: profile.name, email: profile.email, phone: profile.phone,
+      ...(isClient ? { documentNumber: profile.documentNumber.trim(), address: profile.address.trim() } : {}),
+    })
     if (directoryEntry) {
       lms.updateDirectoryUser(user.id, {
         name: profile.name, email: profile.email, phone: profile.phone,
@@ -190,6 +195,22 @@ export default function AccountSettings() {
                       style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)', ...errorInputStyle(!!profileErrors.documentNumber) }} />
                   </FormField>
                 </div>
+              )}
+              {isClient && (
+                <>
+                  <FormField label="N° de documento" helperText="Opcional">
+                    <input value={profile.documentNumber}
+                      onChange={e => setProfile(f => ({ ...f, documentNumber: e.target.value }))}
+                      className="w-full px-3 py-2.5 rounded-lg text-sm outline-none"
+                      style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }} />
+                  </FormField>
+                  <FormField label="Dirección" helperText="Se usa para prellenar la entrega al comprar.">
+                    <input value={profile.address}
+                      onChange={e => setProfile(f => ({ ...f, address: e.target.value }))}
+                      className="w-full px-3 py-2.5 rounded-lg text-sm outline-none"
+                      style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }} />
+                  </FormField>
+                </>
               )}
               {directoryEntry?.joined && (
                 <FormField label="Fecha de ingreso" helperText="La asigna el administrador.">

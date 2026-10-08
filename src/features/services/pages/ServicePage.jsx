@@ -32,7 +32,7 @@ export default function ServicePage() {
             ← Ir al inicio
           </Link>
           <a
-            href="https://wa.me/573016280574"
+            href="https://wa.me/573332371006"
             target="_blank" rel="noreferrer"
             className="px-4 py-2 rounded-lg text-sm font-bold text-white"
             style={{ backgroundColor: '#25D366' }}
@@ -268,7 +268,7 @@ export default function ServicePage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <a
-                href={`https://wa.me/573016280574?text=Hola, me interesa el servicio de ${service.title}`}
+                href={`https://wa.me/573332371006?text=Hola, me interesa el servicio de ${service.title}`}
                 target="_blank" rel="noreferrer"
                 className="px-6 py-3 rounded-lg text-sm font-bold text-white transition-opacity hover:opacity-90"
                 style={{ backgroundColor: '#25D366' }}

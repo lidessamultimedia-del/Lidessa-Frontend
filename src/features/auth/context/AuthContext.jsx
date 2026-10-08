@@ -37,6 +37,7 @@ export const ROLE_HOME = {
   admin: '/admin',
   profesor: '/profesor',
   estudiante: '/estudiante',
+  cliente: '/tienda/cliente',
 }
 
 export function AuthProvider({ children }) {
@@ -59,10 +60,42 @@ export function AuthProvider({ children }) {
   // que un usuario autenticado por esta vía no aparece ahí (gap conocido,
   // aceptado mientras se agregan esos endpoints).
   async function login(email, password) {
+    // Clientes de la tienda de Suministros: todavía no existen en el backend
+    // real (ese rol no está entre los que acepta el registro), así que viven
+    // aparte, en memoria, igual que todo el sitio antes de conectarse a la
+    // API. El día que el backend soporte el rol "cliente" esto se reemplaza
+    // por un login real igual que admin/profesor/estudiante.
+    const clientMatch = users.find(u => u.role === 'cliente' && u.email.toLowerCase() === email.trim().toLowerCase() && u.password === password)
+    if (clientMatch) {
+      const { password: _pw, ...safe } = clientMatch
+      const session = { ...safe, token: null }
+      setUser(session)
+      sessionStorage.setItem('lidessa_user', JSON.stringify(session))
+      return
+    }
+
     const data = await apiLogin(email, password)
     const safe = { ...data.user, id: String(data.user.id), token: data.token, unreadNotifications: 0 }
     setUser(safe)
     sessionStorage.setItem('lidessa_user', JSON.stringify(safe))
+  }
+
+  // Registro de clientes de la tienda de Suministros (mock, ver nota en login).
+  function registerClient({ name, email, password, phone, documentNumber, address }) {
+    if (users.some(u => u.email.toLowerCase() === email.trim().toLowerCase())) {
+      throw new Error('Ya existe una cuenta registrada con ese correo.')
+    }
+    const newUser = {
+      id: `cl${Date.now()}`, name, email, password, role: 'cliente',
+      phone: phone ?? '', documentNumber: documentNumber ?? '', address: address ?? '',
+      unreadNotifications: 0,
+    }
+    setUsers(prev => [...prev, newUser])
+    const { password: _pw, ...safe } = newUser
+    const session = { ...safe, token: null }
+    setUser(session)
+    sessionStorage.setItem('lidessa_user', JSON.stringify(session))
+    return session
   }
 
   async function register({ name, email, password, phone }) {
@@ -76,11 +109,15 @@ export function AuthProvider({ children }) {
 
   // Crea una cuenta con acceso real (login) desde el panel de admin — a
   // diferencia del directorio del LMS, que solo guarda una ficha informativa.
-  function createUser({ id, name, email, password, phone, role }) {
+  function createUser({ id, name, email, password, phone, role, documentNumber, address }) {
     if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
       throw new Error('Ya existe una cuenta registrada con ese correo.')
     }
-    const newUser = { id: id ?? `u${Date.now()}`, name, email, password, role, phone: phone ?? '', unreadNotifications: 0 }
+    const newUser = {
+      id: id ?? `u${Date.now()}`, name, email, password, role,
+      phone: phone ?? '', documentNumber: documentNumber ?? '', address: address ?? '',
+      unreadNotifications: 0,
+    }
     setUsers(prev => [...prev, newUser])
     const { password: _pw, ...safe } = newUser
     return safe
@@ -168,7 +205,7 @@ export function AuthProvider({ children }) {
   const allUsers = users.map(({ password: _pw, ...safe }) => safe)
 
   return (
-    <AuthContext.Provider value={{ user, initialized, login, register, logout, updateProfile, changePassword, requestPasswordReset, verifyResetCode, resetPassword, registeredStudents, allUsers, updateUserRole, createUser, updateUserCredentials, deleteUser }}>
+    <AuthContext.Provider value={{ user, initialized, login, register, registerClient, logout, updateProfile, changePassword, requestPasswordReset, verifyResetCode, resetPassword, registeredStudents, allUsers, updateUserRole, createUser, updateUserCredentials, deleteUser }}>
       {children}
     </AuthContext.Provider>
   )

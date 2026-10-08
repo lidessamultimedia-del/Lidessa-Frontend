@@ -108,7 +108,7 @@ export default function Footer() {
                     Sábados, domingos y festivos: cerrado
                   </li>
                   <li>
-                    <a href="https://wa.me/573016280574" target="_blank" rel="noreferrer"
+                    <a href="https://wa.me/573332371006" target="_blank" rel="noreferrer"
                       className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold text-white transition-opacity hover:opacity-90"
                       style={{ backgroundColor: '#25D366' }}>
                       <MessageCircle size={14} /> WhatsApp disponible

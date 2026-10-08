@@ -34,7 +34,7 @@ export default function ServiceModal({ service, image, onClose }) {
         </div>
 
         <div className="p-6 text-center overflow-y-auto">
-          <h2 className="text-xl font-bold mb-3" style={{ fontFamily: 'var(--font-display)', color: '#005187' }}>
+          <h2 className="text-xl font-bold mb-3" style={{ fontFamily: 'var(--font-display)', color: 'var(--primary)' }}>
             {service.title}
           </h2>
           <p className="text-sm leading-relaxed mb-4" style={{ color: 'var(--muted-foreground)' }}>

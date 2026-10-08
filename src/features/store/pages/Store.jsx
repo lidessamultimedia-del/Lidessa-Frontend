@@ -1,13 +1,69 @@
 import { useState } from 'react'
+import { Link, Navigate } from 'react-router-dom'
 import PQRSFModal from '@/shared/components/PQRSFModal'
+import CheckoutModal from '@/features/supplies/components/CheckoutModal'
+import { useSupplies } from '@/features/supplies/context/SuppliesContext'
+import { useAuth } from '@/features/auth/context/AuthContext'
 import { useScrollReveal } from '@/shared/hooks/useScrollReveal'
-import { Clipboard } from '@/shared/components/Icons'
+import { formatAmountInput, parseAmountInput } from '@/shared/lib/money'
+import { ShoppingCart, Plus, Minus, Trash, Check, ImageIcon } from '@/shared/components/Icons'
+
+function formatCOP(value) {
+  return value.toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })
+}
+
+const SORT_OPTIONS = {
+  destacados: (a, b) => 0,
+  'price-asc': (a, b) => a.price - b.price,
+  'price-desc': (a, b) => b.price - a.price,
+}
 
 export default function Store() {
+  const supplies = useSupplies()
+  const { user } = useAuth()
   const [pqrsfOpen, setPqrsfOpen] = useState(false)
+  const [cartOpen, setCartOpen] = useState(false)
+  const [checkoutOpen, setCheckoutOpen] = useState(false)
+  const [needAccountOpen, setNeedAccountOpen] = useState(false)
+  const [orderDone, setOrderDone] = useState(null)
+  const [sortBy, setSortBy] = useState('destacados')
+  const [search, setSearch] = useState('')
+  const [minPrice, setMinPrice] = useState('')
+  const [maxPrice, setMaxPrice] = useState('')
   const pageRef = useScrollReveal('reveal')
   useScrollReveal('reveal-left')
   useScrollReveal('reveal-scale')
+
+  // Un cliente logueado tiene su propia tienda (catálogo + carrito + sus
+  // pedidos) en vez de esta página pública de mercadeo — se manda para allá.
+  if (user?.role === 'cliente') {
+    return <Navigate to="/tienda/cliente" replace />
+  }
+
+  const filteredProducts = supplies.activeProducts.filter(p => {
+    if (search.trim() && !p.name.toLowerCase().includes(search.trim().toLowerCase())) return false
+    if (minPrice && p.price < Number(minPrice)) return false
+    if (maxPrice && p.price > Number(maxPrice)) return false
+    return true
+  })
+  const sortedProducts = [...filteredProducts].sort(SORT_OPTIONS[sortBy])
+
+  function handleAddToCart(product) {
+    supplies.addToCart(product)
+    setCartOpen(true)
+  }
+
+  function handleContinue() {
+    setCartOpen(false)
+    setNeedAccountOpen(true)
+  }
+
+  function handleOrderSubmit(details) {
+    const order = supplies.createOrder({ ...details, items: supplies.cart })
+    setOrderDone(order)
+    supplies.clearCart()
+    setCheckoutOpen(false)
+  }
 
   return (
     <div ref={pageRef}>
@@ -31,6 +87,13 @@ export default function Store() {
             <p className="text-base max-w-2xl mb-6 leading-relaxed reveal stagger-3" style={{ color: '#cbb98a' }}>
               V2 Suministros es nuestro espacio especializado en seguridad y salud en el trabajo, enfocado en orientarle sobre los equipos de protección personal y elementos que exige la normativa vigente para cada nivel de riesgo.
             </p>
+            <a
+              href="#catalogo"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-lg text-sm font-bold text-white reveal stagger-3 transition-opacity hover:opacity-90"
+              style={{ backgroundColor: '#005187' }}
+            >
+              <ShoppingCart size={16} /> Ver catálogo y comprar
+            </a>
           </div>
 
           <div className="flex justify-center reveal-scale">
@@ -99,7 +162,7 @@ export default function Store() {
             <p className="text-sm mb-5" style={{ color: 'var(--muted-foreground)' }}>
               Recuerde, nuestro asesoramiento es totalmente gratuito. ¡Estamos aquí para ayudarle!
             </p>
-            <a href="https://wa.me/573016280574?text=Hola, quisiera asesoramiento gratuito sobre botiquines de primeros auxilios" target="_blank" rel="noreferrer"
+            <a href="https://wa.me/573332371006?text=Hola, quisiera asesoramiento gratuito sobre botiquines de primeros auxilios" target="_blank" rel="noreferrer"
               className="inline-block px-5 py-2.5 rounded-lg text-sm font-bold text-white transition-opacity hover:opacity-90"
               style={{ backgroundColor: 'var(--primary)' }}>
               ¡Asesoramiento Gratis!
@@ -111,28 +174,107 @@ export default function Store() {
         </div>
       </section>
 
-      {/* Normative bar */}
-      <section className="py-4" style={{ backgroundColor: 'var(--secondary)', borderBottom: '1px solid var(--border)' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex flex-wrap gap-3 items-center reveal">
-            <p className="text-sm font-semibold inline-flex items-center gap-1.5" style={{ color: 'var(--primary)' }}><Clipboard size={15} /> Normativa aplicable:</p>
-            {['Resolución 0312 de 2019', 'NTC 3610 (cascos)', 'ANSI Z87.1 (gafas)', 'NTC 2171 (guantes)', 'Res. 4272/2021 (trabajo en alturas)'].map(n => (
-              <span key={n} className="text-xs px-2 py-1 rounded" style={{ backgroundColor: 'var(--card)', color: 'var(--muted-foreground)', border: '1px solid var(--border)' }}>
-                {n}
-              </span>
-            ))}
-          </div>
+      {/* Catálogo de productos */}
+      <section id="catalogo" className="py-14 max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="text-center mb-8 reveal">
+          <h2 className="text-2xl sm:text-3xl font-black mb-3" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
+            Catálogo de productos
+          </h2>
+          <p className="text-sm max-w-2xl mx-auto mb-2 leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
+            Elementos de protección personal y suministros de seguridad, listos para pedir.
+          </p>
+          <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
+            ¿Ya tiene cuenta de cliente?{' '}
+            <Link to="/login" className="underline font-semibold" style={{ color: 'var(--primary)' }}>Inicie sesión</Link>
+          </p>
         </div>
-      </section>
 
-      {/* Soluciones integrales */}
-      <section className="py-14 max-w-7xl mx-auto px-4 sm:px-6 text-center reveal">
-        <h2 className="text-2xl sm:text-3xl font-black mb-3" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
-          ¡Soluciones Integrales para la Seguridad y el Bienestar!
-        </h2>
-        <p className="text-sm max-w-3xl mx-auto mb-2 leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
-          En V2 Suministros orientamos a empresas, instituciones educativas y propiedades horizontales sobre cómo fortalecer la seguridad y el bienestar de su gente. Nuestro objetivo es que cuente con la información y el acompañamiento necesarios para mantener un entorno seguro y conforme a las normativas vigentes.
-        </p>
+        {supplies.activeProducts.length === 0 ? (
+          <p className="text-sm text-center py-16" style={{ color: 'var(--muted-foreground)' }}>
+            No hay productos disponibles por el momento.
+          </p>
+        ) : (
+          <>
+            <div className="flex flex-wrap items-center gap-3 mb-6 reveal">
+              <input
+                type="text"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Buscar por nombre..."
+                className="flex-1 min-w-[180px] text-sm px-3 py-2 rounded-lg outline-none"
+                style={{ border: '1px solid var(--border)', backgroundColor: 'var(--card)', color: 'var(--foreground)' }}
+              />
+              <input
+                type="text" inputMode="numeric"
+                value={formatAmountInput(minPrice)}
+                onChange={e => setMinPrice(parseAmountInput(e.target.value))}
+                placeholder="Precio mín."
+                className="w-28 text-sm px-3 py-2 rounded-lg outline-none"
+                style={{ border: '1px solid var(--border)', backgroundColor: 'var(--card)', color: 'var(--foreground)' }}
+              />
+              <input
+                type="text" inputMode="numeric"
+                value={formatAmountInput(maxPrice)}
+                onChange={e => setMaxPrice(parseAmountInput(e.target.value))}
+                placeholder="Precio máx."
+                className="w-28 text-sm px-3 py-2 rounded-lg outline-none"
+                style={{ border: '1px solid var(--border)', backgroundColor: 'var(--card)', color: 'var(--foreground)' }}
+              />
+              <select
+                value={sortBy}
+                onChange={e => setSortBy(e.target.value)}
+                className="text-xs px-3 py-2.5 rounded-lg outline-none"
+                style={{ border: '1px solid var(--border)', backgroundColor: 'var(--card)', color: 'var(--foreground)' }}
+              >
+                <option value="destacados">Ordenar: Destacados</option>
+                <option value="price-asc">Precio: menor a mayor</option>
+                <option value="price-desc">Precio: mayor a menor</option>
+              </select>
+            </div>
+
+            {sortedProducts.length === 0 && (
+              <div className="text-center py-16">
+                <p className="text-sm mb-4" style={{ color: 'var(--muted-foreground)' }}>No se encontraron productos con esos filtros.</p>
+                <button
+                  onClick={() => { setSearch(''); setMinPrice(''); setMaxPrice('') }}
+                  className="text-xs font-bold underline"
+                  style={{ color: 'var(--primary)' }}
+                >
+                  Limpiar filtros
+                </button>
+              </div>
+            )}
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {sortedProducts.map((p, i) => (
+              <div key={p.id} className={`rounded-xl overflow-hidden reveal-scale stagger-${(i % 3) + 1}`} style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
+                <div style={{ height: 180, backgroundColor: 'var(--muted)' }}>
+                  {p.image ? (
+                    <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center" style={{ color: 'var(--muted-foreground)' }}><ImageIcon size={32} /></div>
+                  )}
+                </div>
+                <div className="p-5">
+                  <p className="font-bold mb-1" style={{ color: 'var(--foreground)' }}>{p.name}</p>
+                  <p className="text-xs mb-3" style={{ color: 'var(--muted-foreground)' }}>{p.description}</p>
+                  <div className="flex items-center justify-between">
+                    <span className="font-black" style={{ color: 'var(--primary)' }}>{formatCOP(p.price)}</span>
+                    <button
+                      onClick={() => handleAddToCart(p)}
+                      disabled={p.stock <= 0}
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold text-white disabled:opacity-40"
+                      style={{ backgroundColor: '#005187' }}
+                    >
+                      <ShoppingCart size={13} /> {p.stock <= 0 ? 'Agotado' : 'Agregar'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+            </div>
+          </>
+        )}
       </section>
 
       {/* Compliance CTA — norma 0705 */}
@@ -157,7 +299,7 @@ export default function Store() {
           <p className="text-sm max-w-2xl mx-auto mb-6 leading-relaxed" style={{ color: '#cbb98a' }}>
             ¿Cómo puede asegurarse de cumplir con la norma? Contar con un botiquín tipo A certificado y con asesoría de nuestro equipo. Actuar de manera proactiva garantiza la seguridad de su entorno laboral y evita riesgos y sanciones para su empresa.
           </p>
-          <a href="https://wa.me/573016280574?text=Hola, quisiera asesoría para cumplir con la Resolución 0705 en mi empresa" target="_blank" rel="noreferrer"
+          <a href="https://wa.me/573332371006?text=Hola, quisiera asesoría para cumplir con la Resolución 0705 en mi empresa" target="_blank" rel="noreferrer"
             className="inline-block px-5 py-2.5 rounded-lg text-sm font-bold"
             style={{ backgroundColor: '#e8c766', color: '#141414' }}>
             Solicitar asesoría →
@@ -175,7 +317,7 @@ export default function Store() {
               <p className="text-sm leading-relaxed mb-4" style={{ color: 'var(--muted-foreground)' }}>
                 La Resolución 0312 de 2019 y el SG-SST determinan los equipos de protección personal obligatorios según el nivel de riesgo de su actividad económica. Nuestros asesores pueden orientarle sin costo.
               </p>
-              <a href="https://wa.me/573016280574?text=Hola, quisiera asesoría sobre qué EPP necesita mi empresa" target="_blank" rel="noreferrer"
+              <a href="https://wa.me/573332371006?text=Hola, quisiera asesoría sobre qué EPP necesita mi empresa" target="_blank" rel="noreferrer"
                 className="inline-block px-5 py-2.5 rounded-lg text-sm font-bold text-white transition-opacity hover:opacity-90"
                 style={{ backgroundColor: 'var(--primary)' }}>
                 Solicitar asesoría gratuita →
@@ -248,6 +390,114 @@ export default function Store() {
           </div>
         </div>
       </section>
+
+      {/* Botón flotante del carrito, en la esquina opuesta al botón de
+          WhatsApp (fixed bottom-6 right-6): ese widget reserva un panel
+          invisible de 240px de ancho aun cerrado, así que cualquier offset
+          sobre el mismo lado derecho termina debajo de su área de clic. */}
+      {supplies.cartCount > 0 && !cartOpen && (
+        <button
+          onClick={() => setCartOpen(true)}
+          className="fixed bottom-6 left-6 z-40 inline-flex items-center gap-2 px-5 py-3.5 rounded-full text-sm font-bold text-white shadow-lg"
+          style={{ backgroundColor: '#005187' }}
+        >
+          <ShoppingCart size={16} /> {supplies.cartCount} · {formatCOP(supplies.cartTotal)}
+        </button>
+      )}
+
+      {/* Carrito */}
+      {cartOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }} onClick={e => { if (e.target === e.currentTarget) setCartOpen(false) }}>
+          <div className="rounded-xl p-6 max-w-md w-full max-h-full overflow-y-auto" style={{ backgroundColor: 'var(--card)' }}>
+            <h2 className="text-lg font-black mb-4" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Tu pedido</h2>
+
+            {supplies.cart.length === 0 ? (
+              <p className="text-sm mb-4" style={{ color: 'var(--muted-foreground)' }}>Tu carrito está vacío.</p>
+            ) : (
+              <div className="space-y-3 mb-5">
+                {supplies.cart.map(it => (
+                  <div key={it.productId} className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold truncate" style={{ color: 'var(--foreground)' }}>{it.name}</p>
+                      <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{formatCOP(it.price)} c/u</p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button onClick={() => supplies.changeCartQty(it.productId, -1)} className="w-7 h-7 rounded-full flex items-center justify-center" style={{ border: '1px solid var(--border)' }}><Minus size={12} /></button>
+                      <span className="text-sm font-semibold w-4 text-center">{it.qty}</span>
+                      <button onClick={() => supplies.changeCartQty(it.productId, 1)} className="w-7 h-7 rounded-full flex items-center justify-center" style={{ border: '1px solid var(--border)' }}><Plus size={12} /></button>
+                      <button onClick={() => supplies.removeFromCart(it.productId)} style={{ color: '#b3261e' }}><Trash size={14} /></button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {supplies.cart.length > 0 && (
+              <div className="flex items-center justify-between mb-5 pt-3" style={{ borderTop: '1px solid var(--border)' }}>
+                <span className="text-sm font-bold" style={{ color: 'var(--foreground)' }}>Total</span>
+                <span className="text-lg font-black" style={{ color: 'var(--primary)' }}>{formatCOP(supplies.cartTotal)}</span>
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button onClick={() => setCartOpen(false)} className="flex-1 py-2.5 rounded-lg text-sm font-bold" style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>Seguir viendo</button>
+              {supplies.cart.length > 0 && (
+                <button
+                  onClick={handleContinue}
+                  className="flex-1 py-2.5 rounded-lg text-sm font-bold text-white"
+                  style={{ backgroundColor: '#005187' }}
+                >
+                  Continuar
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {needAccountOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }} onClick={e => { if (e.target === e.currentTarget) setNeedAccountOpen(false) }}>
+          <div className="rounded-xl p-6 max-w-sm w-full text-center" style={{ backgroundColor: 'var(--card)' }}>
+            <h2 className="text-lg font-black mb-2" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Necesita una cuenta de cliente</h2>
+            <p className="text-sm mb-6" style={{ color: 'var(--muted-foreground)' }}>
+              Para comprar en el catálogo, inicie sesión o cree una cuenta de cliente. Su carrito queda guardado.
+            </p>
+            <div className="flex gap-3">
+              <Link to="/login" onClick={() => setNeedAccountOpen(false)} className="flex-1 py-2.5 rounded-lg text-sm font-bold" style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>
+                Iniciar sesión
+              </Link>
+              <Link to="/registro?tipo=cliente" onClick={() => setNeedAccountOpen(false)} className="flex-1 py-2.5 rounded-lg text-sm font-bold text-white" style={{ backgroundColor: '#005187' }}>
+                Crear cuenta
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {checkoutOpen && (
+        <CheckoutModal
+          user={user}
+          items={supplies.cart.map(it => ({ ...it, image: supplies.products.find(p => p.id === it.productId)?.image }))}
+          total={supplies.cartTotal}
+          onSubmit={handleOrderSubmit}
+          onCancel={() => setCheckoutOpen(false)}
+        />
+      )}
+
+      {orderDone && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4" style={{ backgroundColor: 'rgba(0,0,0,0.6)' }} onClick={e => { if (e.target === e.currentTarget) setOrderDone(null) }}>
+          <div className="rounded-xl p-8 max-w-sm w-full text-center" style={{ backgroundColor: 'var(--card)' }}>
+            <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4 text-white" style={{ backgroundColor: '#1a7a3c' }}>
+              <Check size={24} strokeWidth="3" />
+            </div>
+            <h2 className="text-lg font-black mb-2" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>¡Pedido enviado!</h2>
+            <p className="text-sm mb-6" style={{ color: 'var(--muted-foreground)' }}>
+              Revisaremos tu comprobante de pago y te contactaremos pronto para confirmar tu pedido.
+            </p>
+            <button onClick={() => setOrderDone(null)} className="w-full py-2.5 rounded-lg text-sm font-bold text-white" style={{ backgroundColor: '#005187' }}>Entendido</button>
+          </div>
+        </div>
+      )}
 
       {pqrsfOpen && <PQRSFModal onClose={() => setPqrsfOpen(false)} />}
     </div>

@@ -26,7 +26,7 @@ export default function WhatsAppButton() {
           Contactar por WhatsApp
         </p>
         <a
-          href="https://wa.me/573016280574?text=Hola, me gustaría información sobre sus servicios."
+          href="https://wa.me/573332371006?text=Hola, me gustaría información sobre sus servicios."
           target="_blank" rel="noreferrer"
           className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-sm font-bold text-white"
           style={{ backgroundColor: '#25D366', transition: 'opacity 0.2s, transform 0.2s' }}

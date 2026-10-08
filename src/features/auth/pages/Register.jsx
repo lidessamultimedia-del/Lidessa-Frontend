@@ -14,13 +14,15 @@ export default function Register() {
   const courses = lms.publicCourses
   const preselected = courses.find(c => c.name === searchParams.get('curso'))?.name ?? ''
 
-  const [form, setForm] = useState({ name: '', email: '', phone: '', courseInterest: preselected, password: '', confirmPassword: '', enrollPassword: '' })
+  const [accountType, setAccountType] = useState(searchParams.get('tipo') === 'cliente' ? 'cliente' : 'estudiante')
+  const isClientSignup = accountType === 'cliente'
+  const [form, setForm] = useState({ name: '', email: '', phone: '', documentNumber: '', address: '', courseInterest: preselected, password: '', confirmPassword: '', enrollPassword: '' })
   const selectedCourse = courses.find(c => c.name === form.courseInterest) ?? null
-  const needsCoursePassword = !!selectedCourse?.selfEnrollment && !!selectedCourse?.requiresPassword
+  const needsCoursePassword = !isClientSignup && !!selectedCourse?.selfEnrollment && !!selectedCourse?.requiresPassword
   const [fieldErrors, setFieldErrors] = useState({})
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const { register } = useAuth()
+  const { register, registerClient } = useAuth()
   const { toast } = useToast()
   const navigate = useNavigate()
 
@@ -51,6 +53,16 @@ export default function Register() {
     if (Object.keys(errors).length > 0) return
     setLoading(true)
     try {
+      if (isClientSignup) {
+        const newUser = registerClient({
+          name: form.name.trim(), email: form.email, password: form.password, phone: form.phone,
+          documentNumber: form.documentNumber, address: form.address,
+        })
+        toast('success', `¡Bienvenido, ${newUser.name.split(' ')[0]}!`, 'Tu cuenta de cliente fue creada. Ya puedes comprar en el catálogo.')
+        navigate(ROLE_HOME[newUser.role] ?? '/')
+        return
+      }
+
       const newUser = await register({ name: form.name.trim(), email: form.email, password: form.password, phone: form.phone })
       lms.addDirectoryUser({
         id: newUser.id,
@@ -102,13 +114,15 @@ export default function Register() {
 
         <div className="relative">
           <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#84b6f4' }}>
-            Portal del estudiante
+            {isClientSignup ? 'V2 Suministros' : 'Portal del estudiante'}
           </p>
           <h1 className="text-3xl font-black text-white mb-2 leading-tight" style={{ fontFamily: 'var(--font-display)' }}>
-            Cree su cuenta y comience a formarse con nosotros
+            {isClientSignup ? 'Cree su cuenta y compre en el catálogo' : 'Cree su cuenta y comience a formarse con nosotros'}
           </h1>
           <p className="text-sm max-w-sm" style={{ color: '#c4dafa' }}>
-            Regístrese para acceder al portal del estudiante. Un asesor lo matriculará en el curso de su interés.
+            {isClientSignup
+              ? 'Regístrese para comprar elementos de protección personal y suministros de seguridad.'
+              : 'Regístrese para acceder al portal del estudiante. Un asesor lo matriculará en el curso de su interés.'}
           </p>
         </div>
 
@@ -122,39 +136,64 @@ export default function Register() {
         <div className="w-full max-w-sm">
           <Link to="/" className="lg:hidden flex items-center gap-2 mb-4">
             <img src="/assets/logolidessa.png" alt="Lidessa" style={{ width: 30, height: 30, objectFit: 'contain' }} />
-            <span className="text-lg font-black" style={{ fontFamily: 'var(--font-display)', color: '#005187' }}>
+            <span className="text-lg font-black" style={{ fontFamily: 'var(--font-display)', color: 'var(--primary)' }}>
               Lide<span style={{ color: '#4d82bc' }}>ssa</span>
             </span>
           </Link>
 
           <h2 className="text-xl font-black mb-1" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
-            Crear cuenta de estudiante
+            {isClientSignup ? 'Crear cuenta de cliente' : 'Crear cuenta de estudiante'}
           </h2>
           <p className="text-xs mb-4" style={{ color: 'var(--muted-foreground)' }}>
-            Complete sus datos para acceder al portal del estudiante.
+            {isClientSignup
+              ? 'Complete sus datos para comprar en el catálogo de Suministros.'
+              : 'Complete sus datos para acceder al portal del estudiante.'}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-2.5" noValidate>
+            <FormField label="Tipo de cuenta">
+              <select value={accountType} onChange={e => setAccountType(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg text-sm outline-none transition-all"
+                style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }}>
+                <option value="estudiante">Estudiante — tomar cursos de formación</option>
+                <option value="cliente">Cliente — comprar en Suministros</option>
+              </select>
+            </FormField>
+
             <Field label="Nombre completo" type="text" placeholder="Su nombre y apellido" autoComplete="name"
               value={form.name} error={fieldErrors.name} onChange={v => set('name', v)} />
             <Field label="Correo electrónico" type="email" placeholder="correo@ejemplo.com" autoComplete="email"
               value={form.email} error={fieldErrors.email} onChange={v => set('email', v)} />
 
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="Teléfono (opcional)" type="tel" placeholder="+57 300 000 0000" autoComplete="tel"
-                value={form.phone} error={fieldErrors.phone} onChange={v => set('phone', v)} />
-              <FormField label="Curso de interés">
-                <select value={form.courseInterest} onChange={e => set('courseInterest', e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg text-sm outline-none transition-all"
-                  style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }}>
-                  <option value="">No sé aún</option>
-                  {courses.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
-                </select>
-              </FormField>
-            </div>
+            {isClientSignup ? (
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <Field label="Teléfono (opcional)" type="tel" placeholder="+57 300 000 0000" autoComplete="tel"
+                    value={form.phone} error={fieldErrors.phone} onChange={v => set('phone', v)} />
+                  <Field label="N° de documento (opcional)" type="text" placeholder="CC 1234567890" autoComplete="off"
+                    value={form.documentNumber} error={fieldErrors.documentNumber} onChange={v => set('documentNumber', v)} />
+                </div>
+                <Field label="Dirección (opcional)" type="text" placeholder="Calle, carrera, número, barrio..." autoComplete="street-address"
+                  helperText="Se usa para prellenar la entrega al momento de comprar."
+                  value={form.address} error={fieldErrors.address} onChange={v => set('address', v)} />
+              </>
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Teléfono (opcional)" type="tel" placeholder="+57 300 000 0000" autoComplete="tel"
+                  value={form.phone} error={fieldErrors.phone} onChange={v => set('phone', v)} />
+                <FormField label="Curso de interés">
+                  <select value={form.courseInterest} onChange={e => set('courseInterest', e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg text-sm outline-none transition-all"
+                    style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }}>
+                    <option value="">No sé aún</option>
+                    {courses.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+                  </select>
+                </FormField>
+              </div>
+            )}
 
-            {selectedCourse?.selfEnrollment && (
-              <p className="text-xs px-3 py-2 rounded-lg" style={{ backgroundColor: 'rgba(0,81,135,0.08)', color: '#005187' }}>
+            {!isClientSignup && selectedCourse?.selfEnrollment && (
+              <p className="text-xs px-3 py-2 rounded-lg" style={{ backgroundColor: 'rgba(0,81,135,0.08)', color: 'var(--primary)' }}>
                 Este curso tiene auto-inscripción: quedarás inscrito de inmediato al crear tu cuenta.
               </p>
             )}

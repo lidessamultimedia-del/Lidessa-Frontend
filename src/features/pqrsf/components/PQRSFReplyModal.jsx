@@ -36,7 +36,7 @@ export default function PQRSFReplyModal({ ticket, onSave, onClose, readOnly = fa
           <div className="rounded-xl p-4 mb-5" style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)' }}>
             <p className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--muted-foreground)' }}>Solicitud completa</p>
             <div className="flex items-center gap-2 mb-1">
-              <span style={{ color: '#005187' }}><User size={13} /></span>
+              <span style={{ color: 'var(--primary)' }}><User size={13} /></span>
               <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{ticket.from}</p>
             </div>
             {ticket.email && (

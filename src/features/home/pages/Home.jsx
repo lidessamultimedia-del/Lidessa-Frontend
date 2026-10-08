@@ -117,7 +117,7 @@ export default function Home() {
               >
                 Quiénes somos
               </Link>
-              <a href="https://wa.me/573016280574?text=Hola, quisiera una asesoría"
+              <a href="https://wa.me/573332371006?text=Hola, quisiera una asesoría"
                 target="_blank" rel="noreferrer"
                 className="px-7 py-3.5 rounded-xl text-sm font-bold"
                 style={{
@@ -221,7 +221,7 @@ export default function Home() {
                   <path d={a.icon} />
                 </svg>
               </div>
-              <h3 className="text-lg font-bold mb-3" style={{ fontFamily: 'var(--font-display)', color: '#005187' }}>{a.title}</h3>
+              <h3 className="text-lg font-bold mb-3" style={{ fontFamily: 'var(--font-display)', color: 'var(--primary)' }}>{a.title}</h3>
               <ul className="space-y-1.5">
                 {a.points.map((p, j) => (
                   <li key={j} className="text-sm flex items-start gap-2" style={{ color: 'var(--muted-foreground)' }}>
@@ -279,7 +279,7 @@ export default function Home() {
                     onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
                   />
                 </div>
-                <h3 className="font-bold text-base text-center mt-4 mb-2" style={{ fontFamily: 'var(--font-display)', color: '#005187' }}>
+                <h3 className="font-bold text-base text-center mt-4 mb-2" style={{ fontFamily: 'var(--font-display)', color: 'var(--primary)' }}>
                   {s.title}
                 </h3>
               </button>
@@ -350,7 +350,7 @@ export default function Home() {
                     <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
                     <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.85), rgba(0,0,0,0.15) 55%, transparent)' }} />
                     <div className="absolute top-3 right-3">
-                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: '#c4dafa', color: '#005187' }}>
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: '#c4dafa', color: 'var(--primary)' }}>
                         {post.category}
                       </span>
                     </div>
@@ -368,7 +368,7 @@ export default function Home() {
                     onClick={() => setSelectedPost(post)}>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
-                        style={{ backgroundColor: '#c4dafa', color: '#005187' }}>
+                        style={{ backgroundColor: '#c4dafa', color: 'var(--primary)' }}>
                         {post.category}
                       </span>
                       <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{post.date}</span>
@@ -406,14 +406,14 @@ export default function Home() {
             <ul className="space-y-3 text-sm">
               {[
                 { icon: MapPin, text: 'Cra. 71 #46-28, Laureles, Medellín, Antioquia' },
-                { icon: Phone, text: '+57 301 628 0574', href: 'https://wa.me/573016280574' },
+                { icon: Phone, text: '+57 333 237 1006', href: 'https://wa.me/573332371006' },
                 { icon: Mail, text: 'info@lidessa.co', href: 'mailto:info@lidessa.co' },
               ].map(c => (
                 <li key={c.text}>
                   {c.href
                     ? <a href={c.href} target="_blank" rel="noreferrer"
                         className="flex items-center gap-2"
-                        style={{ color: '#005187', fontWeight: 600, transition: 'color 0.2s' }}
+                        style={{ color: 'var(--primary)', fontWeight: 600, transition: 'color 0.2s' }}
                         onMouseEnter={e => e.currentTarget.style.color = '#4d82bc'}
                         onMouseLeave={e => e.currentTarget.style.color = '#005187'}
                       >

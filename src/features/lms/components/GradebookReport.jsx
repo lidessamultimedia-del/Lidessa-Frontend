@@ -173,7 +173,7 @@ export default function GradebookReport({ courseId }) {
                         )}
                         {failed && record && !record.retryAllowed && (
                           <button onClick={() => handleAllowRetry(kind, record)} title="Permitir que reintente"
-                            className="ml-1.5 text-xs font-bold" style={{ color: '#005187' }}>
+                            className="ml-1.5 text-xs font-bold" style={{ color: 'var(--primary)' }}>
                             🔓
                           </button>
                         )}

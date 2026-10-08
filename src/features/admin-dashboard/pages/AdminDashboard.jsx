@@ -7,6 +7,14 @@ import { usePQRSF, isIdentified } from '@/features/pqrsf/context/PQRSFContext'
 import { useLMS, MAX_GRADE } from '@/features/lms/context/LMSContext'
 import { downloadCsv } from '@/features/lms/utils/csv'
 import { useServicesData } from '@/features/services/context/ServicesDataContext'
+import { useSupplies } from '@/features/supplies/context/SuppliesContext'
+import SupplyProductFormModal from '@/features/supplies/components/SupplyProductFormModal'
+import ClientEditModal from '@/features/supplies/components/ClientEditModal'
+import ClientDetailModal from '@/features/supplies/components/ClientDetailModal'
+import ShipOrderModal from '@/features/supplies/components/ShipOrderModal'
+import RejectOrderModal from '@/features/supplies/components/RejectOrderModal'
+import PaymentShortfallModal from '@/features/supplies/components/PaymentShortfallModal'
+import ImageLightbox from '@/shared/components/ImageLightbox'
 import BlogPostFormModal from '@/features/blog/components/BlogPostFormModal'
 import CourseFormModal from '@/features/lms/components/CourseFormModal'
 import TopicFormModal from '@/features/lms/components/TopicFormModal'
@@ -30,7 +38,7 @@ import DocumentTypesManagerView from '../components/DocumentTypesManagerView'
 import AnimatedCounter from '@/shared/components/AnimatedCounter'
 import ThemeToggle from '@/shared/components/ThemeToggle'
 import { courseCardStyle } from '@/features/lms/utils/courseCard'
-import { BarChart2, Building, FileText, GraduationCap, Users, Clipboard, Sliders, Bell, User, AlertTriangle, Edit2, Plus, Send, BookOpen, Trash, Search, Eye, Lock, X, UserCog, ShieldCheck, IdCard, MessageCircle, Sparkle, Check, Inbox, Download, Mail, ClipboardCheck } from '@/shared/components/Icons'
+import { BarChart2, Building, FileText, GraduationCap, Users, Clipboard, Sliders, Bell, User, AlertTriangle, Edit2, Plus, Send, BookOpen, Trash, Search, Eye, Lock, X, UserCog, ShieldCheck, IdCard, MessageCircle, Sparkle, Check, Inbox, Download, Mail, ClipboardCheck, Package, ShoppingCart, ImageIcon, ChevronDown } from '@/shared/components/Icons'
 import AccountSettings from '@/shared/components/AccountSettings'
 import Avatar from '@/shared/components/Avatar'
 import Toggle from '@/shared/components/Toggle'
@@ -45,8 +53,8 @@ const statusColor = {
 }
 
 const PQRSF_TYPE_STYLES = {
-  'Petición': { color: '#005187', icon: MessageCircle },
-  'Solicitud': { color: '#005187', icon: MessageCircle },
+  'Petición': { color: 'var(--primary)', icon: MessageCircle },
+  'Solicitud': { color: 'var(--primary)', icon: MessageCircle },
   'Queja': { color: '#dc2626', icon: AlertTriangle },
   'Reclamo': { color: '#d97706', icon: AlertTriangle },
   'Sugerencia': { color: '#7c3aed', icon: Sparkle },
@@ -55,6 +63,12 @@ const PQRSF_TYPE_STYLES = {
 const BRAND_GRADIENT = 'linear-gradient(135deg, #005187 0%, #4d82bc 55%, #b8860b 100%)'
 
 const ROLE_LABELS = { admin: 'Administrador', profesor: 'Profesor', estudiante: 'Estudiante' }
+
+function formatCOP(value) {
+  return value.toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })
+}
+const SUPPLY_ORDER_STATUS_LABEL = { pending: 'Pendiente de revisión', confirmed: 'Confirmado', rejected: 'Rechazado', shipped: 'Enviado', completed: 'Completado' }
+const SUPPLY_ORDER_STATUS_COLOR = { pending: '#b8860b', confirmed: '#16a34a', rejected: '#dc2626', shipped: '#4d82bc', completed: '#16a34a' }
 
 const MONTHS_ES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
 // Los posts de Converge guardan la fecha como texto libre "D mes AAAA" (ver
@@ -90,12 +104,27 @@ export default function AdminDashboard({ theme, setTheme }) {
   const lms = useLMS()
   const catalogCourses = lms.listedCourses
   const { services, addService, updateService, deleteService, toggleServiceActive, categories: serviceCategories, addCategory, updateCategory, toggleCategoryActive, deleteCategory } = useServicesData()
+  const supplies = useSupplies()
+  const clientUsers = allUsers.filter(u => u.role === 'cliente')
+  const [productModal, setProductModal] = useState(null) // null | 'new' | product
+  const [clientModal, setClientModal] = useState(null) // null | 'new' | cliente a editar
+  const [clientDetailModal, setClientDetailModal] = useState(null) // cliente a ver en detalle
+  const [openOrderId, setOpenOrderId] = useState(null)
+  const [pedidosView, setPedidosView] = useState('activos') // 'activos' | 'historial' (rechazados y completados)
+  const [shipOrderModal, setShipOrderModal] = useState(null) // pedido a marcar como enviado
+  const [rejectOrderModal, setRejectOrderModal] = useState(null) // pedido a rechazar
+  const [paymentShortfallModal, setPaymentShortfallModal] = useState(null) // pedido al que avisarle pago incompleto
+  const [lightboxImage, setLightboxImage] = useState(null) // { src, alt } | null
   const [section, setSection] = useState('dashboard')
   const [messageConversation, setMessageConversation] = useState(null)
   const [messagesSearch, setMessagesSearch] = useState('')
   // En pantallas angostas (celular) el sidebar empieza colapsado — abierto
   // ocupa la mayoría del ancho y deja el contenido apretado en una franja.
   const [sidebarOpen, setSidebarOpen] = useState(() => typeof window === 'undefined' || window.innerWidth >= 768)
+  // Qué categorías del menú están desplegadas — arranca todo colapsado para
+  // que el sidebar no quede tan largo (se expande sola la categoría de la
+  // sección activa, ver el useEffect junto a navGroups).
+  const [expandedGroups, setExpandedGroups] = useState(() => new Set())
   const [bellOpen, setBellOpen] = useState(false)
   const bellRef = useRef(null)
 
@@ -137,11 +166,21 @@ export default function AdminDashboard({ theme, setTheme }) {
         date: r.completedAt, section: 'certifications',
       })
     })
+    // Alertas de inventario de Suministros — no tienen una fecha propia (es
+    // una condición vigente, no un evento puntual), así que se marcan con
+    // la hora actual para que siempre aparezcan arriba mientras sigan activas.
+    const now = new Date().toISOString()
+    supplies.activeProducts.filter(p => p.stock === 0).forEach(p => {
+      items.push({ id: `stock_out_${p.id}`, icon: AlertTriangle, text: `"${p.name}" está agotado`, date: now, section: 'suministros' })
+    })
+    supplies.activeProducts.filter(p => p.stock > 0 && p.stock <= 5).forEach(p => {
+      items.push({ id: `stock_low_${p.id}`, icon: AlertTriangle, text: `Quedan pocas unidades de "${p.name}" (${p.stock})`, date: now, section: 'suministros' })
+    })
     return items
       .sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''))
       .slice(0, 8)
       .map(n => ({ ...n, time: relativeTime(n.date) }))
-  }, [pqrsfTickets, catalogCourses, lms.directory, lms.courses, lms.submissions, lms.quizAttempts, lms.certifications])
+  }, [pqrsfTickets, catalogCourses, lms.directory, lms.courses, lms.submissions, lms.quizAttempts, lms.certifications, supplies.activeProducts])
 
   const [notifSeenIds, setNotifSeenIds] = useState(() => new Set())
   const unreadNotifications = notifications.filter(n => !notifSeenIds.has(n.id))
@@ -269,7 +308,7 @@ export default function AdminDashboard({ theme, setTheme }) {
         listed: true, published: false, visible: true,
         teacherId: null, format: 'topics', completionTrackingEnabled: true,
         requiresPassword: false, password: '', selfEnrollment: true, guestAccess: false,
-        capacity: 100, color: '#005187', startDate: '', endDate: '',
+        capacity: 100, color: 'var(--primary)', startDate: '', endDate: '',
         ...form,
       })
       toast('success', 'Curso creado', 'Ya aparece en la página pública de CEET y en Cursos (LMS) para que un profesor lo complete.')
@@ -370,6 +409,12 @@ export default function AdminDashboard({ theme, setTheme }) {
     } else if (deleteConfirm.type === 'documentType') {
       lms.deleteDocumentType(deleteConfirm.id)
       toast('success', 'Tipo de documento eliminado', deleteConfirm.label)
+    } else if (deleteConfirm.type === 'supplyProduct') {
+      supplies.deleteProduct(deleteConfirm.id)
+      toast('success', 'Producto eliminado', deleteConfirm.label)
+    } else if (deleteConfirm.type === 'client') {
+      deleteUser(deleteConfirm.id)
+      toast('success', 'Cliente eliminado', deleteConfirm.label)
     } else {
       toast('success', 'Elemento eliminado', 'El registro fue eliminado correctamente.')
     }
@@ -459,20 +504,105 @@ export default function AdminDashboard({ theme, setTheme }) {
   })
   const { pageItems: pagedConversations, totalPages: adminMessagesTotalPages, safePage: adminMessagesSafePage } = paginate(filteredConversations, adminMessagesPage)
 
-  const navItems = [
+  // El menú se agrupa por categoría (en vez de una lista plana con
+  // separadores de solo texto) para que cada una se pueda colapsar y el
+  // sidebar no quede tan largo. "Dashboard" y "Configuración" quedan sueltos
+  // porque no pertenecen a ninguna categoría concreta.
+  const navGroups = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart2 },
-    { id: 'services', label: 'Servicios', icon: Building },
-    { id: 'blog', label: 'Converge', icon: FileText },
-    { id: 'courses', label: 'CEET', icon: GraduationCap },
-    { id: 'pqrsf', label: 'PQRSF', icon: Clipboard },
-    { id: 'lms-divider', divider: true, label: 'LMS' },
-    { id: 'lms-courses', label: 'Cursos (LMS)', icon: BookOpen },
-    { id: 'teachers', label: 'Profesores', icon: User },
-    { id: 'students', label: 'Estudiantes', icon: Users },
-    { id: 'certifications', label: 'Certificaciones', icon: ShieldCheck },
-    { id: 'messages', label: 'Mensajes', icon: Mail },
+    {
+      group: 'Contenido del sitio',
+      items: [
+        { id: 'services', label: 'Servicios', icon: Building },
+        { id: 'blog', label: 'Converge', icon: FileText },
+        { id: 'courses', label: 'CEET', icon: GraduationCap },
+        { id: 'pqrsf', label: 'PQRSF', icon: Clipboard },
+      ],
+    },
+    {
+      group: 'V2 Suministros',
+      items: [
+        { id: 'suministros', label: 'Suministros', icon: Package },
+        { id: 'pedidos-suministros', label: 'Pedidos', icon: ShoppingCart },
+        { id: 'clientes-suministros', label: 'Clientes', icon: Users },
+      ],
+    },
+    {
+      group: 'LMS',
+      items: [
+        { id: 'lms-courses', label: 'Cursos', icon: BookOpen },
+        { id: 'teachers', label: 'Profesores', icon: User },
+        { id: 'students', label: 'Estudiantes', icon: Users },
+        { id: 'certifications', label: 'Certificaciones', icon: ShieldCheck },
+        { id: 'messages', label: 'Mensajes', icon: Mail },
+      ],
+    },
     { id: 'settings', label: 'Configuración', icon: Sliders },
   ]
+  // Todos los items, sin agrupar — para búsquedas por id (ej. el título del
+  // topbar) sin tener que recorrer la estructura anidada cada vez.
+  const navItems = navGroups.flatMap(entry => entry.group ? entry.items : [entry])
+
+  useEffect(() => {
+    const owner = navGroups.find(g => g.items?.some(i => i.id === section))
+    if (owner) setExpandedGroups(prev => prev.has(owner.group) ? prev : new Set([owner.group]))
+  }, [section])
+
+  // Acordeón: abrir una categoría cierra la que estuviera abierta, para que
+  // el sidebar no crezca con varias desplegadas a la vez.
+  function toggleGroup(group) {
+    setExpandedGroups(prev => (prev.has(group) ? new Set() : new Set([group])))
+  }
+
+  function renderNavButton(item, indent = false) {
+    const iconBox = indent ? 22 : 28
+    const iconSize = indent ? 13 : 15
+    return (
+      <button key={item.id}
+        onClick={() => setSection(item.id)}
+        style={{
+          display: 'flex', alignItems: 'center', gap: indent ? 9 : 11,
+          justifyContent: sidebarOpen ? 'flex-start' : 'center',
+          width: '100%', padding: sidebarOpen ? (indent ? '6px 11px' : '9px 11px') : '9px 0', borderRadius: 9,
+          marginLeft: sidebarOpen && indent ? 12 : 0,
+          background: sidebarOpen && section === item.id
+            ? 'linear-gradient(135deg, rgba(232,199,102,0.18) 0%, rgba(232,199,102,0.06) 100%)'
+            : 'transparent',
+          color: section === item.id ? '#e8c766' : 'rgba(255,255,255,0.6)',
+          border: sidebarOpen && section === item.id ? '1px solid rgba(232,199,102,0.35)' : '1px solid transparent',
+          boxShadow: sidebarOpen && section === item.id ? '0 4px 16px rgba(232,199,102,0.14)' : 'none',
+          cursor: 'pointer', textAlign: 'left',
+          transform: 'translateX(0)',
+          transition: 'background 0.35s ease, border-color 0.35s ease, color 0.35s ease, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s ease',
+        }}
+        onMouseEnter={e => {
+          if (section === item.id) return
+          if (sidebarOpen) {
+            e.currentTarget.style.background = 'linear-gradient(135deg, rgba(232,199,102,0.1) 0%, rgba(255,255,255,0.04) 100%)'
+            e.currentTarget.style.transform = 'translateX(4px)'
+          }
+          e.currentTarget.style.color = '#e8c766'
+        }}
+        onMouseLeave={e => {
+          if (section === item.id) return
+          e.currentTarget.style.background = 'transparent'
+          e.currentTarget.style.color = 'rgba(255,255,255,0.6)'
+          e.currentTarget.style.transform = 'translateX(0)'
+        }}
+      >
+        <span style={{
+          flexShrink: 0, width: iconBox, height: iconBox, borderRadius: 7,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          backgroundColor: section === item.id ? 'rgba(232,199,102,0.16)' : 'rgba(255,255,255,0.05)',
+          border: !sidebarOpen && section === item.id ? '1px solid rgba(232,199,102,0.35)' : '1px solid transparent',
+          transition: 'background-color 0.35s ease, border-color 0.35s ease',
+        }}>
+          <item.icon size={iconSize} />
+        </span>
+        {sidebarOpen && <span className={`${indent ? 'text-xs' : 'text-sm'} font-semibold truncate`}>{item.label}</span>}
+      </button>
+    )
+  }
 
   return (
     <div className="h-screen flex overflow-hidden" style={{ backgroundColor: 'var(--background)' }}>
@@ -500,63 +630,49 @@ export default function AdminDashboard({ theme, setTheme }) {
             )}
           </div>
         </div>
-        <nav className="flex-1 py-4 px-3 overflow-y-auto min-h-0">
+        <nav className="flex-1 py-4 px-3 overflow-y-auto overflow-x-hidden min-h-0">
           {sidebarOpen && (
             <p className="text-[10px] font-bold px-3 mb-2" style={{ color: 'rgba(255,255,255,0.3)', letterSpacing: '0.12em' }}>
               NAVEGACIÓN
             </p>
           )}
           <div className="space-y-1">
-            {navItems.map(item => item.divider ? (
-              sidebarOpen && (
-                <p key={item.id} className="text-[10px] font-bold px-3 pt-4 pb-1" style={{ color: 'rgba(232,199,102,0.5)', letterSpacing: '0.12em' }}>
-                  {item.label}
-                </p>
+            {navGroups.map(entry => {
+              if (!entry.group) return renderNavButton(entry)
+
+              if (!sidebarOpen) {
+                // Colapsado a solo íconos: no hay espacio para encabezados
+                // de categoría, se listan los items directo (como antes).
+                return <div key={entry.group} className="space-y-1">{entry.items.map(i => renderNavButton(i))}</div>
+              }
+
+              const isExpanded = expandedGroups.has(entry.group)
+              return (
+                <div key={entry.group}>
+                  <button
+                    onClick={() => toggleGroup(entry.group)}
+                    className="w-full flex items-center justify-between px-3 pt-4 pb-1"
+                    style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+                  >
+                    <span className="text-sm font-semibold" style={{ color: 'rgba(232,199,102,0.7)' }}>
+                      {entry.group}
+                    </span>
+                    <ChevronDown size={13}
+                      style={{
+                        color: 'rgba(232,199,102,0.5)',
+                        transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                        transition: 'transform 0.25s ease',
+                      }}
+                    />
+                  </button>
+                  {isExpanded && (
+                    <div className="space-y-1">
+                      {entry.items.map(i => renderNavButton(i, true))}
+                    </div>
+                  )}
+                </div>
               )
-            ) : (
-              <button key={item.id}
-                onClick={() => setSection(item.id)}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 11,
-                  justifyContent: sidebarOpen ? 'flex-start' : 'center',
-                  width: '100%', padding: sidebarOpen ? '9px 11px' : '9px 0', borderRadius: 10,
-                  background: sidebarOpen && section === item.id
-                    ? 'linear-gradient(135deg, rgba(232,199,102,0.18) 0%, rgba(232,199,102,0.06) 100%)'
-                    : 'transparent',
-                  color: section === item.id ? '#e8c766' : 'rgba(255,255,255,0.6)',
-                  border: sidebarOpen && section === item.id ? '1px solid rgba(232,199,102,0.35)' : '1px solid transparent',
-                  boxShadow: sidebarOpen && section === item.id ? '0 4px 16px rgba(232,199,102,0.14)' : 'none',
-                  cursor: 'pointer', textAlign: 'left',
-                  transform: 'translateX(0)',
-                  transition: 'background 0.35s ease, border-color 0.35s ease, color 0.35s ease, transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s ease',
-                }}
-                onMouseEnter={e => {
-                  if (section === item.id) return
-                  if (sidebarOpen) {
-                    e.currentTarget.style.background = 'linear-gradient(135deg, rgba(232,199,102,0.1) 0%, rgba(255,255,255,0.04) 100%)'
-                    e.currentTarget.style.transform = 'translateX(4px)'
-                  }
-                  e.currentTarget.style.color = '#e8c766'
-                }}
-                onMouseLeave={e => {
-                  if (section === item.id) return
-                  e.currentTarget.style.background = 'transparent'
-                  e.currentTarget.style.color = 'rgba(255,255,255,0.6)'
-                  e.currentTarget.style.transform = 'translateX(0)'
-                }}
-              >
-                <span style={{
-                  flexShrink: 0, width: 28, height: 28, borderRadius: 8,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  backgroundColor: section === item.id ? 'rgba(232,199,102,0.16)' : 'rgba(255,255,255,0.05)',
-                  border: !sidebarOpen && section === item.id ? '1px solid rgba(232,199,102,0.35)' : '1px solid transparent',
-                  transition: 'background-color 0.35s ease, border-color 0.35s ease',
-                }}>
-                  <item.icon size={15} />
-                </span>
-                {sidebarOpen && <span className="text-sm font-semibold truncate">{item.label}</span>}
-              </button>
-            ))}
+            })}
           </div>
         </nav>
 
@@ -596,6 +712,7 @@ export default function AdminDashboard({ theme, setTheme }) {
                 setBellOpen(next)
                 if (next) markAllNotificationsSeen()
               }}
+                aria-label="Notificaciones"
                 style={{ position: 'relative', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--foreground)' }}>
                 <Bell size={20} />
                 {unreadNotifications.length > 0 && (
@@ -820,7 +937,7 @@ export default function AdminDashboard({ theme, setTheme }) {
                   className="text-sm px-3.5 py-2.5 rounded-xl font-medium flex items-center gap-2 transition-colors"
                   style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
                 >
-                  Categoría: <strong style={{ color: '#005187' }}>{servicesCategoryFilter === 'all' ? 'Todas' : servicesCategoryFilter}</strong>
+                  Categoría: <strong style={{ color: 'var(--primary)' }}>{servicesCategoryFilter === 'all' ? 'Todas' : servicesCategoryFilter}</strong>
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
                     style={{ transition: 'transform 0.2s ease', transform: categoryFilterOpen ? 'rotate(180deg)' : 'none' }}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 9l6 6 6-6" />
@@ -918,7 +1035,7 @@ export default function AdminDashboard({ theme, setTheme }) {
 
                       <button onClick={() => setServiceModal({ mode: 'edit', service: s })} title="Editar"
                         className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
-                        style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: '#005187', border: '1px solid rgba(0,81,135,0.2)' }}>
+                        style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: 'var(--primary)', border: '1px solid rgba(0,81,135,0.2)' }}>
                         <Edit2 size={13} />
                       </button>
                       <button onClick={() => setDeleteConfirm({ type: 'service', id: s.slug, label: s.title })} title="Eliminar"
@@ -969,7 +1086,7 @@ export default function AdminDashboard({ theme, setTheme }) {
                       <div className="flex gap-2">
                         <button onClick={() => setBlogModal({ mode: 'edit', post })} title="Editar"
                           className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors"
-                          style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: '#005187', border: '1px solid rgba(0,81,135,0.2)' }}>
+                          style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: 'var(--primary)', border: '1px solid rgba(0,81,135,0.2)' }}>
                           <Edit2 size={13} />
                         </button>
                         <button onClick={() => setDeleteConfirm({ type: 'blog', id: post.id, label: post.title })} title="Eliminar"
@@ -1029,7 +1146,7 @@ export default function AdminDashboard({ theme, setTheme }) {
                     </button>
                     <button onClick={() => setCatalogModal({ mode: 'edit', course: c })} title="Editar"
                       className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors"
-                      style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: '#005187', border: '1px solid rgba(0,81,135,0.2)' }}>
+                      style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: 'var(--primary)', border: '1px solid rgba(0,81,135,0.2)' }}>
                       <Edit2 size={13} />
                     </button>
                     <button onClick={() => setDeleteConfirm({ type: 'catalogCourse', id: c.id, label: c.name })} title="Eliminar"
@@ -1082,7 +1199,7 @@ export default function AdminDashboard({ theme, setTheme }) {
 
                 <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
                   {[
-                    { label: 'Total recibidos', value: pqrsfTickets.length, icon: Inbox, color: '#005187' },
+                    { label: 'Total recibidos', value: pqrsfTickets.length, icon: Inbox, color: 'var(--primary)' },
                     { label: 'Prioritarios pendientes', value: pendingCount, icon: ShieldCheck, color: '#d97706' },
                     { label: 'Respondidos', value: respondedCount, icon: Check, color: '#16a34a' },
                     { label: 'Anónimos sin leer', value: unreadAnonCount, icon: Eye, color: '#7c3aed' },
@@ -1098,16 +1215,16 @@ export default function AdminDashboard({ theme, setTheme }) {
                 </div>
 
                 <div className="flex items-center gap-2 mb-1">
-                  <span style={{ color: '#005187' }}><ShieldCheck size={16} /></span>
+                  <span style={{ color: 'var(--primary)' }}><ShieldCheck size={16} /></span>
                   <h3 className="text-sm font-bold" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Prioritarios — con datos de contacto</h3>
-                  <span className="text-xs font-bold rounded-full px-1.5" style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: '#005187' }}>{identifiedTickets.length}</span>
+                  <span className="text-xs font-bold rounded-full px-1.5" style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: 'var(--primary)' }}>{identifiedTickets.length}</span>
                 </div>
                 <p className="text-xs mb-3" style={{ color: 'var(--muted-foreground)' }}>
                   Vienen de una cuenta real o dejaron un correo válido — se les puede responder y, al hacerlo, se avisa a la persona por correo.
                 </p>
                 <div className="rounded-xl overflow-hidden mb-2 shadow-sm" style={{ border: '1px solid var(--border)' }}>
                   {pagedIdentified.map((p, i, arr) => {
-                    const typeStyle = PQRSF_TYPE_STYLES[p.type] ?? { color: '#005187', icon: MessageCircle }
+                    const typeStyle = PQRSF_TYPE_STYLES[p.type] ?? { color: 'var(--primary)', icon: MessageCircle }
                     return (
                     <div key={p.id} style={{
                       display: 'flex', gap: 12, padding: '16px', alignItems: 'flex-start',
@@ -1317,7 +1434,7 @@ export default function AdminDashboard({ theme, setTheme }) {
                         <p className="text-xs mb-1" style={{ color: 'var(--muted-foreground)' }}>
                           {r.course.name} · Promedio ponderado: {r.average}/{MAX_GRADE} · Terminó: {fmt(r.completedAt)}
                         </p>
-                        <p className="text-xs font-medium" style={{ color: '#005187' }}>
+                        <p className="text-xs font-medium" style={{ color: 'var(--primary)' }}>
                           {[r.student?.email, r.student?.phone].filter(Boolean).join(' · ') || 'Sin datos de contacto registrados'}
                         </p>
                       </div>
@@ -1325,7 +1442,7 @@ export default function AdminDashboard({ theme, setTheme }) {
                         {r.student?.email && (
                           <a href={certEmailUrl(r)} target="_blank" rel="noopener noreferrer"
                             className="text-xs px-3 py-1.5 rounded-lg font-bold flex items-center justify-center gap-1.5"
-                            style={{ border: '1px solid #005187', color: '#005187' }}>
+                            style={{ border: '1px solid #005187', color: 'var(--primary)' }}>
                             <Mail size={12} /> Enviar correo
                           </a>
                         )}
@@ -1479,7 +1596,7 @@ export default function AdminDashboard({ theme, setTheme }) {
                             <div className="flex items-start justify-between gap-2 mb-0.5">
                               <button onClick={() => openLmsCourseDetail(c.id)}
                                 className="font-bold text-sm leading-snug text-left hover:underline"
-                                style={{ fontFamily: 'var(--font-display)', color: '#005187' }}>
+                                style={{ fontFamily: 'var(--font-display)', color: 'var(--primary)' }}>
                                 {c.name}
                               </button>
                               <span className="text-xs px-2 py-0.5 rounded-full font-semibold shrink-0"
@@ -1598,7 +1715,7 @@ export default function AdminDashboard({ theme, setTheme }) {
                         <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{u.name}</p>
                         <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{u.email}</p>
                         {u.courseInterest && (
-                          <p className="text-xs font-medium mt-0.5" style={{ color: '#005187' }}>Interesado en: {u.courseInterest}</p>
+                          <p className="text-xs font-medium mt-0.5" style={{ color: 'var(--primary)' }}>Interesado en: {u.courseInterest}</p>
                         )}
                       </div>
                       <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>{u.joined}</p>
@@ -1620,7 +1737,7 @@ export default function AdminDashboard({ theme, setTheme }) {
                         </button>
                         <button onClick={() => setDirectoryModal({ mode: 'edit', role, user: u })} title="Editar"
                           className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors"
-                          style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: '#005187', border: '1px solid rgba(0,81,135,0.2)' }}>
+                          style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: 'var(--primary)', border: '1px solid rgba(0,81,135,0.2)' }}>
                           <Edit2 size={13} />
                         </button>
                         <button onClick={() => setDeleteConfirm({ type: 'directory', id: u.id, label: u.name })}
@@ -1647,14 +1764,14 @@ export default function AdminDashboard({ theme, setTheme }) {
             <div style={{ animation: 'fadeUp 0.4s ease' }}>
               {messageConversation ? (
                 <div style={{ maxWidth: 640 }}>
-                  <button onClick={() => setMessageConversation(null)} className="text-xs font-semibold mb-3" style={{ color: '#005187' }}>← Volver a mensajes</button>
+                  <button onClick={() => setMessageConversation(null)} className="text-xs font-semibold mb-3" style={{ color: 'var(--primary)' }}>← Volver a mensajes</button>
                   <div className="flex items-center gap-3 mb-4 rounded-lg p-4" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', borderTop: '3px solid #005187' }}>
                     <Avatar user={lms.directoryById(messageConversation.studentId)} size={42} />
                     <div className="min-w-0">
                       <h2 className="text-lg font-black truncate" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
                         {lms.studentName(messageConversation.studentId)}
                       </h2>
-                      <p className="text-xs truncate" style={{ color: '#005187' }}>
+                      <p className="text-xs truncate" style={{ color: 'var(--primary)' }}>
                         {lms.courses.find(c => c.id === messageConversation.courseId)?.name}
                       </p>
                     </div>
@@ -1696,7 +1813,7 @@ export default function AdminDashboard({ theme, setTheme }) {
                             <p className="text-sm truncate" style={{ color: 'var(--foreground)', fontWeight: unread ? 800 : 600 }}>{lms.studentName(c.studentId)}</p>
                             <span className="text-xs shrink-0" style={{ color: 'var(--muted-foreground)' }}>{new Date(c.lastMessage.createdAt).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
                           </div>
-                          <p className="text-xs mb-0.5 font-medium" style={{ color: '#005187' }}>{lms.courses.find(course => course.id === c.courseId)?.name}</p>
+                          <p className="text-xs mb-0.5 font-medium" style={{ color: 'var(--primary)' }}>{lms.courses.find(course => course.id === c.courseId)?.name}</p>
                           <p className="text-xs truncate" style={{ color: unread ? 'var(--foreground)' : 'var(--muted-foreground)', fontWeight: unread ? 600 : 400 }}>
                             {fromMe ? 'Tú: ' : ''}{c.lastMessage.body}
                           </p>
@@ -1720,6 +1837,263 @@ export default function AdminDashboard({ theme, setTheme }) {
           )}
 
           {/* ── CONFIGURACIÓN ── */}
+          {section === 'suministros' && (
+            <div style={{ animation: 'fadeUp 0.4s ease' }}>
+              <div className="flex justify-end mb-5">
+                <button
+                  onClick={() => setProductModal('new')}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold text-white"
+                  style={{ backgroundColor: '#005187' }}
+                >
+                  <Plus size={15} /> Nuevo producto
+                </button>
+              </div>
+
+              {supplies.products.length === 0 ? (
+                <p className="text-sm text-center py-12" style={{ color: 'var(--muted-foreground)' }}>
+                  Todavía no se ha agregado ningún producto.
+                </p>
+              ) : (
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {supplies.products.map(p => (
+                    <div key={p.id} className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)', opacity: p.active ? 1 : 0.5 }}>
+                      <div style={{ height: 150, backgroundColor: 'var(--muted)' }}>
+                        {p.image ? (
+                          <img src={p.image} alt={p.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center" style={{ color: 'var(--muted-foreground)' }}><ImageIcon size={28} /></div>
+                        )}
+                      </div>
+                      <div className="p-4">
+                        <p className="font-bold text-sm mb-1" style={{ color: 'var(--foreground)' }}>{p.name}</p>
+                        <p className="text-xs mb-2" style={{ color: 'var(--muted-foreground)' }}>{p.description}</p>
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="font-black text-sm" style={{ color: 'var(--primary)' }}>{formatCOP(p.price)}</span>
+                          <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>Stock: {p.stock}</span>
+                        </div>
+                        <div className="flex gap-2">
+                          <button onClick={() => setProductModal(p)} className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold" style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>
+                            <Edit2 size={13} /> Editar
+                          </button>
+                          <button onClick={() => supplies.toggleProductActive(p.id)} className="flex-1 py-2 rounded-lg text-xs font-bold" style={{ border: '1px solid var(--border)', color: p.active ? '#b8860b' : '#16a34a' }}>
+                            {p.active ? 'Despublicar' : 'Publicar'}
+                          </button>
+                          <button onClick={() => setDeleteConfirm({ type: 'supplyProduct', id: p.id, label: p.name })} className="py-2 px-2.5 rounded-lg" style={{ border: '1px solid var(--border)', color: '#dc2626' }}>
+                            <Trash size={13} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {section === 'pedidos-suministros' && (() => {
+            const historialStatuses = ['rejected', 'completed']
+            const visibleOrders = supplies.orders.filter(o =>
+              pedidosView === 'historial' ? historialStatuses.includes(o.status) : !historialStatuses.includes(o.status)
+            )
+            return (
+            <div style={{ animation: 'fadeUp 0.4s ease' }}>
+              <div className="flex gap-1 mb-5 rounded-xl p-1" style={{ backgroundColor: 'var(--muted)', width: 'fit-content' }}>
+                {[
+                  { id: 'activos', label: 'Activos' },
+                  { id: 'historial', label: 'Historial' },
+                ].map(t => (
+                  <button key={t.id} onClick={() => setPedidosView(t.id)}
+                    className="px-4 py-2 rounded-lg text-xs font-bold"
+                    style={pedidosView === t.id
+                      ? { backgroundColor: 'var(--supplies-surface)', color: 'var(--primary)', boxShadow: '0 1px 4px rgba(0,0,0,0.12)' }
+                      : { color: 'var(--muted-foreground)' }}>
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+
+              {visibleOrders.length === 0 ? (
+                <p className="text-sm text-center py-12" style={{ color: 'var(--muted-foreground)' }}>
+                  {pedidosView === 'historial'
+                    ? 'Todavía no hay pedidos rechazados ni completados.'
+                    : 'No hay pedidos activos por el momento.'}
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {visibleOrders.map(o => {
+                    const open = openOrderId === o.id
+                    return (
+                      <div key={o.id} className="rounded-xl overflow-hidden" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
+                        <button onClick={() => setOpenOrderId(open ? null : o.id)} className="w-full flex items-center justify-between gap-3 p-4 text-left">
+                          <div className="min-w-0">
+                            <p className="font-bold text-sm truncate" style={{ color: 'var(--foreground)' }}>{o.customerName} — {formatCOP(o.total)}</p>
+                            <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{new Date(o.createdAt).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })} · {o.items.length} artículo(s)</p>
+                          </div>
+                          <span className="text-xs font-bold uppercase tracking-wide shrink-0" style={{ color: SUPPLY_ORDER_STATUS_COLOR[o.status] }}>
+                            {SUPPLY_ORDER_STATUS_LABEL[o.status]}
+                          </span>
+                        </button>
+
+                        {open && (
+                          <div className="px-4 pb-4 pt-1 border-t" style={{ borderColor: 'var(--border)' }}>
+                            <div className="grid sm:grid-cols-2 gap-4 mb-4">
+                              <div>
+                                <p className="text-xs font-bold uppercase tracking-wide mb-1.5" style={{ color: 'var(--muted-foreground)' }}>Contacto</p>
+                                <p className="text-sm" style={{ color: 'var(--foreground)' }}>{o.customerPhone}</p>
+                                {o.customerEmail && <p className="text-sm" style={{ color: 'var(--foreground)' }}>{o.customerEmail}</p>}
+                                <p className="text-sm" style={{ color: 'var(--foreground)' }}>{o.address}{o.city ? `, ${o.city}` : ''}</p>
+                                {o.notes && <p className="text-xs mt-1 italic" style={{ color: 'var(--muted-foreground)' }}>"{o.notes}"</p>}
+                              </div>
+                              <div>
+                                <p className="text-xs font-bold uppercase tracking-wide mb-1.5" style={{ color: 'var(--muted-foreground)' }}>Comprobante de pago</p>
+                                {o.proofImage ? (
+                                  <button type="button" onClick={() => setLightboxImage({ src: o.proofImage, alt: 'Comprobante de pago' })}>
+                                    <img src={o.proofImage} alt="Comprobante de pago" className="rounded-lg max-h-40 object-contain" style={{ border: '1px solid var(--border)' }} />
+                                  </button>
+                                ) : (
+                                  <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>No se adjuntó comprobante.</p>
+                                )}
+                              </div>
+                            </div>
+
+                            <p className="text-xs font-bold uppercase tracking-wide mb-1.5" style={{ color: 'var(--muted-foreground)' }}>Artículos</p>
+                            <ul className="mb-4 space-y-1">
+                              {o.items.map((it, i) => (
+                                <li key={i} className="flex justify-between text-sm" style={{ color: 'var(--foreground)' }}>
+                                  <span>{it.qty} × {it.name}</span>
+                                  <span>{formatCOP(it.price * it.qty)}</span>
+                                </li>
+                              ))}
+                            </ul>
+
+                            {o.paymentNote && (
+                              <div className="rounded-lg px-3 py-2.5 mb-4 text-xs" style={{ backgroundColor: 'rgba(184,134,11,0.12)', border: '1px solid rgba(184,134,11,0.3)', color: '#b8860b' }}>
+                                <strong>Pago incompleto avisado</strong> — faltan {formatCOP(o.paymentNote.amount)}: "{o.paymentNote.message}"
+                              </div>
+                            )}
+
+                            {o.status === 'rejected' && o.rejectionReason && (
+                              <div className="rounded-lg px-3 py-2.5 mb-4 text-xs" style={{ backgroundColor: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.25)', color: '#dc2626' }}>
+                                <strong>Causa del rechazo:</strong> "{o.rejectionReason}"
+                                {o.refundProof && (
+                                  <button type="button" onClick={() => setLightboxImage({ src: o.refundProof, alt: 'Comprobante de devolución' })} className="mt-2 block">
+                                    <img src={o.refundProof} alt="Comprobante de devolución" className="rounded-lg max-h-32 object-contain" style={{ border: '1px solid var(--border)' }} />
+                                  </button>
+                                )}
+                              </div>
+                            )}
+
+                            {o.shipment && (
+                              <div className="rounded-lg p-3 mb-4" style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)' }}>
+                                <p className="text-xs font-bold uppercase tracking-wide mb-1.5" style={{ color: 'var(--muted-foreground)' }}>Envío</p>
+                                <p className="text-sm" style={{ color: 'var(--foreground)' }}>{o.shipment.carrier} — guía {o.shipment.trackingNumber}</p>
+                                {o.shipment.photo && (
+                                  <button type="button" onClick={() => setLightboxImage({ src: o.shipment.photo, alt: 'Foto del paquete' })} className="mt-2">
+                                    <img src={o.shipment.photo} alt="Foto del paquete" className="rounded-lg max-h-32 object-contain" style={{ border: '1px solid var(--border)' }} />
+                                  </button>
+                                )}
+                              </div>
+                            )}
+
+                            {o.statusHistory?.length > 1 && (
+                              <div className="mb-4">
+                                <p className="text-xs font-bold uppercase tracking-wide mb-1.5" style={{ color: 'var(--muted-foreground)' }}>Historial</p>
+                                <ul className="space-y-1">
+                                  {o.statusHistory.map((h, i) => (
+                                    <li key={i} className="text-xs flex justify-between" style={{ color: 'var(--muted-foreground)' }}>
+                                      <span style={{ color: SUPPLY_ORDER_STATUS_COLOR[h.status] }}>{SUPPLY_ORDER_STATUS_LABEL[h.status]}</span>
+                                      <span>{new Date(h.date).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+
+                            {o.status === 'pending' && (
+                              <div className="space-y-2">
+                                <div className="flex gap-3">
+                                  <button onClick={() => supplies.confirmOrder(o.id)} className="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-sm font-bold text-white" style={{ backgroundColor: '#16a34a' }}>
+                                    <Check size={14} /> Confirmar pedido
+                                  </button>
+                                  <button onClick={() => setRejectOrderModal(o)} className="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-sm font-bold" style={{ border: '1px solid #dc2626', color: '#dc2626' }}>
+                                    <X size={14} /> Rechazar
+                                  </button>
+                                </div>
+                                <button onClick={() => setPaymentShortfallModal(o)} className="w-full inline-flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-sm font-bold" style={{ border: '1px solid #b8860b', color: '#b8860b' }}>
+                                  <AlertTriangle size={14} /> Avisar pago incompleto
+                                </button>
+                              </div>
+                            )}
+
+                            {o.status === 'confirmed' && (
+                              <button onClick={() => setShipOrderModal(o)} className="w-full inline-flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-sm font-bold text-white" style={{ backgroundColor: '#005187' }}>
+                                <Package size={14} /> Marcar como enviado
+                              </button>
+                            )}
+
+                            {o.status === 'shipped' && (
+                              <p className="text-xs text-center" style={{ color: 'var(--muted-foreground)' }}>
+                                Esperando que el cliente confirme que ya le llegó.
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+            )
+          })()}
+
+          {section === 'clientes-suministros' && (
+            <div style={{ animation: 'fadeUp 0.4s ease' }}>
+              <div className="flex justify-end mb-5">
+                <button
+                  onClick={() => setClientModal('new')}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold text-white"
+                  style={{ backgroundColor: '#005187' }}
+                >
+                  <Plus size={15} /> Nuevo cliente
+                </button>
+              </div>
+
+              {clientUsers.length === 0 ? (
+                <p className="text-sm text-center py-12" style={{ color: 'var(--muted-foreground)' }}>
+                  Todavía no se ha registrado ningún cliente.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {clientUsers.map(c => (
+                    <div key={c.id} className="rounded-xl p-4 flex flex-wrap items-center justify-between gap-3" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
+                      <div className="min-w-0">
+                        <p className="font-bold text-sm truncate" style={{ color: 'var(--foreground)' }}>{c.name}</p>
+                        <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{c.email}</p>
+                        <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
+                          {c.phone || 'Sin teléfono'}
+                          {c.documentNumber ? ` · Doc. ${c.documentNumber}` : ''}
+                          {c.address ? ` · ${c.address}` : ''}
+                        </p>
+                      </div>
+                      <div className="flex gap-2 shrink-0">
+                        <button onClick={() => setClientDetailModal(c)} className="inline-flex items-center gap-1.5 py-2 px-3 rounded-lg text-xs font-bold" style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>
+                          <Eye size={13} /> Ver detalle
+                        </button>
+                        <button onClick={() => setClientModal(c)} className="inline-flex items-center gap-1.5 py-2 px-3 rounded-lg text-xs font-bold" style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>
+                          <Edit2 size={13} /> Editar
+                        </button>
+                        <button onClick={() => setDeleteConfirm({ type: 'client', id: c.id, label: c.name })} className="py-2 px-2.5 rounded-lg" style={{ border: '1px solid var(--border)', color: '#dc2626' }}>
+                          <Trash size={13} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           {section === 'settings' && (
             <div style={{ animation: 'fadeUp 0.4s ease' }}>
               <div className="flex gap-1 mb-6 rounded-xl p-1" style={{ backgroundColor: 'var(--muted)', width: 'fit-content' }}>
@@ -1804,7 +2178,7 @@ export default function AdminDashboard({ theme, setTheme }) {
                                 <p className="text-xs truncate" style={{ color: 'var(--muted-foreground)' }}>{u.email}</p>
                               </div>
                               {isSelf && (
-                                <span className="text-xs font-bold px-1.5 py-0.5 rounded-full shrink-0" style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: '#005187' }}>Tú</span>
+                                <span className="text-xs font-bold px-1.5 py-0.5 rounded-full shrink-0" style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: 'var(--primary)' }}>Tú</span>
                               )}
                             </div>
                             <select value={u.role} disabled={isSelf} title={isSelf ? 'No puedes cambiar tu propio rol' : undefined}
@@ -1878,6 +2252,88 @@ export default function AdminDashboard({ theme, setTheme }) {
             </div>
           </div>
         </div>
+      )}
+
+      {productModal && (
+        <SupplyProductFormModal
+          product={productModal === 'new' ? null : productModal}
+          onSave={data => {
+            if (productModal === 'new') supplies.addProduct(data)
+            else supplies.updateProduct(productModal.id, data)
+            toast('success', productModal === 'new' ? 'Producto creado' : 'Producto actualizado', data.name)
+            setProductModal(null)
+          }}
+          onCancel={() => setProductModal(null)}
+        />
+      )}
+
+      {clientModal && (
+        <ClientEditModal
+          client={clientModal === 'new' ? null : clientModal}
+          onSave={data => {
+            try {
+              if (clientModal === 'new') {
+                createUser({ ...data, role: 'cliente' })
+                toast('success', 'Cliente creado', data.name)
+              } else {
+                updateUserCredentials(clientModal.id, data)
+                toast('success', 'Cliente actualizado', data.name)
+              }
+              setClientModal(null)
+            } catch (err) {
+              toast('error', 'No se pudo guardar', err.message)
+            }
+          }}
+          onCancel={() => setClientModal(null)}
+        />
+      )}
+
+      {clientDetailModal && (
+        <ClientDetailModal
+          client={clientDetailModal}
+          orders={supplies.orders.filter(o => o.clientId === clientDetailModal.id)}
+          onClose={() => setClientDetailModal(null)}
+        />
+      )}
+
+      {shipOrderModal && (
+        <ShipOrderModal
+          order={shipOrderModal}
+          onSave={data => {
+            supplies.shipOrder(shipOrderModal.id, data)
+            toast('success', 'Pedido marcado como enviado', shipOrderModal.customerName)
+            setShipOrderModal(null)
+          }}
+          onCancel={() => setShipOrderModal(null)}
+        />
+      )}
+
+      {rejectOrderModal && (
+        <RejectOrderModal
+          order={rejectOrderModal}
+          onSave={(reason, refundProof) => {
+            supplies.rejectOrder(rejectOrderModal.id, reason, refundProof)
+            toast('success', 'Pedido rechazado', rejectOrderModal.customerName)
+            setRejectOrderModal(null)
+          }}
+          onCancel={() => setRejectOrderModal(null)}
+        />
+      )}
+
+      {paymentShortfallModal && (
+        <PaymentShortfallModal
+          order={paymentShortfallModal}
+          onSave={data => {
+            supplies.requestPaymentShortfall(paymentShortfallModal.id, data)
+            toast('success', 'Aviso enviado', paymentShortfallModal.customerName)
+            setPaymentShortfallModal(null)
+          }}
+          onCancel={() => setPaymentShortfallModal(null)}
+        />
+      )}
+
+      {lightboxImage && (
+        <ImageLightbox src={lightboxImage.src} alt={lightboxImage.alt} caption={lightboxImage.alt} onClose={() => setLightboxImage(null)} />
       )}
 
       {blogModal && (
@@ -2035,7 +2491,7 @@ function AdminLmsCourseDetail({
 
   return (
     <div style={{ animation: 'fadeUp 0.4s ease' }}>
-      <button onClick={onBack} className="text-xs font-semibold mb-3" style={{ color: '#005187' }}>← Volver a cursos del LMS</button>
+      <button onClick={onBack} className="text-xs font-semibold mb-3" style={{ color: 'var(--primary)' }}>← Volver a cursos del LMS</button>
 
       <div className="rounded-xl overflow-hidden mb-5" style={{ border: '1px solid var(--border)' }}>
         <div style={{ height: 10, backgroundColor: course.color ?? '#005187' }} />

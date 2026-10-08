@@ -59,7 +59,7 @@ export default function DirectoryUserDetailModal({ user, role, lms, onClose }) {
 
           {isStudent && user.courseInterest && (
             <div className="rounded-xl px-3.5 py-2.5" style={{ backgroundColor: 'rgba(0,81,135,0.06)', border: '1px solid rgba(0,81,135,0.2)' }}>
-              <p className="text-xs font-semibold" style={{ color: '#005187' }}>Interesado en: {user.courseInterest}</p>
+              <p className="text-xs font-semibold" style={{ color: 'var(--primary)' }}>Interesado en: {user.courseInterest}</p>
             </div>
           )}
 

@@ -249,7 +249,7 @@ export default function StudentDashboard({ theme, setTheme }) {
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
             {[
-              { label: 'Mis Cursos', value: myCourses.length, icon: GraduationCap, color: '#005187' },
+              { label: 'Mis Cursos', value: myCourses.length, icon: GraduationCap, color: 'var(--primary)' },
               { label: 'Actividades Pendientes', value: pendingAssignments.length + pendingQuizzes.length, icon: ClipboardCheck, color: '#d97706' },
               { label: 'Calificación Promedio', value: averageGrade, empty: overallGrades.length === 0, icon: BarChart2, color: '#7c3aed' },
             ].map(s => (

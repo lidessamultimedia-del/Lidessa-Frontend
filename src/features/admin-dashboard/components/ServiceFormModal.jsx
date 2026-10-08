@@ -196,7 +196,7 @@ export default function ServiceFormModal({ service, categories, onAddCategory, o
                       )}
                       <label
                         className="flex-1 cursor-pointer text-xs px-3 py-2.5 rounded-lg text-center font-semibold transition-colors"
-                        style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: '#005187', border: '1px solid rgba(0,81,135,0.2)' }}
+                        style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: 'var(--primary)', border: '1px solid rgba(0,81,135,0.2)' }}
                       >
                         {form.hero ? 'Cambiar' : 'Elegir foto…'}
                         <input type="file" accept="image/*" className="hidden" onChange={e => {
@@ -272,7 +272,7 @@ export default function ServiceFormModal({ service, categories, onAddCategory, o
                         ))}
                         <button type="button" onClick={() => addBullet(i)}
                           className="text-xs px-2 py-1 rounded-lg font-semibold flex items-center gap-1 ml-1 transition-opacity hover:opacity-70"
-                          style={{ color: '#005187' }}>
+                          style={{ color: 'var(--primary)' }}>
                           <Plus size={11} /> Agregar viñeta
                         </button>
                       </div>
@@ -280,7 +280,7 @@ export default function ServiceFormModal({ service, categories, onAddCategory, o
                   ))}
                   <button type="button" onClick={addSection}
                     className="w-full text-xs px-3 py-2.5 rounded-xl font-semibold flex items-center justify-center gap-1.5 transition-colors"
-                    style={{ border: '1px dashed var(--border)', color: '#005187' }}
+                    style={{ border: '1px dashed var(--border)', color: 'var(--primary)' }}
                     onMouseEnter={e => e.currentTarget.style.backgroundColor = 'rgba(0,81,135,0.05)'}
                     onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
                   >

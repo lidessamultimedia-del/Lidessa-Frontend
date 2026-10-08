@@ -5,7 +5,7 @@ const SiteSettingsContext = createContext(null)
 // Valores por defecto = lo que el footer mostraba antes de conectarse a este
 // panel, para que activarlo no cambie nada visible hasta que el admin edite.
 export const defaultSiteSettings = {
-  phone: '+57 301 628 0574',
+  phone: '+57 333 237 1006',
   email: 'comercial@lidessa.co',
   address: 'Cra. 71 #46-28, Laureles, Medellín, Antioquia',
   schedule: 'Lunes – Viernes: 7:00 a.m. – 4:30 p.m.',

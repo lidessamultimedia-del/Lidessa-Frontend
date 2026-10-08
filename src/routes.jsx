@@ -7,6 +7,7 @@ import Home from '@/features/home/pages/Home'
 import About from '@/features/about/pages/About'
 import Blog from '@/features/blog/pages/Blog'
 import Store from '@/features/store/pages/Store'
+import ClientStore from '@/features/supplies/pages/ClientStore'
 import Training from '@/features/training/pages/Training'
 import ServicesOverview from '@/features/services/pages/ServicesOverview'
 import ServicePage from '@/features/services/pages/ServicePage'
@@ -40,6 +41,7 @@ function PublicLayout({ theme, setTheme }) {
           <Route path="/nosotros" element={<About />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/tienda" element={<Store />} />
+          <Route path="/tienda/catalogo" element={<Navigate to="/tienda" replace />} />
           <Route path="/formacion" element={<Training />} />
           <Route path="/servicios" element={<ServicesOverview />} />
           <Route path="/servicios/:slug" element={<ServicePage />} />
@@ -106,6 +108,11 @@ export default function AppRoutes() {
           <Suspense fallback={<PanelLoading />}>
             <StudentDashboard theme={theme} setTheme={setTheme} />
           </Suspense>
+        </ProtectedRoute>
+      } />
+      <Route path="/tienda/cliente" element={
+        <ProtectedRoute roles={['cliente']}>
+          <ClientStore theme={theme} setTheme={setTheme} />
         </ProtectedRoute>
       } />
       <Route path="/*" element={<PublicLayout theme={theme} setTheme={setTheme} />} />

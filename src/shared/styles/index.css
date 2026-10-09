@@ -44,6 +44,9 @@
      — en modo oscuro usa el mismo azul marino de los heros de la marca en
      vez del --card genérico (gris-café, pensado para el resto del sitio). */
   --supplies-surface: #ffffff;
+  /* Resplandor difuminado detrás de las tarjetas de producto de Suministros
+     — azul en modo claro, dorado (el mismo acento de marca) en modo oscuro. */
+  --card-glow: rgba(0, 81, 135, 0.4);
   /* brand extras */
   --blue-light: #84b6f4;
   --blue-xlight: #c4dafa;
@@ -68,6 +71,7 @@
   --border: #454546;
   --ring: #84b6f4;
   --supplies-surface: #13223b;
+  --card-glow: rgba(232, 199, 102, 0.5);
 }
 
 * { box-sizing: border-box; }

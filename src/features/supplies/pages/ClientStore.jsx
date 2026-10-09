@@ -11,11 +11,16 @@ import Avatar from '@/shared/components/Avatar'
 import { formatAmountInput, parseAmountInput } from '@/shared/lib/money'
 import {
   ShoppingCart, Plus, Minus, Trash, Check, X, Bell, ImageIcon, Package, LogOut, Search, ShieldCheck,
-  Truck, CreditCard, Headset, ChevronDown, ChevronRight, User, Eye, MessageCircle, AlertTriangle,
+  Truck, CreditCard, Headset, ChevronDown, ChevronRight, User, MessageCircle, AlertTriangle,
 } from '@/shared/components/Icons'
 
 function formatCOP(value) {
   return value.toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })
+}
+
+function stepDateTime(dateStr) {
+  if (!dateStr) return ''
+  return new Date(dateStr).toLocaleString('es-CO', { day: '2-digit', month: 'short', hour: 'numeric', minute: '2-digit' })
 }
 
 function relativeTime(dateStr) {
@@ -61,31 +66,45 @@ function StatusBadge({ status }) {
 }
 
 function StockBadge({ stock }) {
-  if (stock <= 0) return <span className="text-[11px] font-bold uppercase tracking-wide px-2 py-1 rounded-md" style={{ backgroundColor: 'rgba(15,23,42,0.8)', color: 'white' }}>Agotado</span>
-  if (stock <= 5) return <span className="text-[11px] font-bold uppercase tracking-wide px-2 py-1 rounded-md" style={{ backgroundColor: '#d97706', color: 'white' }}>Últimas {stock} unid.</span>
-  return <span className="text-[11px] font-bold uppercase tracking-wide px-2 py-1 rounded-md" style={{ backgroundColor: 'rgba(22,163,74,0.92)', color: 'white' }}>Disponible</span>
+  const info = stock <= 0
+    ? { label: 'Agotado', color: '#f87171' }
+    : stock <= 5
+    ? { label: `Últimas ${stock} unid.`, color: '#fbbf24' }
+    : { label: 'Disponible', color: '#4ade80' }
+  return (
+    <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide px-2.5 py-1.5 rounded-full"
+      style={{ backgroundColor: 'rgba(7,20,38,0.6)', backdropFilter: 'blur(6px)', color: 'white', boxShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>
+      <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: info.color, boxShadow: `0 0 6px ${info.color}` }} />
+      {info.label}
+    </span>
+  )
 }
 
-// Línea de progreso del pedido (Recibido → Confirmado → Enviado → Entregado).
-function OrderProgress({ status }) {
+// Línea de progreso del pedido (Recibido → Confirmado → Enviado → Entregado),
+// con la fecha y hora en que ocurrió cada paso ya cumplido (statusHistory).
+function OrderProgress({ status, history = [] }) {
   if (status === 'rejected') return null
   const current = ORDER_STEPS.findIndex(s => s.status === status)
   return (
-    <div className="flex items-center">
+    <div className="flex items-start">
       {ORDER_STEPS.map((step, i) => {
         const done = i <= current
+        const entry = history.find(h => h.status === step.status)
         return (
-          <div key={step.status} className="flex items-center flex-1 last:flex-none">
-            <div className="flex flex-col items-center gap-1">
-              <span className="flex items-center justify-center rounded-full text-white"
+          <div key={step.status} className="flex flex-col items-center flex-1 last:flex-none" style={{ minWidth: 0 }}>
+            <div className="flex items-center w-full">
+              <span className="flex items-center justify-center rounded-full text-white shrink-0"
                 style={{ width: 22, height: 22, backgroundColor: done ? '#005187' : 'var(--muted)', border: done ? 'none' : '1px solid var(--border)' }}>
                 {done ? <Check size={12} strokeWidth={3} /> : <span style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: 'var(--border)' }} />}
               </span>
-              <span className="text-[10px] font-semibold whitespace-nowrap" style={{ color: done ? 'var(--foreground)' : 'var(--muted-foreground)' }}>{step.label}</span>
+              {i < ORDER_STEPS.length - 1 && (
+                <span className="flex-1 h-0.5 mx-1.5 rounded-full" style={{ backgroundColor: i < current ? '#005187' : 'var(--border)' }} />
+              )}
             </div>
-            {i < ORDER_STEPS.length - 1 && (
-              <span className="flex-1 h-0.5 mx-1.5 mb-4 rounded-full" style={{ backgroundColor: i < current ? '#005187' : 'var(--border)' }} />
-            )}
+            <span className="text-[10px] font-semibold whitespace-nowrap mt-1" style={{ color: done ? 'var(--foreground)' : 'var(--muted-foreground)' }}>{step.label}</span>
+            <span className="text-[9px] whitespace-nowrap" style={{ color: 'var(--muted-foreground)' }}>
+              {done && entry ? stepDateTime(entry.date) : ' '}
+            </span>
           </div>
         )
       })}
@@ -485,46 +504,36 @@ export default function ClientStore({ theme, setTheme }) {
                       <button onClick={clearFilters} className="text-xs font-bold px-4 py-2 rounded-lg text-white" style={{ backgroundColor: '#005187' }}>Limpiar filtros</button>
                     </div>
                   ) : (
-                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 pb-8">
-                      {sortedProducts.map(p => {
-                        const inCart = supplies.cart.find(it => it.productId === p.id)
-                        return (
-                          <article key={p.id}
-                            className="group rounded-2xl overflow-hidden flex flex-col transition-all duration-200 hover:-translate-y-1"
-                            style={{ backgroundColor: 'var(--supplies-surface)', border: '1px solid var(--border)', boxShadow: '0 1px 3px rgba(7,20,38,0.04)' }}
-                            onMouseEnter={e => e.currentTarget.style.boxShadow = '0 14px 30px rgba(7,20,38,0.10)'}
-                            onMouseLeave={e => e.currentTarget.style.boxShadow = '0 1px 3px rgba(7,20,38,0.04)'}>
-                            <button onClick={() => setDetailProduct(p)} className="relative block w-full overflow-hidden"
-                              style={{ aspectRatio: '4 / 3', backgroundColor: 'var(--muted)' }} aria-label={`Ver detalle de ${p.name}`}>
-                              {p.image ? (
-                                <img src={p.image} alt={p.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center" style={{ color: 'var(--muted-foreground)' }}><ImageIcon size={32} /></div>
-                              )}
-                              <span className="absolute top-3 left-3"><StockBadge stock={p.stock} /></span>
-                              <span className="absolute bottom-3 right-3 inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity"
-                                style={{ backgroundColor: 'rgba(255,255,255,0.95)', color: '#071426' }}>
-                                <Eye size={13} /> Ver detalle
-                              </span>
-                            </button>
-                            <div className="p-4 flex flex-col flex-1">
-                              <h3 className="text-sm font-bold leading-snug mb-1" style={{ color: 'var(--foreground)' }}>{p.name}</h3>
-                              <p className="text-xs leading-relaxed mb-4 line-clamp-2" style={{ color: 'var(--muted-foreground)' }}>{p.description}</p>
-                              <div className="mt-auto flex items-end justify-between gap-3">
-                                <div>
-                                  <p className="text-[11px] uppercase tracking-wide" style={{ color: 'var(--muted-foreground)' }}>Precio</p>
-                                  <p className="text-lg font-black leading-tight" style={{ color: 'var(--foreground)' }}>{formatCOP(p.price)}</p>
-                                </div>
-                                <button onClick={() => handleAddToCart(p)} disabled={p.stock <= 0}
-                                  className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-lg text-xs font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
-                                  style={{ backgroundColor: '#005187' }}>
-                                  {p.stock <= 0 ? 'Agotado' : <><Plus size={13} /> {inCart ? `Agregar (${inCart.qty})` : 'Agregar'}</>}
-                                </button>
-                              </div>
-                            </div>
-                          </article>
-                        )
-                      })}
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-16">
+                      {sortedProducts.map(p => (
+                        <div key={p.id}>
+                          <button
+                            onClick={() => setDetailProduct(p)}
+                            className="relative overflow-hidden mb-4 group block w-full text-left"
+                            style={{ aspectRatio: '1 / 1', backgroundColor: 'var(--muted)', boxShadow: '0 0 0 1px var(--border), 0 0 26px 1px var(--card-glow)' }}
+                            aria-label={`Ver detalle de ${p.name}`}
+                          >
+                            {p.image ? (
+                              <img src={p.image} alt={p.name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center" style={{ color: 'var(--muted-foreground)' }}><ImageIcon size={32} /></div>
+                            )}
+                            <span className="absolute top-3 left-3"><StockBadge stock={p.stock} /></span>
+                          </button>
+                          <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{p.name}</p>
+                          <p className="text-sm font-bold mb-3" style={{ color: 'var(--primary)' }}>{formatCOP(p.price)}</p>
+                          <button
+                            onClick={() => handleAddToCart(p)}
+                            disabled={p.stock <= 0}
+                            className="w-full py-2.5 text-xs font-bold uppercase tracking-wide transition-colors disabled:opacity-40"
+                            style={{ border: '1px solid #005187', color: 'var(--primary)', backgroundColor: 'transparent' }}
+                            onMouseEnter={e => { if (p.stock > 0) { e.currentTarget.style.backgroundColor = '#005187'; e.currentTarget.style.color = 'white' } }}
+                            onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#005187' }}
+                          >
+                            {p.stock <= 0 ? 'Agotado' : 'Agregar al carrito'}
+                          </button>
+                        </div>
+                      ))}
                     </div>
                   )}
                 </>
@@ -599,7 +608,7 @@ export default function ClientStore({ theme, setTheme }) {
                         {o.status === 'rejected' ? (
                           <p className="text-xs font-semibold" style={{ color: '#dc2626' }}>Este pedido fue rechazado. Vea el detalle para conocer la causa.</p>
                         ) : (
-                          <OrderProgress status={o.status} />
+                          <OrderProgress status={o.status} history={o.statusHistory} />
                         )}
                       </button>
 
@@ -821,7 +830,7 @@ export default function ClientStore({ theme, setTheme }) {
               style={{ width: 34, height: 34, backgroundColor: 'var(--supplies-surface)', color: 'var(--foreground)', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
               <X size={16} />
             </button>
-            <div className="relative" style={{ aspectRatio: '1 / 1', backgroundColor: 'var(--muted)' }}>
+            <div className="relative aspect-[4/3] md:aspect-auto max-h-[46vh] md:max-h-none md:h-full" style={{ backgroundColor: 'var(--muted)' }}>
               {detailProduct.image ? (
                 <img src={detailProduct.image} alt={detailProduct.name} className="w-full h-full object-cover" />
               ) : (

@@ -1,0 +1,11 @@
+{
+  "title": "Lidessa",
+  "description": "",
+  "language": "es",
+  "robots": {
+    "index": true
+  },
+  "icons": {
+    "icon": "/assets/logolidessa.png"
+  }
+}

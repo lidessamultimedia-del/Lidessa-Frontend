@@ -1,0 +1,526 @@
+import { useRef, useEffect, useState } from 'react'
+import { useScrollReveal } from '@/shared/hooks/useScrollReveal'
+import { useIsDarkTheme } from '@/shared/hooks/useIsDarkTheme'
+import PQRSFModal from '@/shared/components/PQRSFModal'
+import { MessageCircle, Mail, MapPin, Phone, Check } from '@/shared/components/Icons'
+
+const whyChooseUs = [
+  'Más de 15 años de experiencia acompañando organizaciones en Colombia.',
+  'Más de 280 clientes atendidos exitosamente en múltiples sectores.',
+  'Reducción promedio del 35% en costos operativos de nuestros clientes.',
+  'Hasta 90% de reducción en el riesgo de sanciones normativas.',
+]
+
+const infoTabs = [
+  { key: 'quienes', label: '¿Quiénes Somos?' },
+  { key: 'servicios', label: 'Nuestros Servicios' },
+  { key: 'porque', label: '¿Por qué Elegirnos?' },
+  { key: 'contacto', label: 'Contáctenos' },
+]
+
+const timelineItems = [
+  {
+    image: '/assets/Servicio-cliente.png',
+    title: 'Servicio al cliente',
+    text: 'En nuestra empresa, el servicio al cliente es nuestra prioridad número uno. Nos esforzamos por brindar una experiencia excepcional a cada uno de nuestros clientes en cada interacción. Nuestro equipo de atención al cliente está altamente capacitado y dedicado a satisfacer sus necesidades y resolver cualquier pregunta o problema que pueda tener.',
+  },
+  {
+    image: '/assets/SG-SST.png',
+    title: 'SG-SST',
+    text: 'El SG-SST se dedica a garantizar la seguridad y el bienestar en el entorno laboral. Nuestra prioridad es proporcionar soluciones efectivas en seguridad y salud en el trabajo. Contamos con un equipo altamente capacitado en normativas y medidas preventivas. Estamos aquí para acompañarlo en cualquier aspecto relacionado con la seguridad laboral: confíe en nosotros para un entorno laboral más seguro y saludable.',
+  },
+  {
+    image: '/assets/Multimedia.png',
+    title: 'Recursos',
+    text: 'Contamos con una variedad de recursos, incluyendo videos educativos, infografías informativas y testimonios de clientes satisfechos. Estos recursos están diseñados para brindar información relevante y útil sobre SST y servicio al cliente, ayudando a nuestros clientes a comprender mejor estos temas y cómo pueden beneficiar a sus empresas.',
+  },
+]
+
+function TimelineItem({ image, title, text, side, bodyText }) {
+  const isLeft = side === 'left'
+  return (
+    <div className={`relative reveal sm:w-[45%] ${isLeft ? 'sm:mr-auto' : 'sm:ml-auto'}`}>
+      <span
+        className="hidden sm:block absolute rounded-full"
+        style={{ [isLeft ? 'right' : 'left']: -41, top: 8, width: 14, height: 14, backgroundColor: '#b8860b', boxShadow: '0 0 0 4px var(--background)' }}
+      />
+      <img
+        src={image}
+        alt={title}
+        className="w-full h-auto rounded-xl shadow-md mb-5"
+        style={{ border: '1px solid var(--border)' }}
+      />
+      <h3 className="text-xl font-black mb-3" style={{ fontFamily: 'var(--font-display)', color: '#b8860b' }}>{title}</h3>
+      <p className="text-sm leading-relaxed" style={{ color: bodyText }}>{text}</p>
+    </div>
+  )
+}
+
+function CheckItem({ label, children }) {
+  const isDark = useIsDarkTheme()
+  const brandBlue = isDark ? '#84b6f4' : '#005187'
+  return (
+    <div className="flex items-start gap-3">
+      <span
+        className="shrink-0 flex items-center justify-center rounded-full text-white"
+        style={{ width: 22, height: 22, marginTop: 1, background: 'linear-gradient(135deg, #e6c158, #b8860b)', boxShadow: '0 2px 6px rgba(184,134,11,0.4)' }}
+      >
+        <Check size={13} strokeWidth="3" />
+      </span>
+      <p className="text-sm leading-relaxed" style={{ color: 'var(--foreground)' }}>
+        {label && <strong style={{ color: brandBlue, fontFamily: 'var(--font-display)' }}>{label}: </strong>}
+        {children}
+      </p>
+    </div>
+  )
+}
+
+const acronym = [
+  { letter: 'L', value: 'Liderazgo', description: 'Guiamos a nuestros clientes con visión estratégica y resultados comprobados.' },
+  { letter: 'I', value: 'Integridad', description: 'Actuamos con transparencia y honestidad en cada proceso.' },
+  { letter: 'D', value: 'Dedicación', description: 'Acompañamos cada proyecto con compromiso total desde el inicio hasta el cierre.' },
+  { letter: 'E', value: 'Excelencia', description: 'Entregamos resultados que superan las expectativas de nuestros clientes.' },
+  { letter: 'S', value: 'Sostenibilidad', description: 'Promovemos prácticas responsables y soluciones duraderas.' },
+  { letter: 'S', value: 'Sinergia', description: 'Trabajamos en equipo con usted para alcanzar objetivos compartidos.' },
+  { letter: 'A', value: 'Actualización', description: 'Permanecemos al día con la normativa vigente para proteger a nuestros clientes.' },
+]
+
+const differentials = [
+  { label: 'Enfoque Personalizado', text: 'Trabajamos estrechamente con usted para entender sus necesidades y ofrecer soluciones a medida.' },
+  { label: 'Equipo Multidisciplinario', text: 'Contamos con expertos en diversas áreas para brindarle un servicio integral.' },
+  { label: 'Experiencia Comprobada', text: 'Más de 15 años de experiencia respaldan nuestra calidad y excelencia.' },
+  { label: 'Reducción de Costos', text: 'Nuestras soluciones eficientes pueden ayudarle a ahorrar recursos.' },
+  { label: 'Compromiso con la Excelencia', text: 'Nuestra misión es superar sus expectativas y garantizar su satisfacción.' },
+  { label: 'Cercanía', text: 'Nos destacamos por trabajar por y para nuestros clientes. Sabemos que el empleado es fundamental para una empresa; entendemos que un buen apoyo a la administración hace la diferencia en el correcto manejo de una organización.' },
+  { label: null, text: 'Somos claros en la actualización de la normativa, así que siempre estamos al corriente de la reglamentación.' },
+]
+
+export default function About() {
+  const pageRef = useScrollReveal('reveal')
+  useScrollReveal('reveal-left')
+  useScrollReveal('reveal-scale')
+  const isDark = useIsDarkTheme()
+  const brandBlue = isDark ? '#84b6f4' : '#005187'
+  const bodyText = isDark ? '#e4e4e7' : '#2a2a2a'
+  const [infoTab, setInfoTab] = useState('quienes')
+  const [pqrsfOpen, setPqrsfOpen] = useState(false)
+  const [tabIndicator, setTabIndicator] = useState({ left: 0, width: 0, opacity: 0 })
+  const [hoveredTab, setHoveredTab] = useState(null)
+  const tabNavRef = useRef(null)
+  const tabLinkRefs = useRef({})
+
+  function moveTabIndicatorTo(key) {
+    const el = tabLinkRefs.current[key]
+    const nav = tabNavRef.current
+    if (!el || !nav) return
+    const elRect = el.getBoundingClientRect()
+    const navRect = nav.getBoundingClientRect()
+    setTabIndicator({ left: elRect.left - navRect.left, width: elRect.width, opacity: 1 })
+    setHoveredTab(key)
+  }
+  function resetTabIndicator() {
+    moveTabIndicatorTo(infoTab)
+  }
+  useEffect(() => {
+    moveTabIndicatorTo(infoTab)
+    const onResize = () => moveTabIndicatorTo(infoTab)
+    window.addEventListener('resize', onResize)
+    return () => window.removeEventListener('resize', onResize)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [infoTab])
+
+  const logoVideoRef = useRef(null)
+  const logoSectionRef = useRef(null)
+  const hasPlayedLogoRef = useRef(false)
+
+  useEffect(() => {
+    const section = logoSectionRef.current
+    const video = logoVideoRef.current
+    if (!section || !video) return
+
+    const playForCurrentTheme = () => {
+      const nextSrc = isDark ? '/assets/modooscuro-logo.mp4' : '/assets/lidessa.mp4'
+      if (video.getAttribute('data-src') === nextSrc) return
+      video.setAttribute('data-src', nextSrc)
+      video.src = nextSrc
+      video.currentTime = 0
+      video.load()
+      video.play()
+    }
+
+    if (hasPlayedLogoRef.current) {
+      playForCurrentTheme()
+      return
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          hasPlayedLogoRef.current = true
+          playForCurrentTheme()
+        }
+      },
+      { threshold: 0.1 }
+    )
+    observer.observe(section)
+    return () => observer.disconnect()
+  }, [isDark])
+
+  return (
+    <div ref={pageRef}>
+
+      {/* Hero */}
+      <section
+        className="py-20 relative"
+        style={{
+          backgroundImage: 'url("/assets/nosotros.png")',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, rgba(16,41,77,0.55) 0%, rgba(7,20,38,0.4) 100%)' }} />
+        <div className="relative max-w-3xl mx-auto px-4 sm:px-6 text-center">
+          <p className="text-xs font-bold uppercase tracking-widest mb-3 reveal" style={{ color: '#e8c766', fontFamily: 'var(--font-display)' }}>Conózcanos</p>
+          <h1 className="font-black mb-5 reveal stagger-1" style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(2.2rem, 5vw, 3.4rem)', color: '#e8c766' }}>
+            Más que consultoría,<br />
+            <span style={{ color: '#e8c766' }}>resultados que transforman</span>
+          </h1>
+          <p className="text-lg mx-auto reveal stagger-2" style={{ color: '#cbb98a', fontFamily: 'var(--font-display)' }}>
+            15 años ayudando a empresas e instituciones colombianas a cumplir la norma y alcanzar la excelencia organizacional.
+          </p>
+        </div>
+        <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 50, overflow: 'hidden' }}>
+          <svg viewBox="0 0 1440 50" preserveAspectRatio="none" style={{ width: '100%', height: '100%' }}>
+            <path d="M0,25 C360,50 1080,0 1440,25 L1440,50 L0,50 Z" fill="var(--background)" />
+          </svg>
+        </div>
+      </section>
+
+      {/* Acronym */}
+      <section ref={logoSectionRef} className="py-16" style={{ backgroundColor: 'var(--muted)' }}>
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          <div className="flex justify-center mb-12 reveal-scale">
+            <div className="rounded-2xl px-10 py-5 shadow-lg" style={{ background: 'linear-gradient(135deg, #005187 0%, #4d82bc 55%, #b8860b 100%)' }}>
+              <h2 className="text-2xl sm:text-3xl font-black text-center text-white" style={{ fontFamily: 'var(--font-display)', letterSpacing: '0.4em' }}>
+                LIDESSA
+              </h2>
+            </div>
+          </div>
+          <div className="grid md:grid-cols-3 gap-10 items-center">
+            <div className="md:col-span-2 space-y-4">
+              {acronym.map((a, i) => (
+                <div key={i} className={`flex items-start gap-4 reveal-left stagger-${i + 1}`}>
+                  <span className="text-2xl font-black shrink-0" style={{ fontFamily: 'var(--font-display)', color: '#4d82bc' }}>
+                    {a.letter}
+                  </span>
+                  <p className="text-sm leading-relaxed pt-1" style={{ color: bodyText }}>
+                    <strong style={{ color: brandBlue, fontFamily: 'var(--font-display)' }}>{a.value}.</strong> {a.description}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <div className="flex justify-center reveal-scale">
+              <div style={{ backgroundColor: 'var(--muted)' }}>
+                <video
+                  ref={logoVideoRef}
+                  muted
+                  playsInline
+                  preload="auto"
+                  style={{ width: 'min(280px, 65vw)', mixBlendMode: isDark ? 'screen' : 'multiply', display: 'block' }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Info tabs */}
+      <section className="py-16 max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="text-center mb-10 reveal">
+          <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#4d82bc' }}>Conózcanos a fondo</p>
+          <h2 className="text-3xl font-black" style={{ fontFamily: 'var(--font-display)' }}>
+            Todo lo que necesita <span className="gradient-text">saber de nosotros</span>
+          </h2>
+        </div>
+
+        <div className="rounded-2xl shadow-xl overflow-hidden reveal" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
+          <div
+            ref={tabNavRef}
+            className="flex flex-wrap justify-center gap-2 p-3.5 relative"
+            style={{ background: 'linear-gradient(135deg, #005187 0%, #4d82bc 55%, #b8860b 100%)' }}
+            onMouseLeave={resetTabIndicator}
+          >
+            <div
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: 0,
+                height: 40,
+                borderRadius: 9999,
+                backgroundColor: 'white',
+                boxShadow: '0 4px 14px rgba(0,0,0,0.2)',
+                opacity: tabIndicator.opacity,
+                transform: `translate(${tabIndicator.left}px, -50%)`,
+                width: tabIndicator.width,
+                transition: 'transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), width 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.2s ease',
+                pointerEvents: 'none',
+                zIndex: 0,
+              }}
+            />
+            {infoTabs.map(t => (
+              <button
+                key={t.key}
+                ref={el => { tabLinkRefs.current[t.key] = el }}
+                onClick={() => setInfoTab(t.key)}
+                onMouseEnter={() => moveTabIndicatorTo(t.key)}
+                className="px-5 py-2.5 rounded-full text-sm font-bold relative"
+                style={{
+                  fontFamily: 'var(--font-display)',
+                  color: (hoveredTab ? hoveredTab === t.key : infoTab === t.key) ? '#005187' : 'rgba(255,255,255,0.85)',
+                  transition: 'color 0.3s ease',
+                  zIndex: 1,
+                }}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
+          <div key={infoTab} className="p-6 sm:p-10" style={{ animation: 'fadeUpSoft 0.55s cubic-bezier(0.22, 1, 0.36, 1)' }}>
+            {infoTab === 'quienes' && (
+              <div className="grid md:grid-cols-2 gap-10 items-start">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#4d82bc' }}>Nuestra historia</p>
+                  <h3 className="text-2xl font-black mb-4" style={{ fontFamily: 'var(--font-display)' }}>¿Quiénes somos?</h3>
+                  <p className="text-sm leading-relaxed mb-4" style={{ color: bodyText }}>
+                    En Lidessa, no somos simplemente una empresa; nos consideramos un verdadero aliado estratégico en su camino hacia el éxito empresarial. Con más de 15 años de experiencia en el mercado, nuestro compromiso con la excelencia y la innovación nos ha permitido desarrollar una profunda comprensión de las necesidades empresariales y de los desafíos del mercado actual.
+                  </p>
+                  <p className="text-sm leading-relaxed mb-4" style={{ color: bodyText }}>
+                    Desde nuestros inicios, hemos trabajado incansablemente para ofrecer soluciones integrales que no solo impulsan el crecimiento y la eficiencia de las empresas, sino que también aseguran la conformidad con las normativas vigentes. Nuestra amplia gama de servicios está diseñada para atender a empresas de todos los tamaños y sectores, adaptándonos a sus necesidades específicas para proporcionar soluciones personalizadas que realmente marquen la diferencia.
+                  </p>
+                  <p className="text-sm leading-relaxed" style={{ color: bodyText }}>
+                    Nos enorgullece ofrecer un enfoque proactivo y orientado a resultados. Nuestro equipo de expertos está dedicado a entender a fondo su negocio y a trabajar junto a usted para diseñar e implementar estrategias que optimicen sus operaciones, mejoren la eficiencia y fortalezcan su posición en el mercado. Creemos que el éxito de nuestros clientes es nuestro propio éxito, y es por eso que ponemos todo nuestro conocimiento y recursos a su disposición.
+                  </p>
+                </div>
+                <div className="md:border-l md:pl-10" style={{ borderColor: 'var(--border)' }}>
+                  <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#4d82bc' }}>Nuestra ventaja</p>
+                  <h3 className="text-2xl font-black mb-4" style={{ fontFamily: 'var(--font-display)' }}>¿Qué nos diferencia de los demás?</h3>
+                  <div className="space-y-3">
+                    {differentials.map((d, i) => (
+                      <CheckItem key={i} label={d.label}>{d.text}</CheckItem>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {infoTab === 'servicios' && (
+              <div>
+                <div className="text-center mb-8">
+                  <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#4d82bc' }}>Lo que hacemos</p>
+                  <h3 className="text-2xl font-black" style={{ fontFamily: 'var(--font-display)' }}>Nuestros Servicios</h3>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-10 items-start mb-12">
+                  <div>
+                    <p className="text-sm leading-relaxed mb-4" style={{ color: bodyText }}>
+                      Lidessa, con más de 15 años de experiencia en procesos de consultoría de gestión, ha acompañado a más de 350 empresarios a nivel nacional en la gestión del cumplimiento normativo. Con un amplio portafolio empresarial, llegamos a nuestros usuarios con beneficios integradores que les permiten efectividad y eficiencia en el alcance de sus objetivos.
+                    </p>
+                    <p className="text-sm leading-relaxed mb-4" style={{ color: bodyText }}>
+                      Para facilitarle al empresario el acceso a recurso humano de alta calidad, nuestros servicios son desarrollados y orientados bajo un modelo de gestión potencializador interno.
+                    </p>
+                    <p className="text-sm leading-relaxed" style={{ color: bodyText }}>
+                      Con el modelo de gestión KPO (Knowledge Process Outsourcing), la empresa entrega la gestión a un tercero denominado Lidessa, en aras de garantizar ventajas competitivas y reducción de costos, logrando potenciar las actividades de cumplimiento normativo asociadas al alcance mediante la tercerización de procesos de conocimiento. Es un modelo que garantiza el bienestar de la empresa por medio de procesos y equipos interdisciplinarios que se ponen a disposición de la organización, brindando acompañamiento permanente y apoyo con información actualizada sobre cambios de normativas y obligaciones empresariales.
+                    </p>
+                  </div>
+                  <div className="md:border-l md:pl-10" style={{ borderColor: 'var(--border)' }}>
+                    <div className="space-y-3">
+                      <CheckItem>Más de 15 años de experiencia en consultoría de gestión.</CheckItem>
+                      <CheckItem>Más de 350 empresarios acompañados a nivel nacional.</CheckItem>
+                      <CheckItem>Hasta 70% de reducción en costos de recurso humano.</CheckItem>
+                      <CheckItem>Hasta 89% de reducción en el riesgo de sanción.</CheckItem>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mb-12">
+                  <div className="text-center mb-6">
+                    <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#4d82bc' }}>Nuestro modelo</p>
+                    <h3 className="text-2xl font-black" style={{ fontFamily: 'var(--font-display)' }}>Beneficios y proceso</h3>
+                  </div>
+                  <div className="grid sm:grid-cols-2 gap-6 items-start max-w-5xl mx-auto">
+                    <img src="/assets/descripcion2.png" alt="Beneficios de utilizar un equipo de outsourcing" className="w-full h-auto rounded-xl shadow-md mx-auto" style={{ border: '1px solid var(--border)' }} />
+                    <img src="/assets/etapas_procesos.png" alt="Etapas de los procesos de gestión" className="w-full h-auto rounded-xl shadow-md mx-auto" style={{ border: '1px solid var(--border)' }} />
+                  </div>
+                </div>
+
+                <div className="mb-12">
+                  <div className="text-center mb-6">
+                    <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#4d82bc' }}>Cómo trabajamos</p>
+                    <h3 className="text-2xl font-black" style={{ fontFamily: 'var(--font-display)' }}>Metodología del Servicio</h3>
+                  </div>
+                  <div className="space-y-4 max-w-4xl mx-auto">
+                    <p className="text-sm leading-relaxed" style={{ color: bodyText }}>
+                      Según el tamaño y las condiciones de la entidad se establecen una cantidad mínima de horas presenciales, que se distribuyen en el año a necesidad y según actividad; por ejemplo, una capacitación puede durar 2 horas, pero una inspección locativa de 8 a 16 horas o más según el tamaño del edificio. Por lo tanto, las actividades se distribuyen según horas asignadas en el plan de priorización que se desarrolla al iniciar el proceso. Las actividades a distancia, por su parte, no cuentan con límite de tiempo establecido: nuestro equipo empleará el tiempo que sea necesario para su gestión y desarrollo. Es muy importante tener en cuenta que muchas de las actividades requieren la ejecución previa de otras para su finalización.
+                    </p>
+                    <p className="text-sm leading-relaxed" style={{ color: bodyText }}>
+                      Según informes presentados por el BBVA, las MiPymes son el 99,5% del universo empresarial formal colombiano. El 58% de las MiPymes formales tienen menos de 5 años de operación y el 22% son empresas consolidadas con más de 10 años de vida; el 20% de las micro están consolidadas, el 44% de las pequeñas, el 63% de las medianas y el 71% de las grandes.
+                    </p>
+                    <p className="text-sm leading-relaxed" style={{ color: bodyText }}>
+                      La capacidad de las microempresas de generar empleo contrasta con su tendencia a hacerlo de manera informal: el 15% del empleo que generan es formal y el 85% informal (lo que representa el 94% del empleo informal nacional). La formalidad empresarial no es fácil en el sector de las mipymes y es heterogénea por sectores y por tamaño de la empresa; los altos costos del recurso humano y los grandes cambios normativos obligan al empresario a dotarse de recurso humano diverso y especialista, que de tenerlo de tiempo completo dispararía los costos de nómina volviéndolas insostenibles. Es por ello que la tendencia al outsourcing, cada vez más en crecimiento, facilita al empresario el acceso a recurso humano cualificado a costos más asequibles sin perder principios de calidad y eficiencia.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {infoTab === 'porque' && (
+              <div>
+                <div className="text-center mb-6">
+                  <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#4d82bc' }}>Nuestros resultados</p>
+                  <h3 className="text-2xl font-black" style={{ fontFamily: 'var(--font-display)' }}>¿Por qué elegirnos?</h3>
+                </div>
+                <div className="grid sm:grid-cols-2 gap-4 max-w-3xl mx-auto">
+                  {whyChooseUs.map((reason, i) => (
+                    <CheckItem key={i}>{reason}</CheckItem>
+                  ))}
+                </div>
+
+                <p className="text-sm leading-relaxed text-center max-w-2xl mx-auto mt-8" style={{ color: bodyText }}>
+                  Más de 15 años de experiencia respaldan nuestro compromiso con la excelencia. Estamos aquí para acompañarlo en el logro de sus metas empresariales, trabajando incansablemente por la seguridad de nuestros clientes y ofreciendo soluciones sólidas y confiables. Contáctenos hoy mismo y sea parte de este camino hacia el crecimiento y la prosperidad empresarial.
+                </p>
+
+                <div className="max-w-2xl mx-auto mt-10 p-6 rounded-2xl" style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)' }}>
+                  <p className="text-4xl font-black mb-2" style={{ color: '#84b6f4', lineHeight: 1 }}>"</p>
+                  <p className="text-sm leading-relaxed mb-4" style={{ color: bodyText }}>
+                    Le doy un cordial saludo a la Doctora Lina Aristizabal y al equipo de Lidessa. Quiero agradecer su gran aporte en el proyecto y proceso de legalización del Centro Étnico de Educación Laboral de Colombia (CETELCO), en el Urabá antioqueño y chocoano. Recomiendo ampliamente sus servicios: soy una persona exigente y, gracias a Dios, han cumplido y superado las expectativas.
+                  </p>
+                  <p className="text-sm font-bold" style={{ color: brandBlue }}>Lic. Marco Bonett</p>
+                  <p className="text-xs" style={{ color: bodyText }}>Representante legal, Centro Étnico de Educación Laboral de Colombia (CETELCO)</p>
+                </div>
+              </div>
+            )}
+
+            {infoTab === 'contacto' && (
+              <div className="grid sm:grid-cols-2 gap-8 items-center">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#4d82bc' }}>Hablemos</p>
+                  <h3 className="text-2xl font-black mb-4" style={{ fontFamily: 'var(--font-display)' }}>Contáctenos</h3>
+                  <p className="text-sm leading-relaxed mb-5" style={{ color: bodyText }}>
+                    Escríbanos y un asesor le atenderá a la brevedad para resolver sus dudas o iniciar su proceso de consultoría.
+                  </p>
+                  <div className="flex flex-wrap gap-3">
+                    <a href="https://wa.me/573332371006" target="_blank" rel="noreferrer"
+                      className="px-5 py-2.5 rounded-xl text-sm font-bold text-white"
+                      style={{ backgroundColor: '#25D366', transition: 'opacity 0.2s' }}
+                      onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
+                      onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+                    >
+                      <span className="inline-flex items-center gap-1.5"><MessageCircle size={15} /> WhatsApp</span>
+                    </a>
+                    <a href="mailto:comercial@lidessa.co"
+                      className="px-5 py-2.5 rounded-xl text-sm font-bold"
+                      style={{ border: '2px solid var(--border)', color: 'var(--foreground)', transition: 'background-color 0.2s' }}
+                      onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--muted)'}
+                      onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
+                    >
+                      <span className="inline-flex items-center gap-1.5"><Mail size={15} /> comercial@lidessa.co</span>
+                    </a>
+                  </div>
+                </div>
+                <ul className="space-y-3 text-sm" style={{ color: bodyText }}>
+                  <li className="flex items-start gap-2"><MapPin size={15} className="shrink-0 mt-0.5" /> Cra. 71 #46-28, Laureles, Medellín, Antioquia</li>
+                  <li className="flex items-start gap-2"><Phone size={15} className="shrink-0 mt-0.5" /> +57 333 237 1006</li>
+                  <li className="flex items-start gap-2"><Mail size={15} className="shrink-0 mt-0.5" /> comercial@lidessa.co</li>
+                </ul>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Timeline: Servicio al cliente / SG-SST / Recursos */}
+      <section className="py-16 max-w-5xl mx-auto px-4 sm:px-6">
+        <div className="relative">
+          <div className="hidden sm:block absolute" style={{ left: '50%', top: 0, bottom: 0, width: 2, backgroundColor: 'var(--border)', transform: 'translateX(-50%)' }} />
+          <div className="flex flex-col gap-14">
+            {timelineItems.map((item, i) => (
+              <TimelineItem key={item.title} {...item} side={i % 2 === 0 ? 'left' : 'right'} bodyText={bodyText} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* PQRSF prompt */}
+      <section className="py-16 max-w-3xl mx-auto px-4 sm:px-6">
+        <div className="text-center rounded-2xl p-8 reveal" style={{ border: '1px solid #d4af37', backgroundColor: 'var(--card)' }}>
+          <h3 className="text-2xl font-black mb-2" style={{ fontFamily: 'var(--font-display)' }}>
+            ¿Tiene alguna duda o sugerencia?
+          </h3>
+          <p className="text-sm font-semibold mb-6" style={{ color: '#b8860b' }}>
+            Contáctenos, o envíenos su comentario aquí
+          </p>
+          <button
+            onClick={() => setPqrsfOpen(true)}
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold"
+            style={{ backgroundColor: '#e6b93d', color: '#1a1a1a', transition: 'opacity 0.2s' }}
+            onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
+            onMouseLeave={e => e.currentTarget.style.opacity = '1'}
+          >
+            <span className="inline-flex items-center gap-1.5"><Mail size={15} /> PQRSF</span>
+          </button>
+        </div>
+      </section>
+
+      {/* Office / map */}
+      <section className="py-20 max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="grid md:grid-cols-2 gap-10 items-center">
+          <div className="reveal-left">
+            <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#4d82bc' }}>Encuéntrenos</p>
+            <h2 className="text-3xl font-black mb-4" style={{ fontFamily: 'var(--font-display)' }}>Nuestra oficina</h2>
+            <p className="text-sm mb-5" style={{ color: bodyText }}>
+              Estamos en el corazón de Medellín, disponibles para atención presencial y virtual en todo el territorio nacional.
+            </p>
+            <ul className="space-y-3 text-sm">
+              {[
+                { icon: MapPin, text: 'Cra. 71 #46-28, Laureles, Medellín, Antioquia' },
+                { icon: Phone, text: '+57 333 237 1006', href: 'https://wa.me/573332371006' },
+                { icon: Mail, text: 'comercial@lidessa.co', href: 'mailto:comercial@lidessa.co' },
+              ].map(c => (
+                <li key={c.text}>
+                  {c.href
+                    ? <a href={c.href} target="_blank" rel="noreferrer"
+                        className="flex items-center gap-2"
+                        style={{ color: brandBlue, fontWeight: 600, transition: 'color 0.2s' }}
+                        onMouseEnter={e => e.currentTarget.style.color = '#4d82bc'}
+                        onMouseLeave={e => e.currentTarget.style.color = brandBlue}
+                      >
+                        <c.icon size={15} /> {c.text}
+                      </a>
+                    : <span className="flex items-center gap-2" style={{ color: 'var(--foreground)', fontWeight: 600 }}>
+                        <c.icon size={15} /> {c.text}
+                      </span>
+                  }
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div
+            className="rounded-2xl overflow-hidden reveal-scale"
+            style={{ height: 320, border: '1px solid var(--border)', boxShadow: '0 12px 40px rgba(0,81,135,0.12)' }}
+          >
+            <iframe
+              title="Ubicación Lidessa"
+              src="https://www.google.com/maps?q=Cra.%2071%20%2346-28%2C%20Laureles%20-%20Estadio%2C%20Medell%C3%ADn%2C%20Laureles%2C%20Medell%C3%ADn%2C%20Antioquia&output=embed"
+              width="100%" height="100%"
+              style={{ border: 0 }}
+              loading="lazy"
+            />
+          </div>
+        </div>
+      </section>
+
+      {pqrsfOpen && <PQRSFModal onClose={() => setPqrsfOpen(false)} />}
+    </div>
+  )
+}

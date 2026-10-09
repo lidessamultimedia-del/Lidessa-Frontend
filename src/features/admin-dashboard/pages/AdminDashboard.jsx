@@ -42,7 +42,7 @@ import UserAccountDetailModal, { RoleBadge } from '../components/UserAccountDeta
 import AnimatedCounter from '@/shared/components/AnimatedCounter'
 import ThemeToggle from '@/shared/components/ThemeToggle'
 import { courseCardStyle } from '@/features/lms/utils/courseCard'
-import { BarChart2, Building, FileText, GraduationCap, Users, Clipboard, Sliders, Bell, User, AlertTriangle, Edit2, Plus, Send, BookOpen, Trash, Search, Eye, Lock, X, UserCog, ShieldCheck, IdCard, MessageCircle, Sparkle, Check, Inbox, Download, Mail, ClipboardCheck, Package, ShoppingCart, ImageIcon, ChevronDown } from '@/shared/components/Icons'
+import { BarChart2, Building, FileText, GraduationCap, Users, Clipboard, Sliders, Bell, User, AlertTriangle, Edit2, Plus, Send, BookOpen, Trash, Search, Eye, Lock, X, UserCog, ShieldCheck, IdCard, MessageCircle, Sparkle, Check, Inbox, Download, Mail, ClipboardCheck, Package, ShoppingCart, ImageIcon, ChevronDown, History } from '@/shared/components/Icons'
 import AccountSettings from '@/shared/components/AccountSettings'
 import Avatar from '@/shared/components/Avatar'
 import Toggle from '@/shared/components/Toggle'
@@ -2460,10 +2460,14 @@ export default function AdminDashboard({ theme, setTheme }) {
             const historialStatuses = ['rejected', 'completed']
             const statusCounts = supplies.orders.reduce((acc, o) => ({ ...acc, [o.status]: (acc[o.status] ?? 0) + 1 }), {})
             const activeCount = supplies.orders.filter(o => !historialStatuses.includes(o.status)).length
+            const historialCount = supplies.orders.filter(o => historialStatuses.includes(o.status)).length
+            const inHistorial = pedidosView === 'historial'
             const chips = [
               { id: 'activos', label: 'Activos', count: activeCount },
               { id: 'all', label: 'Todos', count: supplies.orders.length },
-              ...Object.entries(ORDER_STATUS).map(([id, s]) => ({ id, label: s.short, count: statusCounts[id] ?? 0, color: s.color })),
+              ...Object.entries(ORDER_STATUS)
+                .filter(([id]) => !historialStatuses.includes(id))
+                .map(([id, s]) => ({ id, label: s.short, count: statusCounts[id] ?? 0, color: s.color })),
             ]
             const q = ordersSearch.trim().toLowerCase()
             const visibleOrders = supplies.orders
@@ -2479,15 +2483,31 @@ export default function AdminDashboard({ theme, setTheme }) {
             return (
             <div style={{ animation: 'fadeUp 0.4s ease' }}>
               <div className="flex flex-wrap items-start justify-between gap-3 mb-1">
-                <h2 className="text-xl font-black" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>Pedidos</h2>
-                <button onClick={() => setOrderModal({ mode: 'new' })}
-                  className="px-4 py-2.5 rounded-lg text-sm font-bold text-white flex items-center gap-1.5"
-                  style={{ backgroundColor: '#005187', boxShadow: '0 4px 14px rgba(0,81,135,0.25)' }}>
-                  <Plus size={14} /> Nuevo pedido
-                </button>
+                <h2 className="text-xl font-black" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
+                  {inHistorial ? 'Historial de pedidos' : 'Pedidos'}
+                </h2>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => { setPedidosView(inHistorial ? 'activos' : 'historial'); setOrdersPage(1) }}
+                    className="px-4 py-2.5 rounded-lg text-sm font-bold flex items-center gap-1.5"
+                    style={inHistorial
+                      ? { backgroundColor: '#005187', color: 'white', boxShadow: '0 4px 14px rgba(0,81,135,0.25)' }
+                      : { border: '1px solid var(--border)', color: 'var(--foreground)' }}>
+                    <History size={14} /> {inHistorial ? 'Ver pedidos activos' : 'Historial de pedidos'}
+                    {!inHistorial && historialCount > 0 && (
+                      <span className="text-xs font-bold px-1.5 rounded-full" style={{ backgroundColor: 'var(--muted)', color: 'var(--muted-foreground)' }}>{historialCount}</span>
+                    )}
+                  </button>
+                  <button onClick={() => setOrderModal({ mode: 'new' })}
+                    className="px-4 py-2.5 rounded-lg text-sm font-bold text-white flex items-center gap-1.5"
+                    style={{ backgroundColor: '#005187', boxShadow: '0 4px 14px rgba(0,81,135,0.25)' }}>
+                    <Plus size={14} /> Nuevo pedido
+                  </button>
+                </div>
               </div>
               <p className="text-xs mb-5" style={{ color: 'var(--muted-foreground)' }}>
-                {supplies.orders.length} pedidos · {statusCounts.pending ?? 0} por revisar · Haga clic en un pedido para ver su detalle y gestionarlo.
+                {inHistorial
+                  ? `${historialCount} pedidos completados o rechazados · Haga clic en un pedido para ver su detalle.`
+                  : `${supplies.orders.length} pedidos · ${statusCounts.pending ?? 0} por revisar · Haga clic en un pedido para ver su detalle y gestionarlo.`}
               </p>
 
               <div className="flex flex-wrap items-center gap-3 mb-4">
@@ -2496,8 +2516,10 @@ export default function AdminDashboard({ theme, setTheme }) {
                   <input value={ordersSearch} onChange={e => { setOrdersSearch(e.target.value); setOrdersPage(1) }} placeholder="Buscar por cliente, correo o # pedido…"
                     className="text-sm outline-none bg-transparent flex-1 min-w-0" style={{ color: 'var(--foreground)' }} />
                 </div>
-                <FilterDropdown options={chips} value={pedidosView} defaultValue="activos"
-                  onChange={v => { setPedidosView(v); setOrdersPage(1) }} />
+                {!inHistorial && (
+                  <FilterDropdown options={chips} value={pedidosView} defaultValue="activos"
+                    onChange={v => { setPedidosView(v); setOrdersPage(1) }} />
+                )}
               </div>
 
               <div className="rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>

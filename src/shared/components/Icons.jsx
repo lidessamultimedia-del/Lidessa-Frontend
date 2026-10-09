@@ -51,6 +51,7 @@ import {
   Minus as LucideMinus,
   LogOut as LucideLogOut,
   Truck as LucideTruck,
+  History as LucideHistory,
   CreditCard as LucideCreditCard,
   ChevronRight as LucideChevronRight,
   Headset as LucideHeadset,
@@ -113,3 +114,4 @@ export const Truck = withDefaultSize(LucideTruck)
 export const CreditCard = withDefaultSize(LucideCreditCard)
 export const ChevronRight = withDefaultSize(LucideChevronRight)
 export const Headset = withDefaultSize(LucideHeadset)
+export const History = withDefaultSize(LucideHistory)

@@ -830,7 +830,7 @@ export default function ClientStore({ theme, setTheme }) {
               style={{ width: 34, height: 34, backgroundColor: 'var(--supplies-surface)', color: 'var(--foreground)', boxShadow: '0 2px 8px rgba(0,0,0,0.15)' }}>
               <X size={16} />
             </button>
-            <div className="relative aspect-[4/3] md:aspect-auto max-h-[46vh] md:max-h-none md:h-full" style={{ backgroundColor: 'var(--muted)' }}>
+            <div className="relative aspect-4/3 md:aspect-auto max-h-[46vh] md:max-h-none md:h-full" style={{ backgroundColor: 'var(--muted)' }}>
               {detailProduct.image ? (
                 <img src={detailProduct.image} alt={detailProduct.name} className="w-full h-full object-cover" />
               ) : (

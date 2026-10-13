@@ -27,7 +27,7 @@ function InfoRow({ icon: Icon, label, value }) {
       </span>
       <div className="min-w-0">
         <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: 'var(--muted-foreground)' }}>{label}</p>
-        <p className="text-sm break-words" style={{ color: value ? 'var(--foreground)' : 'var(--muted-foreground)' }}>{value || '—'}</p>
+        <p className="text-sm wrap-break-word" style={{ color: value ? 'var(--foreground)' : 'var(--muted-foreground)' }}>{value || '—'}</p>
       </div>
     </div>
   )

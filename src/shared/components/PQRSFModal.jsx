@@ -11,6 +11,7 @@ export default function PQRSFModal({ onClose }) {
   const [form, setForm] = useState({ name: '', email: '', phone: '', type: 'Petición', subject: '', message: '' })
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [submitError, setSubmitError] = useState('')
   const [touched, setTouched] = useState({ subject: false, message: false, email: false })
   const [ticketId, setTicketId] = useState(null)
 
@@ -35,17 +36,21 @@ export default function PQRSFModal({ onClose }) {
   const markTouched = (field) => setTouched(t => ({ ...t, [field]: true }))
   const borderColor = (field) => (touched[field] && errors[field] ? '#dc2626' : 'var(--border)')
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     setTouched({ subject: true, message: true, email: true })
     if (!isValid) return
     setLoading(true)
-    setTimeout(() => {
-      const ticket = addTicket(form, user)
+    setSubmitError('')
+    try {
+      const ticket = await addTicket(form, user)
       setTicketId(ticket.id)
-      setLoading(false)
       setSubmitted(true)
-    }, 1400)
+    } catch (err) {
+      setSubmitError(err.message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -216,6 +221,9 @@ export default function PQRSFModal({ onClose }) {
                 Tiempo de respuesta: máximo 15 días hábiles. Sus datos serán tratados conforme a la{' '}
                 <button type="button" className="underline" style={{ color: 'var(--accent)' }}>política de privacidad</button>.
               </p>
+              {submitError && (
+                <p className="text-xs" style={{ color: '#dc2626' }}>{submitError}</p>
+              )}
               <button type="submit" disabled={loading || (touched.subject && touched.message && !isValid)}
                 className="w-full py-3 rounded-lg text-sm font-bold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
                 style={{ background: 'linear-gradient(135deg, #005187 0%, #4d82bc 55%, #b8860b 100%)' }}

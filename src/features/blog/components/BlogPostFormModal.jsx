@@ -1,36 +1,33 @@
 import { useState } from 'react'
+import { useAuth } from '@/features/auth/context/AuthContext'
+import { apiUploadAttachment, toFileUrl } from '@/shared/lib/api'
 
 const emptyForm = {
   title: '',
   excerpt: '',
-  date: '',
-  image: '',
+  imageUrl: '',
   author: '',
   link: '',
   phone: '',
 }
 
-const MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
-function todayFormatted() {
-  const d = new Date()
-  return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`
-}
-
-// La imagen se guarda como base64 directo en memoria (sin backend de
-// archivos todavía) — se limita el tamaño de cada foto para no inflar el
-// estado de la página.
-const MAX_IMAGE_MB = 1.5
+// La imagen se sube al servidor apenas se elige (mismo endpoint de adjuntos
+// que usa el LMS) y en la publicación solo se guarda su URL.
+const MAX_IMAGE_MB = 5
 const MAX_IMAGE_BYTES = MAX_IMAGE_MB * 1024 * 1024
 
 export default function BlogPostFormModal({ post, onSave, onClose }) {
+  const { user } = useAuth()
   const [form, setForm] = useState(post ? { ...emptyForm, ...post } : emptyForm)
   const [imageError, setImageError] = useState('')
+  const [uploading, setUploading] = useState(false)
+  const [saving, setSaving] = useState(false)
 
   function set(field, value) {
     setForm(prev => ({ ...prev, [field]: value }))
   }
 
-  function handleImageChange(e) {
+  async function handleImageChange(e) {
     const file = e.target.files?.[0]
     e.target.value = ''
     if (!file) return
@@ -39,15 +36,26 @@ export default function BlogPostFormModal({ post, onSave, onClose }) {
       return
     }
     setImageError('')
-    const reader = new FileReader()
-    reader.onload = () => set('image', reader.result)
-    reader.readAsDataURL(file)
+    setUploading(true)
+    try {
+      const uploaded = await apiUploadAttachment(file, user?.token)
+      set('imageUrl', uploaded.url)
+    } catch (err) {
+      setImageError(err.message)
+    } finally {
+      setUploading(false)
+    }
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
-    if (!form.image) { setImageError('La imagen es obligatoria.'); return }
-    onSave(post ? form : { ...form, date: todayFormatted() })
+    if (!form.imageUrl) { setImageError('La imagen es obligatoria.'); return }
+    setSaving(true)
+    try {
+      await onSave(form)
+    } finally {
+      setSaving(false)
+    }
   }
 
   const fields = [
@@ -103,8 +111,8 @@ export default function BlogPostFormModal({ post, onSave, onClose }) {
               Imagen *
             </label>
             <div className="flex items-center gap-3">
-              {form.image ? (
-                <img src={form.image} alt="" className="w-16 h-12 object-cover rounded-lg shrink-0" style={{ border: '1px solid var(--border)' }} />
+              {form.imageUrl ? (
+                <img src={toFileUrl(form.imageUrl)} alt="" className="w-16 h-12 object-cover rounded-lg shrink-0" style={{ border: '1px solid var(--border)' }} />
               ) : (
                 <div className="w-16 h-12 rounded-lg shrink-0" style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)' }} />
               )}
@@ -112,8 +120,8 @@ export default function BlogPostFormModal({ post, onSave, onClose }) {
                 className="flex-1 cursor-pointer text-sm px-3 py-2.5 rounded-lg text-center font-medium transition-colors"
                 style={{ backgroundColor: 'var(--muted)', border: imageError ? '1px solid #dc2626' : '1px solid var(--border)', color: 'var(--foreground)' }}
               >
-                {form.image ? 'Cambiar imagen…' : 'Elegir imagen del computador…'}
-                <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+                {uploading ? 'Subiendo imagen…' : form.imageUrl ? 'Cambiar imagen…' : 'Elegir imagen del computador…'}
+                <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="hidden" disabled={uploading} onChange={handleImageChange} />
               </label>
             </div>
             {imageError && <p className="text-xs mt-1" style={{ color: '#dc2626' }}>⚠ {imageError}</p>}
@@ -154,10 +162,10 @@ export default function BlogPostFormModal({ post, onSave, onClose }) {
               style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>
               Cancelar
             </button>
-            <button type="submit"
-              className="flex-1 py-2.5 rounded-lg text-sm font-bold text-white"
+            <button type="submit" disabled={uploading || saving}
+              className="flex-1 py-2.5 rounded-lg text-sm font-bold text-white disabled:opacity-60"
               style={{ backgroundColor: '#005187' }}>
-              {post ? 'Guardar cambios' : 'Publicar'}
+              {saving ? 'Guardando…' : post ? 'Guardar cambios' : 'Publicar'}
             </button>
           </div>
         </form>

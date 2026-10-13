@@ -349,11 +349,13 @@ export default function Home() {
                     onClick={() => setSelectedPost(post)}>
                     <img src={post.image} alt={post.title} className="w-full h-full object-cover" />
                     <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.85), rgba(0,0,0,0.15) 55%, transparent)' }} />
-                    <div className="absolute top-3 right-3">
-                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: '#c4dafa', color: 'var(--primary)' }}>
-                        {post.category}
-                      </span>
-                    </div>
+                    {post.category && (
+                      <div className="absolute top-3 right-3">
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{ backgroundColor: '#c4dafa', color: 'var(--primary)' }}>
+                          {post.category}
+                        </span>
+                      </div>
+                    )}
                     <div className="absolute bottom-0 left-0 right-0 p-5">
                       <span className="text-xs" style={{ color: '#cbd5e1' }}>{post.date}</span>
                       <h3 className="font-bold text-lg mt-1 leading-snug text-white" style={{ fontFamily: 'var(--font-display)' }}>
@@ -367,10 +369,12 @@ export default function Home() {
                     style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}
                     onClick={() => setSelectedPost(post)}>
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
-                        style={{ backgroundColor: '#c4dafa', color: 'var(--primary)' }}>
-                        {post.category}
-                      </span>
+                      {post.category ? (
+                        <span className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                          style={{ backgroundColor: '#c4dafa', color: 'var(--primary)' }}>
+                          {post.category}
+                        </span>
+                      ) : <span />}
                       <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{post.date}</span>
                     </div>
                     <h3 className="font-bold text-base mb-3 leading-snug" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>

@@ -157,3 +157,46 @@ export function apiUpdateQuiz(id, payload, token) {
 export function apiDeleteQuiz(id, token) {
   return request(`/api/quizzes/${id}`, { method: 'DELETE', headers: authHeaders(token) })
 }
+
+// ── Converge (blog) ──
+// Lectura pública; crear/editar/borrar solo admin.
+export function apiGetBlogPosts() {
+  return request('/api/blog-posts')
+}
+
+// payload: { title, excerpt, publishedOn, imageUrl, author, phone, externalLink }
+export function apiCreateBlogPost(payload, token) {
+  return request('/api/blog-posts', { method: 'POST', headers: authHeaders(token), body: JSON.stringify(payload) })
+}
+
+export function apiUpdateBlogPost(id, payload, token) {
+  return request(`/api/blog-posts/${id}`, { method: 'PUT', headers: authHeaders(token), body: JSON.stringify(payload) })
+}
+
+export function apiDeleteBlogPost(id, token) {
+  return request(`/api/blog-posts/${id}`, { method: 'DELETE', headers: authHeaders(token) })
+}
+
+// ── PQRSF ──
+// Radicar es público; si va con token, el ticket queda ligado a esa cuenta.
+// payload: { ticketType, name, email, phone, subject, message }
+export function apiCreatePqrsf(payload, token) {
+  return request('/api/pqrsf-tickets', { method: 'POST', headers: authHeaders(token), body: JSON.stringify(payload) })
+}
+
+export function apiGetPqrsfTickets(token) {
+  return request('/api/pqrsf-tickets', { headers: authHeaders(token) })
+}
+
+// status: 'Pendiente' | 'Revisando' ('Respondida' solo con apiRespondPqrsf).
+export function apiChangePqrsfStatus(id, status, token) {
+  return request(`/api/pqrsf-tickets/${id}/status`, { method: 'PUT', headers: authHeaders(token), body: JSON.stringify({ status }) })
+}
+
+export function apiRespondPqrsf(id, response, token) {
+  return request(`/api/pqrsf-tickets/${id}/response`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify({ response }) })
+}
+
+export function apiMarkPqrsfRead(id, token) {
+  return request(`/api/pqrsf-tickets/${id}/read`, { method: 'PUT', headers: authHeaders(token) })
+}

@@ -6,7 +6,7 @@ import { useScrollReveal } from '@/shared/hooks/useScrollReveal'
 const GOLD = '#e8c766'
 
 export default function Blog() {
-  const { posts: blogPosts } = useBlog()
+  const { posts: blogPosts, loading, error } = useBlog()
   const [selectedPost, setSelectedPost] = useState(null)
   const pageRef = useScrollReveal('reveal')
   useScrollReveal('reveal-scale')
@@ -159,8 +159,8 @@ export default function Blog() {
           ))}
         </div>
         {blogPosts.length === 0 && (
-          <p className="text-center py-12 text-sm" style={{ color: 'var(--muted-foreground)' }}>
-            No hay publicaciones todavía.
+          <p className="text-center py-12 text-sm" style={{ color: error ? '#dc2626' : 'var(--muted-foreground)' }}>
+            {loading ? 'Cargando publicaciones…' : error ? `No se pudieron cargar las publicaciones. ${error}` : 'No hay publicaciones todavía.'}
           </p>
         )}
       </section>

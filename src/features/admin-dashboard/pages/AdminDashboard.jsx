@@ -119,7 +119,7 @@ export default function AdminDashboard({ theme, setTheme }) {
   const { toast } = useToast()
   const navigate = useNavigate()
   const { posts: blogPosts, addPost, updatePost, deletePost } = useBlog()
-  const { tickets: pqrsfTickets, updateTicket: updatePQRSF, markRead: markPQRSFRead, respondTicket: respondPQRSF } = usePQRSF()
+  const { tickets: pqrsfTickets, changeStatus: changePQRSFStatus, markRead: markPQRSFRead, respondTicket: respondPQRSF } = usePQRSF()
   const lms = useLMS()
   const catalogCourses = lms.listedCourses
   const { services, addService, updateService, deleteService, toggleServiceActive, categories: serviceCategories, addCategory, updateCategory, toggleCategoryActive, deleteCategory } = useServicesData()
@@ -241,7 +241,7 @@ export default function AdminDashboard({ theme, setTheme }) {
     })
     // Un comentario anónimo no tiene respuesta posible: marcar su aviso
     // como leído también lo marca leído en PQRSF (así deja de contar ahí).
-    list.forEach(n => { if (n.anonTicketId) markPQRSFRead(n.anonTicketId) })
+    list.forEach(n => { if (n.anonTicketId) markPQRSFReadQuietly(n.anonTicketId) })
   }
 
   function markNotificationUnread(n) {
@@ -429,23 +429,50 @@ export default function AdminDashboard({ theme, setTheme }) {
   }
 
   async function handleReplyPQRSF(response) {
-    const { emailSent } = await respondPQRSF(pqrsfReplyModal.id, response)
-    toast('success', 'Respuesta guardada',
-      emailSent
-        ? `Se notificará a ${pqrsfReplyModal.email} por correo (simulado — falta conectar el backend de envío).`
-        : `Se guardó la respuesta para ${pqrsfReplyModal.from}.`)
-    setPqrsfReplyModal(null)
+    try {
+      const { emailSent } = await respondPQRSF(pqrsfReplyModal.id, response)
+      toast('success', 'Respuesta guardada',
+        emailSent
+          ? `Se le avisó a ${pqrsfReplyModal.email} (por ahora el aviso se escribe en la consola del API).`
+          : `Se guardó la respuesta para ${pqrsfReplyModal.from}.`)
+      setPqrsfReplyModal(null)
+    } catch (err) {
+      toast('error', 'No se pudo guardar la respuesta', err.message)
+    }
   }
 
-  function handlePQRSFMarkRead(ticket) {
-    markPQRSFRead(ticket.id)
-    toast('info', 'Marcado como leído', ticket.subject)
+  async function handlePQRSFMarkRead(ticket) {
+    try {
+      await markPQRSFRead(ticket.id)
+      toast('info', 'Marcado como leído', ticket.subject)
+    } catch (err) {
+      toast('error', 'No se pudo marcar como leído', err.message)
+    }
+  }
+
+  // Para marcados automáticos (al abrir un ticket o leer avisos): si falla,
+  // no vale la pena interrumpir con un toast; se reintenta la próxima vez.
+  function markPQRSFReadQuietly(id) {
+    markPQRSFRead(id).catch(() => {})
+  }
+
+  async function handlePQRSFStatus(ticket, status) {
+    try {
+      await changePQRSFStatus(ticket.id, status)
+      toast('info', 'Marcado en revisión', ticket.subject)
+    } catch (err) {
+      toast('error', 'No se pudo cambiar el estado', err.message)
+    }
   }
 
   async function handleDeleteConfirm() {
     if (deleteConfirm.type === 'blog') {
-      deletePost(deleteConfirm.id)
-      toast('success', 'Publicación eliminada', deleteConfirm.label)
+      try {
+        await deletePost(deleteConfirm.id)
+        toast('success', 'Publicación eliminada', deleteConfirm.label)
+      } catch (err) {
+        toast('error', 'No se pudo eliminar la publicación', err.message)
+      }
     } else if (deleteConfirm.type === 'lmsCourse') {
       lms.deleteCourse(deleteConfirm.id)
       if (lmsSelectedCourseId === deleteConfirm.id) setLmsSelectedCourseId(null)
@@ -606,15 +633,19 @@ export default function AdminDashboard({ theme, setTheme }) {
     setAccountModal(null)
   }
 
-  function handleSaveBlogPost(form) {
-    if (blogModal.mode === 'edit') {
-      updatePost(blogModal.post.id, form)
-      toast('success', 'Publicación actualizada', form.title)
-    } else {
-      addPost(form)
-      toast('success', 'Publicación creada', form.title)
+  async function handleSaveBlogPost(form) {
+    try {
+      if (blogModal.mode === 'edit') {
+        await updatePost(blogModal.post.id, form)
+        toast('success', 'Publicación actualizada', form.title)
+      } else {
+        await addPost(form)
+        toast('success', 'Publicación creada', form.title)
+      }
+      setBlogModal(null)
+    } catch (err) {
+      toast('error', 'No se pudo guardar la publicación', err.message)
     }
-    setBlogModal(null)
   }
 
   function handleSettingsSave(e) {
@@ -1767,13 +1798,13 @@ export default function AdminDashboard({ theme, setTheme }) {
                         {p.response && (
                           <p className="text-xs mt-2 p-2.5 rounded-lg wrap-break-word" style={{ color: 'var(--muted-foreground)', backgroundColor: 'var(--muted)', borderLeft: '3px solid #16a34a' }}>
                             <strong style={{ color: 'var(--foreground)' }}>Respuesta:</strong> {p.response}
-                            {p.emailSent && <span style={{ color: '#16a34a' }}> · Correo simulado enviado</span>}
+                            {p.emailSent && <span style={{ color: '#16a34a' }}> · Aviso enviado</span>}
                           </p>
                         )}
                       </div>
                       <div className="flex flex-col gap-2 shrink-0">
                         {p.status === 'Pendiente' && (
-                          <button onClick={() => { updatePQRSF(p.id, { status: 'Revisando' }); toast('info', 'Marcado en revisión', p.subject) }}
+                          <button onClick={() => handlePQRSFStatus(p, 'Revisando')}
                             className="text-xs px-3 py-1.5 rounded-lg font-bold transition-opacity hover:opacity-80"
                             style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>
                             Marcar en revisión
@@ -1828,7 +1859,7 @@ export default function AdminDashboard({ theme, setTheme }) {
                         )}
                       </div>
                       <div className="flex flex-col gap-2 shrink-0">
-                        <button onClick={() => { setPqrsfReplyModal(p); if (!p.read) markPQRSFRead(p.id) }}
+                        <button onClick={() => { setPqrsfReplyModal(p); if (!p.read) markPQRSFReadQuietly(p.id) }}
                           className="text-xs px-3 py-1.5 rounded-lg font-bold transition-opacity hover:opacity-80"
                           style={{ border: '1px solid var(--border)', color: 'var(--foreground)', backgroundColor: 'var(--card)' }}>
                           Ver completo

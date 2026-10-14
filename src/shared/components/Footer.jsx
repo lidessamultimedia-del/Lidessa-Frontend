@@ -142,10 +142,9 @@ export default function Footer() {
             </div>
 
             {/* Contact strip */}
-            <div className="mt-10 pt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-center text-sm" style={{ borderTop: '1px solid rgba(132,182,244,0.15)' }}>
-              <a href="mailto:comercial@lidessa.co" className="hover:text-white transition-colors">comercial@lidessa.co</a>
-              <a href="mailto:mercadeo@lidessa.co" className="hover:text-white transition-colors">mercadeo@lidessa.co</a>
-              <a href="mailto:servicios@lidessa.co" className="hover:text-white transition-colors">servicios@lidessa.co</a>
+            <div className="mt-10 pt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 text-center text-sm" style={{ borderTop: '1px solid rgba(132,182,244,0.15)' }}>
+              <a href="mailto:gerencia@lidessa.com" className="hover:text-white transition-colors">gerencia@lidessa.com</a>
+              <a href="mailto:administrativo@lidessa.com" className="hover:text-white transition-colors">administrativo@lidessa.com</a>
               <a href={`tel:${settings.phone.replace(/[^\d+]/g, '')}`} className="hover:text-white transition-colors">{settings.phone}</a>
             </div>
 
@@ -163,6 +162,8 @@ export default function Footer() {
             <div className="text-center mt-6">
               <p className="text-xs" style={{ color: '#5f7690' }}>
                 © {new Date().getFullYear()} Lidessa. Todos los derechos reservados.
+                {' · '}
+                <Link to="/privacidad" className="hover:text-white transition-colors">Aviso de privacidad</Link>
               </p>
               <button onClick={scrollTop} title="Volver arriba"
                 className="mt-3 w-9 h-9 rounded-full flex items-center justify-center mx-auto transition-all hover:scale-110"

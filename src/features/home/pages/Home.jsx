@@ -411,7 +411,7 @@ export default function Home() {
               {[
                 { icon: MapPin, text: 'Cra. 71 #46-28, Laureles, Medellín, Antioquia' },
                 { icon: Phone, text: '+57 333 237 1006', href: 'https://wa.me/573332371006' },
-                { icon: Mail, text: 'info@lidessa.co', href: 'mailto:info@lidessa.co' },
+                { icon: Mail, text: 'administrativo@lidessa.com', href: 'mailto:administrativo@lidessa.com' },
               ].map(c => (
                 <li key={c.text}>
                   {c.href

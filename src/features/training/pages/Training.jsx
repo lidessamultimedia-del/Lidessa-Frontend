@@ -3,12 +3,8 @@ import { useLMS } from '@/features/lms/context/LMSContext'
 import CourseModal from '../components/CourseModal'
 import { useScrollReveal } from '@/shared/hooks/useScrollReveal'
 import ComingSoon from '@/shared/components/ComingSoon'
+import { COURSES_ENABLED } from '@/shared/lib/features'
 import { GraduationCap, ShieldCheck, Monitor, MessageCircle } from '@/shared/components/Icons'
-
-// Los cursos todavía no están abiertos al público: mientras sea false se
-// muestra el bloque "Próximamente" en lugar de la grilla. La grilla y el
-// modal de detalle se conservan para reactivarlos cambiando solo esta bandera.
-const COURSES_ENABLED = false
 
 export default function Training() {
   const { publicCourses: courses } = useLMS()

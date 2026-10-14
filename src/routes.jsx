@@ -11,10 +11,13 @@ import ClientStore from '@/features/supplies/pages/ClientStore'
 import Training from '@/features/training/pages/Training'
 import ServicesOverview from '@/features/services/pages/ServicesOverview'
 import ServicePage from '@/features/services/pages/ServicePage'
+import PrivacyPolicy from '@/features/about/pages/PrivacyPolicy'
+import NotFound from '@/shared/components/NotFound'
 import Login from '@/features/auth/pages/Login'
 import Register from '@/features/auth/pages/Register'
 import ForgotPassword from '@/features/auth/pages/ForgotPassword'
 import { useAuth } from '@/features/auth/context/AuthContext'
+import { COURSES_ENABLED, CATALOG_ENABLED, LOGIN_ENABLED } from '@/shared/lib/features'
 
 // Los paneles de admin y LMS son la parte más pesada del bundle y solo los
 // usan usuarios autenticados con esos roles — se cargan aparte para que un
@@ -45,6 +48,8 @@ function PublicLayout({ theme, setTheme }) {
           <Route path="/formacion" element={<Training />} />
           <Route path="/servicios" element={<ServicesOverview />} />
           <Route path="/servicios/:slug" element={<ServicePage />} />
+          <Route path="/privacidad" element={<PrivacyPolicy />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
       <Footer />
@@ -53,9 +58,15 @@ function PublicLayout({ theme, setTheme }) {
   )
 }
 
-function ProtectedRoute({ roles, children }) {
+// `enabled`: mientras Cursos/Suministros no estén abiertos al público, la
+// ruta redirige a inicio sin importar si hay una sesión válida — así nadie
+// llega al panel real de estudiante/cliente mientras esa parte del sitio
+// sigue en "Próximamente". LOGIN_ENABLED corta todos los paneles por igual
+// (incluido admin/profesor) mientras el sitio es solo visual.
+function ProtectedRoute({ roles, enabled = true, children }) {
   const { user, initialized } = useAuth()
   if (!initialized) return null
+  if (!LOGIN_ENABLED || !enabled) return <Navigate to="/" replace />
   if (!user || !roles.includes(user.role)) return <Navigate to="/" replace />
   return <>{children}</>
 }
@@ -104,14 +115,14 @@ export default function AppRoutes() {
         </ProtectedRoute>
       } />
       <Route path="/estudiante" element={
-        <ProtectedRoute roles={['estudiante']}>
+        <ProtectedRoute roles={['estudiante']} enabled={COURSES_ENABLED}>
           <Suspense fallback={<PanelLoading />}>
             <StudentDashboard theme={theme} setTheme={setTheme} />
           </Suspense>
         </ProtectedRoute>
       } />
       <Route path="/tienda/cliente" element={
-        <ProtectedRoute roles={['cliente']}>
+        <ProtectedRoute roles={['cliente']} enabled={CATALOG_ENABLED}>
           <ClientStore theme={theme} setTheme={setTheme} />
         </ProtectedRoute>
       } />

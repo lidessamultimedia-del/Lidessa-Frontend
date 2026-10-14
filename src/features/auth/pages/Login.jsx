@@ -4,10 +4,24 @@ import { useAuth, ROLE_HOME } from '../context/AuthContext'
 import { useToast } from '@/shared/context/ToastContext'
 import FormField, { errorInputStyle } from '@/shared/components/FormField'
 import { Eye, EyeOff } from '@/shared/components/Icons'
+import { LOGIN_ENABLED } from '@/shared/lib/features'
+import AuthComingSoon from '../components/AuthComingSoon'
 
 const EMAIL_RE = /^\S+@\S+\.\S+$/
 
 export default function Login() {
+  if (!LOGIN_ENABLED) {
+    return (
+      <AuthComingSoon
+        title="El acceso abre muy pronto"
+        message="Estamos terminando de preparar la plataforma. Mientras tanto, escríbanos por WhatsApp y con gusto le ayudamos."
+      />
+    )
+  }
+  return <LoginForm />
+}
+
+function LoginForm() {
   const [form, setForm] = useState({ email: '', password: '' })
   const [fieldErrors, setFieldErrors] = useState({})
   const [error, setError] = useState('')

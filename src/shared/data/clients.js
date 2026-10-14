@@ -1,7 +1,7 @@
 export const clients = [
   { name: 'La Pampa', logo: '/assets/pampa.png' },
   { name: 'CEET', logo: '/assets/ceet.png' },
-  { name: 'Converge', logo: '/assets/Converge.png' },
+  { name: 'Converge', logo: '/assets/logo_converge.png' },
   { name: 'Oxi Vital', logo: '/assets/oxivital.png' },
   { name: 'Reno', logo: '/assets/reno.png' },
   { name: 'Dental Service', logo: '/assets/dental.png' },

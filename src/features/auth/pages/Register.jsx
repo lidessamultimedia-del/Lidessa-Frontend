@@ -4,11 +4,29 @@ import { useAuth, ROLE_HOME } from '../context/AuthContext'
 import { useLMS } from '@/features/lms/context/LMSContext'
 import { useToast } from '@/shared/context/ToastContext'
 import FormField, { errorInputStyle } from '@/shared/components/FormField'
+import { COURSES_ENABLED, CATALOG_ENABLED, LOGIN_ENABLED } from '@/shared/lib/features'
 import { Eye, EyeOff } from '@/shared/components/Icons'
+import AuthComingSoon from '../components/AuthComingSoon'
 
 const EMAIL_RE = /^\S+@\S+\.\S+$/
 
+// Mientras ni Cursos ni Suministros están abiertos al público (ni el login
+// en general, ver LOGIN_ENABLED), no tiene sentido dejar crear cuentas.
+const REGISTRATION_OPEN = LOGIN_ENABLED && (COURSES_ENABLED || CATALOG_ENABLED)
+
 export default function Register() {
+  if (!REGISTRATION_OPEN) {
+    return (
+      <AuthComingSoon
+        title="La creación de cuentas abre muy pronto"
+        message="Estamos terminando de preparar el portal del estudiante y la tienda de V2 Suministros. Mientras tanto, escríbanos por WhatsApp y con gusto le ayudamos."
+      />
+    )
+  }
+  return <RegisterForm />
+}
+
+function RegisterForm() {
   const [searchParams] = useSearchParams()
   const lms = useLMS()
   const courses = lms.publicCourses

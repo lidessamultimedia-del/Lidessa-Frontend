@@ -2719,7 +2719,7 @@ export default function AdminDashboard({ theme, setTheme }) {
                     <form onSubmit={handleSettingsSave} className="space-y-4">
                       {[
                         { key: 'phone', label: 'Teléfono principal', placeholder: '+57 300 123 4567' },
-                        { key: 'email', label: 'Correo de contacto', placeholder: 'info@lidessa.co' },
+                        { key: 'email', label: 'Correo de contacto', placeholder: 'administrativo@lidessa.com' },
                         { key: 'address', label: 'Dirección', placeholder: 'Calle 100 # 19-61, Bogotá D.C.' },
                         { key: 'schedule', label: 'Horario de atención', placeholder: 'Lunes a viernes: 7:30 am – 5:30 pm' },
                       ].map(f => (

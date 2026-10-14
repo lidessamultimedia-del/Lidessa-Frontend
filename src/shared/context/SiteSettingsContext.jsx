@@ -6,7 +6,7 @@ const SiteSettingsContext = createContext(null)
 // panel, para que activarlo no cambie nada visible hasta que el admin edite.
 export const defaultSiteSettings = {
   phone: '+57 333 237 1006',
-  email: 'comercial@lidessa.co',
+  email: 'administrativo@lidessa.com',
   address: 'Cra. 71 #46-28, Laureles, Medellín, Antioquia',
   schedule: 'Lunes – Viernes: 7:00 a.m. – 4:30 p.m.',
 }

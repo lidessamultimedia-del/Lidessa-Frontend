@@ -418,20 +418,20 @@ export default function About() {
                     >
                       <span className="inline-flex items-center gap-1.5"><MessageCircle size={15} /> WhatsApp</span>
                     </a>
-                    <a href="mailto:comercial@lidessa.co"
+                    <a href="mailto:administrativo@lidessa.com"
                       className="px-5 py-2.5 rounded-xl text-sm font-bold"
                       style={{ border: '2px solid var(--border)', color: 'var(--foreground)', transition: 'background-color 0.2s' }}
                       onMouseEnter={e => e.currentTarget.style.backgroundColor = 'var(--muted)'}
                       onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
-                      <span className="inline-flex items-center gap-1.5"><Mail size={15} /> comercial@lidessa.co</span>
+                      <span className="inline-flex items-center gap-1.5"><Mail size={15} /> administrativo@lidessa.com</span>
                     </a>
                   </div>
                 </div>
                 <ul className="space-y-3 text-sm" style={{ color: bodyText }}>
                   <li className="flex items-start gap-2"><MapPin size={15} className="shrink-0 mt-0.5" /> Cra. 71 #46-28, Laureles, Medellín, Antioquia</li>
                   <li className="flex items-start gap-2"><Phone size={15} className="shrink-0 mt-0.5" /> +57 333 237 1006</li>
-                  <li className="flex items-start gap-2"><Mail size={15} className="shrink-0 mt-0.5" /> comercial@lidessa.co</li>
+                  <li className="flex items-start gap-2"><Mail size={15} className="shrink-0 mt-0.5" /> administrativo@lidessa.com</li>
                 </ul>
               </div>
             )}
@@ -485,7 +485,7 @@ export default function About() {
               {[
                 { icon: MapPin, text: 'Cra. 71 #46-28, Laureles, Medellín, Antioquia' },
                 { icon: Phone, text: '+57 333 237 1006', href: 'https://wa.me/573332371006' },
-                { icon: Mail, text: 'comercial@lidessa.co', href: 'mailto:comercial@lidessa.co' },
+                { icon: Mail, text: 'administrativo@lidessa.com', href: 'mailto:administrativo@lidessa.com' },
               ].map(c => (
                 <li key={c.text}>
                   {c.href

@@ -17,7 +17,7 @@ import Login from '@/features/auth/pages/Login'
 import Register from '@/features/auth/pages/Register'
 import ForgotPassword from '@/features/auth/pages/ForgotPassword'
 import { useAuth } from '@/features/auth/context/AuthContext'
-import { COURSES_ENABLED, CATALOG_ENABLED } from '@/shared/lib/features'
+import { COURSES_ENABLED, CATALOG_ENABLED, LOGIN_ENABLED } from '@/shared/lib/features'
 
 // Los paneles de admin y LMS son la parte más pesada del bundle y solo los
 // usan usuarios autenticados con esos roles — se cargan aparte para que un
@@ -61,11 +61,12 @@ function PublicLayout({ theme, setTheme }) {
 // `enabled`: mientras Cursos/Suministros no estén abiertos al público, la
 // ruta redirige a inicio sin importar si hay una sesión válida — así nadie
 // llega al panel real de estudiante/cliente mientras esa parte del sitio
-// sigue en "Próximamente".
+// sigue en "Próximamente". LOGIN_ENABLED corta todos los paneles por igual
+// (incluido admin/profesor) mientras el sitio es solo visual.
 function ProtectedRoute({ roles, enabled = true, children }) {
   const { user, initialized } = useAuth()
   if (!initialized) return null
-  if (!enabled) return <Navigate to="/" replace />
+  if (!LOGIN_ENABLED || !enabled) return <Navigate to="/" replace />
   if (!user || !roles.includes(user.role)) return <Navigate to="/" replace />
   return <>{children}</>
 }

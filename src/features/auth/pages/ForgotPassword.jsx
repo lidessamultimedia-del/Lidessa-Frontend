@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '@/shared/context/ToastContext'
 import FormField, { errorInputStyle } from '@/shared/components/FormField'
+import { LOGIN_ENABLED } from '@/shared/lib/features'
+import AuthComingSoon from '../components/AuthComingSoon'
 
 const EMAIL_RE = /^\S+@\S+\.\S+$/
 const CODE_RE = /^\d{6}$/
@@ -23,6 +25,18 @@ const STEP_COPY = {
 }
 
 export default function ForgotPassword() {
+  if (!LOGIN_ENABLED) {
+    return (
+      <AuthComingSoon
+        title="El acceso abre muy pronto"
+        message="Estamos terminando de preparar la plataforma. Mientras tanto, escríbanos por WhatsApp y con gusto le ayudamos."
+      />
+    )
+  }
+  return <ForgotPasswordForm />
+}
+
+function ForgotPasswordForm() {
   const [step, setStep] = useState('email')
   const [email, setEmail] = useState('')
   const [code, setCode] = useState('')

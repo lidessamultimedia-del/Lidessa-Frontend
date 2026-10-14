@@ -6,3 +6,8 @@
 // por separado.
 export const COURSES_ENABLED = false
 export const CATALOG_ENABLED = false
+
+// El 16 de octubre el sitio se publica solo para que el cliente lo vea —
+// nadie, ni admin ni profesor, debe poder iniciar sesión ni manipular nada
+// todavía. Se activa junto con el despliegue completo de noviembre.
+export const LOGIN_ENABLED = false

@@ -4,51 +4,26 @@ import { useAuth, ROLE_HOME } from '../context/AuthContext'
 import { useLMS } from '@/features/lms/context/LMSContext'
 import { useToast } from '@/shared/context/ToastContext'
 import FormField, { errorInputStyle } from '@/shared/components/FormField'
-import { COURSES_ENABLED, CATALOG_ENABLED } from '@/shared/lib/features'
+import { COURSES_ENABLED, CATALOG_ENABLED, LOGIN_ENABLED } from '@/shared/lib/features'
 import { Eye, EyeOff } from '@/shared/components/Icons'
+import AuthComingSoon from '../components/AuthComingSoon'
 
 const EMAIL_RE = /^\S+@\S+\.\S+$/
 
-// Mientras ni Cursos ni Suministros están abiertos al público, no tiene
-// sentido dejar crear cuentas de estudiante o cliente — ver RegisterComingSoon.
-const REGISTRATION_OPEN = COURSES_ENABLED || CATALOG_ENABLED
+// Mientras ni Cursos ni Suministros están abiertos al público (ni el login
+// en general, ver LOGIN_ENABLED), no tiene sentido dejar crear cuentas.
+const REGISTRATION_OPEN = LOGIN_ENABLED && (COURSES_ENABLED || CATALOG_ENABLED)
 
 export default function Register() {
-  if (!REGISTRATION_OPEN) return <RegisterComingSoon />
+  if (!REGISTRATION_OPEN) {
+    return (
+      <AuthComingSoon
+        title="La creación de cuentas abre muy pronto"
+        message="Estamos terminando de preparar el portal del estudiante y la tienda de V2 Suministros. Mientras tanto, escríbanos por WhatsApp y con gusto le ayudamos."
+      />
+    )
+  }
   return <RegisterForm />
-}
-
-function RegisterComingSoon() {
-  return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-10" style={{ backgroundColor: 'var(--background)' }}>
-      <div className="w-full max-w-md text-center">
-        <Link to="/" className="inline-flex items-center gap-2 mb-8">
-          <img src="/assets/logolidessa.png" alt="Lidessa" style={{ width: 34, height: 34, objectFit: 'contain' }} />
-          <span className="text-xl font-black" style={{ fontFamily: 'var(--font-display)', color: 'var(--primary)' }}>
-            Lide<span style={{ color: '#4d82bc' }}>ssa</span>
-          </span>
-        </Link>
-        <h1 className="text-2xl font-black mb-3" style={{ fontFamily: 'var(--font-display)', color: 'var(--foreground)' }}>
-          La creación de cuentas abre muy pronto
-        </h1>
-        <p className="text-sm leading-relaxed mb-8" style={{ color: 'var(--muted-foreground)' }}>
-          Estamos terminando de preparar el portal del estudiante y la tienda de V2 Suministros. Mientras tanto,
-          escríbanos por WhatsApp y con gusto le ayudamos.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <a href="https://wa.me/573332371006?text=Hola, quisiera más información" target="_blank" rel="noreferrer"
-            className="px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-opacity hover:opacity-90"
-            style={{ backgroundColor: '#25D366' }}>
-            Escribirnos por WhatsApp
-          </a>
-          <Link to="/" className="px-5 py-2.5 rounded-xl text-sm font-bold transition-colors"
-            style={{ border: '2px solid var(--border)', color: 'var(--foreground)' }}>
-            Volver al inicio
-          </Link>
-        </div>
-      </div>
-    </div>
-  )
 }
 
 function RegisterForm() {

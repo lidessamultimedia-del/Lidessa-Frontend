@@ -7,13 +7,8 @@ import { useAuth } from '@/features/auth/context/AuthContext'
 import { useScrollReveal } from '@/shared/hooks/useScrollReveal'
 import { formatAmountInput, parseAmountInput } from '@/shared/lib/money'
 import ComingSoon from '@/shared/components/ComingSoon'
+import { CATALOG_ENABLED } from '@/shared/lib/features'
 import { ShoppingCart, Plus, Minus, Trash, Check, ImageIcon, Package, ShieldCheck, MessageCircle } from '@/shared/components/Icons'
-
-// El catálogo público todavía no está disponible: mientras sea false se
-// muestra el bloque "Próximamente" en su lugar. Toda la lógica del catálogo
-// (filtros, carrito, checkout) se conserva intacta para reactivarlo
-// cambiando solo esta bandera.
-const CATALOG_ENABLED = false
 
 function formatCOP(value) {
   return value.toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })

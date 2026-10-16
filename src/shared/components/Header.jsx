@@ -400,13 +400,14 @@ export default function Header({ theme, setTheme }) {
               left: 0,
               right: 0,
               borderRadius: 20,
-              overflow: 'hidden',
+              overflowY: 'auto',
+              overflowX: 'hidden',
               backgroundColor: `color-mix(in srgb, var(--card) 96%, transparent)`,
               backdropFilter: 'blur(18px)',
               WebkitBackdropFilter: 'blur(18px)',
               border: '1px solid var(--border)',
               boxShadow: '0 20px 50px rgba(0,81,135,0.18)',
-              maxHeight: mobileOpen ? '600px' : '0',
+              maxHeight: mobileOpen ? 'min(600px, calc(100vh - 100px))' : '0',
               opacity: mobileOpen ? 1 : 0,
               transition: 'max-height 0.35s ease, opacity 0.25s ease',
               zIndex: 40,
@@ -442,7 +443,7 @@ export default function Header({ theme, setTheme }) {
               </svg>
             </button>
 
-            <div style={{ maxHeight: mobileServicesOpen ? '600px' : '0', overflow: 'hidden', transition: 'max-height 0.3s ease' }}>
+            <div style={{ maxHeight: mobileServicesOpen ? '2000px' : '0', overflow: 'hidden', transition: 'max-height 0.3s ease' }}>
               <div className="pl-3 pb-2">
                 <Link to="/servicios" className="block py-1.5 pt-3 text-sm font-bold" style={{ color: 'var(--primary)' }}>
                   Ver todos los servicios →

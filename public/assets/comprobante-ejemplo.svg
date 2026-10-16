@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="520" viewBox="0 0 360 520" font-family="Arial, Helvetica, sans-serif">
+  <rect width="360" height="520" rx="16" fill="#ffffff"/>
+  <rect width="360" height="90" rx="16" fill="#005187"/>
+  <rect y="70" width="360" height="20" fill="#005187"/>
+  <text x="180" y="42" fill="#ffffff" font-size="18" font-weight="bold" text-anchor="middle">Comprobante de pago</text>
+  <text x="180" y="66" fill="#c4dafa" font-size="12" text-anchor="middle">EJEMPLO · Transferencia bancaria</text>
+  <circle cx="180" cy="140" r="26" fill="#16a34a"/>
+  <path d="M168 140 l8 8 l16 -16" stroke="#ffffff" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="180" y="196" fill="#16a34a" font-size="14" font-weight="bold" text-anchor="middle">Transacción exitosa</text>
+  <text x="180" y="240" fill="#071426" font-size="30" font-weight="bold" text-anchor="middle">$ 425.000</text>
+  <line x1="30" y1="270" x2="330" y2="270" stroke="#e2e8f0" stroke-dasharray="4 4"/>
+  <g font-size="13">
+    <text x="30" y="300" fill="#64748b">Pagado por</text>
+    <text x="330" y="300" fill="#071426" text-anchor="end">Constructora Andina S.A.S.</text>
+    <text x="30" y="330" fill="#64748b">Destino</text>
+    <text x="330" y="330" fill="#071426" text-anchor="end">Lidessa · Cta. Ahorros ****4821</text>
+    <text x="30" y="360" fill="#64748b">Referencia</text>
+    <text x="330" y="360" fill="#071426" text-anchor="end">TRX-20481937</text>
+    <text x="30" y="390" fill="#64748b">Concepto</text>
+    <text x="330" y="390" fill="#071426" text-anchor="end">Pedido V2 Suministros</text>
+  </g>
+  <line x1="30" y1="420" x2="330" y2="420" stroke="#e2e8f0" stroke-dasharray="4 4"/>
+  <text x="180" y="460" fill="#94a3b8" font-size="11" text-anchor="middle">Documento de ejemplo para la demo.</text>
+  <text x="180" y="478" fill="#94a3b8" font-size="11" text-anchor="middle">No corresponde a una transacción real.</text>
+</svg>

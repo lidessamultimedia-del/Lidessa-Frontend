@@ -7,7 +7,7 @@ import { useToast } from '@/shared/context/ToastContext'
 import { BACKEND_LIVE } from '@/shared/lib/features'
 
 const whyChooseUs = [
-  'Más de 15 años de experiencia acompañando organizaciones en Colombia.',
+  'Más de 2 años de experiencia acompañando organizaciones en Colombia.',
   'Más de 280 clientes atendidos exitosamente en múltiples sectores.',
   'Reducción promedio del 35% en costos operativos de nuestros clientes.',
   'Hasta 90% de reducción en el riesgo de sanciones normativas.',
@@ -90,7 +90,7 @@ const acronym = [
 const differentials = [
   { label: 'Enfoque Personalizado', text: 'Trabajamos estrechamente con usted para entender sus necesidades y ofrecer soluciones a medida.' },
   { label: 'Equipo Multidisciplinario', text: 'Contamos con expertos en diversas áreas para brindarle un servicio integral.' },
-  { label: 'Experiencia Comprobada', text: 'Más de 15 años de experiencia respaldan nuestra calidad y excelencia.' },
+  { label: 'Experiencia Comprobada', text: 'Más de 2 años de experiencia respaldan nuestra calidad y excelencia.' },
   { label: 'Reducción de Costos', text: 'Nuestras soluciones eficientes pueden ayudarle a ahorrar recursos.' },
   { label: 'Compromiso con la Excelencia', text: 'Nuestra misión es superar sus expectativas y garantizar su satisfacción.' },
   { label: 'Cercanía', text: 'Nos destacamos por trabajar por y para nuestros clientes. Sabemos que el empleado es fundamental para una empresa; entendemos que un buen apoyo a la administración hace la diferencia en el correcto manejo de una organización.' },
@@ -193,7 +193,7 @@ export default function About() {
             <span style={{ color: '#e8c766' }}>resultados que transforman</span>
           </h1>
           <p className="text-lg mx-auto reveal stagger-2" style={{ color: '#cbb98a', fontFamily: 'var(--font-display)' }}>
-            15 años ayudando a empresas e instituciones colombianas a cumplir la norma y alcanzar la excelencia organizacional.
+            Más de 2 años ayudando a empresas e instituciones colombianas a cumplir la norma y alcanzar la excelencia organizacional.
           </p>
         </div>
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 50, overflow: 'hidden' }}>
@@ -300,7 +300,7 @@ export default function About() {
                   <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: '#4d82bc' }}>Nuestra historia</p>
                   <h3 className="text-2xl font-black mb-4" style={{ fontFamily: 'var(--font-display)' }}>¿Quiénes somos?</h3>
                   <p className="text-sm leading-relaxed mb-4" style={{ color: bodyText }}>
-                    En Lidessa, no somos simplemente una empresa; nos consideramos un verdadero aliado estratégico en su camino hacia el éxito empresarial. Con más de 15 años de experiencia en el mercado, nuestro compromiso con la excelencia y la innovación nos ha permitido desarrollar una profunda comprensión de las necesidades empresariales y de los desafíos del mercado actual.
+                    En Lidessa, no somos simplemente una empresa; nos consideramos un verdadero aliado estratégico en su camino hacia el éxito empresarial. Con más de 2 años de experiencia en el mercado, nuestro compromiso con la excelencia y la innovación nos ha permitido desarrollar una profunda comprensión de las necesidades empresariales y de los desafíos del mercado actual.
                   </p>
                   <p className="text-sm leading-relaxed mb-4" style={{ color: bodyText }}>
                     Desde nuestros inicios, hemos trabajado incansablemente para ofrecer soluciones integrales que no solo impulsan el crecimiento y la eficiencia de las empresas, sino que también aseguran la conformidad con las normativas vigentes. Nuestra amplia gama de servicios está diseñada para atender a empresas de todos los tamaños y sectores, adaptándonos a sus necesidades específicas para proporcionar soluciones personalizadas que realmente marquen la diferencia.
@@ -331,7 +331,7 @@ export default function About() {
                 <div className="grid md:grid-cols-2 gap-10 items-start mb-12">
                   <div>
                     <p className="text-sm leading-relaxed mb-4" style={{ color: bodyText }}>
-                      Lidessa, con más de 15 años de experiencia en procesos de consultoría de gestión, ha acompañado a más de 350 empresarios a nivel nacional en la gestión del cumplimiento normativo. Con un amplio portafolio empresarial, llegamos a nuestros usuarios con beneficios integradores que les permiten efectividad y eficiencia en el alcance de sus objetivos.
+                      Lidessa, con más de 2 años de experiencia en procesos de consultoría de gestión, ha acompañado a más de 350 empresarios a nivel nacional en la gestión del cumplimiento normativo. Con un amplio portafolio empresarial, llegamos a nuestros usuarios con beneficios integradores que les permiten efectividad y eficiencia en el alcance de sus objetivos.
                     </p>
                     <p className="text-sm leading-relaxed mb-4" style={{ color: bodyText }}>
                       Para facilitarle al empresario el acceso a recurso humano de alta calidad, nuestros servicios son desarrollados y orientados bajo un modelo de gestión potencializador interno.
@@ -342,7 +342,7 @@ export default function About() {
                   </div>
                   <div className="md:border-l md:pl-10" style={{ borderColor: 'var(--border)' }}>
                     <div className="space-y-3">
-                      <CheckItem>Más de 15 años de experiencia en consultoría de gestión.</CheckItem>
+                      <CheckItem>Más de 2 años de experiencia en consultoría de gestión.</CheckItem>
                       <CheckItem>Más de 350 empresarios acompañados a nivel nacional.</CheckItem>
                       <CheckItem>Hasta 70% de reducción en costos de recurso humano.</CheckItem>
                       <CheckItem>Hasta 89% de reducción en el riesgo de sanción.</CheckItem>
@@ -394,7 +394,7 @@ export default function About() {
                 </div>
 
                 <p className="text-sm leading-relaxed text-center max-w-2xl mx-auto mt-8" style={{ color: bodyText }}>
-                  Más de 15 años de experiencia respaldan nuestro compromiso con la excelencia. Estamos aquí para acompañarlo en el logro de sus metas empresariales, trabajando incansablemente por la seguridad de nuestros clientes y ofreciendo soluciones sólidas y confiables. Contáctenos hoy mismo y sea parte de este camino hacia el crecimiento y la prosperidad empresarial.
+                  Más de 2 años de experiencia respaldan nuestro compromiso con la excelencia. Estamos aquí para acompañarlo en el logro de sus metas empresariales, trabajando incansablemente por la seguridad de nuestros clientes y ofreciendo soluciones sólidas y confiables. Contáctenos hoy mismo y sea parte de este camino hacia el crecimiento y la prosperidad empresarial.
                 </p>
 
                 <div className="max-w-2xl mx-auto mt-10 p-6 rounded-2xl" style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)' }}>

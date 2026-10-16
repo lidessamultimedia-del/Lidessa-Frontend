@@ -78,7 +78,7 @@ export default function Footer() {
                   Identificación general
                 </h4>
                 <p className="text-sm leading-relaxed">
-                  Más de <strong className="text-white">12 años</strong> acompañando a empresas e instituciones en el cumplimiento normativo, la excelencia organizacional y el desarrollo sostenible.
+                  Más de <strong className="text-white">2 años</strong> acompañando a empresas e instituciones en el cumplimiento normativo, la excelencia organizacional y el desarrollo sostenible.
                 </p>
               </div>
 

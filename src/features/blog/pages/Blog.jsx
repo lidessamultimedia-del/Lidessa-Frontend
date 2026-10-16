@@ -20,7 +20,7 @@ export default function Blog() {
           <div
             className="lg:col-span-3 rounded-3xl p-6 sm:p-8 flex flex-col justify-center reveal relative overflow-hidden"
             style={{
-              backgroundImage: 'url("/assets/converge1.png")',
+              backgroundImage: 'url("/assets/converge1.jpg")',
               backgroundSize: 'cover',
               backgroundPosition: 'center',
               border: '1px solid rgba(232,199,102,0.18)',

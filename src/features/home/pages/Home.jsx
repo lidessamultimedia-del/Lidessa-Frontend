@@ -15,12 +15,12 @@ const allies = allyNames.map(n => clients.find(c => c.name === n)).filter(Boolea
 const alliesLoop = [...allies, ...allies]
 
 const FEATURED_SERVICE_IMAGES = {
-  'seguridad-salud': '/assets/Inicio-destacados-sst.png',
-  'manejo-residuos': '/assets/PMIRS.png',
-  'evaluacion-docente': '/assets/PBR.png',
-  'proyecto-educativo': '/assets/disenoPEI.png',
-  'manuales-convivencia': '/assets/InstitucionesEducativasCarta.png',
-  'formacion-medida': '/assets/Capacitacion.png',
+  'seguridad-salud': '/assets/Inicio-destacados-sst.jpg',
+  'manejo-residuos': '/assets/PMIRS.jpg',
+  'evaluacion-docente': '/assets/PBR.jpg',
+  'proyecto-educativo': '/assets/disenoPEI.jpg',
+  'manuales-convivencia': '/assets/InstitucionesEducativasCarta.jpg',
+  'formacion-medida': '/assets/Capacitacion.jpg',
 }
 
 const pillarIcons = {

@@ -8,6 +8,7 @@ import ClientMarquee from '@/shared/components/ClientMarquee'
 import { useScrollReveal } from '@/shared/hooks/useScrollReveal'
 import { clients } from '@/shared/data/clients'
 import { MapPin, Phone, Mail, Check } from '@/shared/components/Icons'
+import { BACKEND_LIVE } from '@/shared/lib/features'
 
 const allyNames = ['Dental Service', 'Hydro Bombas', 'Converge', 'CEET', 'Ópticas Visión Éxito']
 const allies = allyNames.map(n => clients.find(c => c.name === n)).filter(Boolean)
@@ -339,8 +340,14 @@ export default function Home() {
             </Link>
           </div>
 
+          {!BACKEND_LIVE && (
+            <p className="text-center py-12 text-sm" style={{ color: 'var(--muted-foreground)' }}>
+              Estamos preparando esta sección. Vuelva pronto.
+            </p>
+          )}
+
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {blogPosts.slice(0, 3).map((post, i) => (
+            {BACKEND_LIVE && blogPosts.slice(0, 3).map((post, i) => (
               <div key={post.id} className={`flip-card h-95 reveal-scale stagger-${i + 1}`}>
                 <div className="flip-card-inner">
                   {/* Front — image poster */}

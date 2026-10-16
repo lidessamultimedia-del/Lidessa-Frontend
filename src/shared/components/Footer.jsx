@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import PQRSFModal from './PQRSFModal'
 import { MessageCircle, LinkIcon } from './Icons'
 import { useSiteSettings } from '@/shared/context/SiteSettingsContext'
+import { useToast } from '@/shared/context/ToastContext'
+import { BACKEND_LIVE } from '@/shared/lib/features'
 
 const icons = {
   facebook: 'M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036 26.805 26.805 0 0 0-.733-.009c-.707 0-1.259.096-1.675.309a1.686 1.686 0 0 0-.679.622c-.258.42-.374.995-.374 1.752v1.297h3.919l-.386 1.913-.287 1.754h-3.246v7.98H9.101Z',
@@ -24,6 +26,12 @@ function Icon({ path }) {
 export default function Footer() {
   const [pqrsfOpen, setPqrsfOpen] = useState(false)
   const { settings } = useSiteSettings()
+  const { toast } = useToast()
+
+  const openPqrsf = () => {
+    if (!BACKEND_LIVE) { toast('info', 'Disponible muy pronto', 'El formulario de PQRSF estará activo en la próxima etapa del sitio.'); return }
+    setPqrsfOpen(true)
+  }
 
   const socialLinks = [
     { label: 'Facebook', icon: icons.facebook, href: 'https://www.facebook.com/lidessa.co' },
@@ -123,7 +131,7 @@ export default function Footer() {
                   <li><Link to="/blog" className="hover:text-white transition-colors">Converge</Link></li>
                   <li><Link to="/formacion" className="hover:text-white transition-colors">CEET</Link></li>
                   <li>
-                    <button onClick={() => setPqrsfOpen(true)} className="hover:text-white transition-colors">
+                    <button onClick={openPqrsf} className="hover:text-white transition-colors">
                       Formulario PQRSF
                     </button>
                   </li>
@@ -149,7 +157,7 @@ export default function Footer() {
             </div>
 
             <div className="text-center mt-6">
-              <button onClick={() => setPqrsfOpen(true)}
+              <button onClick={openPqrsf}
                 className="text-sm font-bold uppercase tracking-wider transition-colors"
                 style={{ color: '#84b6f4' }}
                 onMouseEnter={e => e.currentTarget.style.color = '#c4dafa'}

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useBlog } from '../context/BlogContext'
 import BlogModal from '../components/BlogModal'
 import { useScrollReveal } from '@/shared/hooks/useScrollReveal'
+import { BACKEND_LIVE } from '@/shared/lib/features'
 
 const GOLD = '#e8c766'
 
@@ -159,8 +160,10 @@ export default function Blog() {
           ))}
         </div>
         {blogPosts.length === 0 && (
-          <p className="text-center py-12 text-sm" style={{ color: error ? '#dc2626' : 'var(--muted-foreground)' }}>
-            {loading ? 'Cargando publicaciones…' : error ? `No se pudieron cargar las publicaciones. ${error}` : 'No hay publicaciones todavía.'}
+          <p className="text-center py-12 text-sm" style={{ color: !BACKEND_LIVE ? 'var(--muted-foreground)' : error ? '#dc2626' : 'var(--muted-foreground)' }}>
+            {!BACKEND_LIVE
+              ? 'Estamos preparando esta sección. Vuelva pronto.'
+              : loading ? 'Cargando publicaciones…' : error ? `No se pudieron cargar las publicaciones. ${error}` : 'No hay publicaciones todavía.'}
           </p>
         )}
       </section>

@@ -3,6 +3,8 @@ import { useScrollReveal } from '@/shared/hooks/useScrollReveal'
 import { useIsDarkTheme } from '@/shared/hooks/useIsDarkTheme'
 import PQRSFModal from '@/shared/components/PQRSFModal'
 import { MessageCircle, Mail, MapPin, Phone, Check } from '@/shared/components/Icons'
+import { useToast } from '@/shared/context/ToastContext'
+import { BACKEND_LIVE } from '@/shared/lib/features'
 
 const whyChooseUs = [
   'Más de 15 años de experiencia acompañando organizaciones en Colombia.',
@@ -104,6 +106,11 @@ export default function About() {
   const bodyText = isDark ? '#e4e4e7' : '#2a2a2a'
   const [infoTab, setInfoTab] = useState('quienes')
   const [pqrsfOpen, setPqrsfOpen] = useState(false)
+  const { toast } = useToast()
+  const openPqrsf = () => {
+    if (!BACKEND_LIVE) { toast('info', 'Disponible muy pronto', 'El formulario de PQRSF estará activo en la próxima etapa del sitio.'); return }
+    setPqrsfOpen(true)
+  }
   const [tabIndicator, setTabIndicator] = useState({ left: 0, width: 0, opacity: 0 })
   const [hoveredTab, setHoveredTab] = useState(null)
   const tabNavRef = useRef(null)
@@ -461,7 +468,7 @@ export default function About() {
             Contáctenos, o envíenos su comentario aquí
           </p>
           <button
-            onClick={() => setPqrsfOpen(true)}
+            onClick={openPqrsf}
             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-bold"
             style={{ backgroundColor: '#e6b93d', color: '#1a1a1a', transition: 'opacity 0.2s' }}
             onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}

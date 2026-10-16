@@ -34,8 +34,8 @@ export default function Footer() {
   }
 
   const socialLinks = [
-    { label: 'Facebook', icon: icons.facebook, href: 'https://www.facebook.com/lidessa.co' },
-    { label: 'Instagram', icon: icons.instagram, href: 'https://www.instagram.com/lidessa.co' },
+    { label: 'Facebook', icon: icons.facebook, href: 'https://www.facebook.com/share/1LgHqsaw6c/' },
+    { label: 'Instagram', icon: icons.instagram, href: 'https://www.instagram.com/lidessa__?exln=aWNpbHc1enkwNnVx' },
     { label: 'YouTube', icon: icons.youtube, href: 'https://www.youtube.com/channel/UCoHXkPDBTLhk3LuOCxaPNlA' },
   ]
 

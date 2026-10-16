@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { useAuth } from '@/features/auth/context/AuthContext'
 import { apiGetBlogPosts, apiCreateBlogPost, apiUpdateBlogPost, apiDeleteBlogPost, toFileUrl } from '@/shared/lib/api'
+import { BACKEND_LIVE } from '@/shared/lib/features'
 
 const BlogContext = createContext(null)
 
@@ -48,10 +49,11 @@ function toApiPayload(form) {
 export function BlogProvider({ children }) {
   const { user } = useAuth()
   const [posts, setPosts] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(BACKEND_LIVE)
   const [error, setError] = useState('')
 
   useEffect(() => {
+    if (!BACKEND_LIVE) return
     let cancelled = false
     apiGetBlogPosts()
       .then(data => {

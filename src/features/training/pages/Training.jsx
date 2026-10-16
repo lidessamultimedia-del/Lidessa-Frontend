@@ -19,7 +19,7 @@ export default function Training() {
       <section
         className="py-20 relative"
         style={{
-          backgroundImage: 'url("/assets/portadaceet.png")',
+          backgroundImage: 'url("/assets/portadaceet.jpg")',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         }}

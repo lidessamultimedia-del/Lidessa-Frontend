@@ -5,23 +5,23 @@ import { useScrollReveal } from '@/shared/hooks/useScrollReveal'
 
 const categoryMeta = [
   {
-    image: '/assets/GestionEmpresas.png',
+    image: '/assets/GestionEmpresas.jpg',
     summary: 'Ofrecemos soluciones integrales para optimizar la administración y operación de su empresa, enfocándonos en el desarrollo estratégico, eficiencia operativa y cumplimiento normativo para impulsar el crecimiento sostenible y el éxito empresarial.',
   },
   {
-    image: '/assets/gestionIE.png',
+    image: '/assets/gestionIE.jpg',
     summary: 'Ofrecemos un servicio integral para optimizar la administración de instituciones educativas, incluyendo la creación de manuales de convivencia, el diseño de Proyectos Educativos Institucionales (PEI), y el desarrollo de mallas curriculares, asegurando un entorno educativo organizado, eficiente y alineado con los estándares de calidad.',
   },
   {
-    image: '/assets/formacion.png',
+    image: '/assets/formacion.jpg',
     summary: 'Proveemos capacitación especializada en diversas áreas empresariales, incluyendo Sistemas de Gestión de Seguridad y Salud en el Trabajo (SG-SST), Bases de Datos, Plan de Manejo Integral de Residuos Sólidos (PMIRS), Mallas Curriculares, y más. Nuestro servicio está diseñado para asegurar que tanto empleados como directivos estén plenamente capacitados en normativas, procedimientos y buenas prácticas, garantizando un entorno laboral eficiente y seguro en todo tipo de empresas, incluyendo propiedades horizontales e instituciones educativas.',
   },
   {
-    image: '/assets/ph1.png',
+    image: '/assets/ph1.jpg',
     summary: 'En el ámbito de la administración de Propiedades Horizontales (PH), asegurar el funcionamiento óptimo y la seguridad de las instalaciones es crucial para la satisfacción de los propietarios y la operatividad general del complejo. Una adecuada gestión de las PH requiere la implementación de una serie de servicios y normativas esenciales para garantizar un entorno seguro, conforme a las regulaciones y eficiente en su funcionamiento.',
   },
   {
-    image: '/assets/SG-SST.png',
+    image: '/assets/SG-SST.jpg',
     summary: 'En Lidessa, nos comprometemos a ofrecer servicios de supervisión e interventoría de alta calidad, alineados con las normativas legales vigentes y las mejores prácticas en gestión de proyectos. Este servicio está diseñado para garantizar el cumplimiento de los objetivos de los contratos, supervisando cada etapa del proyecto con el fin de asegurar eficiencia, calidad, y sostenibilidad.',
   },
 ]
@@ -35,7 +35,7 @@ export default function ServicesOverview() {
   const categories = categoryList.map((c, i) => ({
     label: c.name,
     active: c.active,
-    image: categoryMeta[i]?.image ?? '/assets/GestionEmpresas.png',
+    image: categoryMeta[i]?.image ?? '/assets/GestionEmpresas.jpg',
     summary: categoryMeta[i]?.summary ?? `Servicios de la categoría ${c.name}.`,
     items: services.filter(s => s.category === c.name && s.active !== false),
   })).filter(cat => cat.active !== false && cat.items.length > 0)

@@ -66,7 +66,7 @@ export const seedCourses = [
     format: 'topics', completionTrackingEnabled: true,
     requiresPassword: false, password: '', selfEnrollment: false, guestAccess: false,
     capacity: 100, color: '#7c3aed',
-    listed: true, image: '/assets/fundadores.png', duration: '40 horas', modality: 'Virtual', certified: false,
+    listed: true, image: '/assets/fundadores.jpg', duration: '40 horas', modality: 'Virtual', certified: false,
   },
   {
     id: 'c3', name: 'SG-SST Básico 50 Horas', shortName: 'SST-003',
@@ -89,7 +89,7 @@ export const seedCourses = [
     format: 'topics', completionTrackingEnabled: true,
     requiresPassword: false, password: '', selfEnrollment: true, guestAccess: false,
     capacity: 100, color: '#005187',
-    listed: true, image: '/assets/Auditoria.png', duration: '40 horas', modality: 'Virtual', certified: true,
+    listed: true, image: '/assets/Auditoria.jpg', duration: '40 horas', modality: 'Virtual', certified: true,
     intro: '¿Le gustaría convertirse en un auditor interno experto? Este curso le brinda las competencias necesarias para evaluar y mejorar sistemas de gestión HSEQ. Descubra cómo aplicar las Normas ISO y realizar auditorías que impulsen el crecimiento sostenible de su organización. A lo largo del curso, descubrirá cómo interpretar y aplicar las Normas ISO más relevantes para asegurar el cumplimiento normativo y la eficiencia operativa. Aprenderá a leer y analizar normas técnicas colombianas y sectoriales, y se sumergirá en las reglas que todo auditor interno debe dominar para realizar evaluaciones efectivas y confiables. Todo esto mientras fortalece sus habilidades para identificar áreas de mejora y proponer soluciones estratégicas.',
     objectives: [
       'Dominar los fundamentos de las Normas ISO (9001, 14001, 45001).',
@@ -115,7 +115,7 @@ export const seedCourses = [
     format: 'topics', completionTrackingEnabled: true,
     requiresPassword: false, password: '', selfEnrollment: true, guestAccess: false,
     capacity: 100, color: '#d97706',
-    listed: true, image: '/assets/sst.png', duration: '40 horas', modality: 'Virtual', certified: true,
+    listed: true, image: '/assets/sst.jpg', duration: '40 horas', modality: 'Virtual', certified: true,
     intro: '¿Le interesa optimizar la seguridad y salud de su equipo de trabajo? Este curso está diseñado para brindarle las herramientas necesarias para realizar procesos efectivos de inducción y reinducción en el marco del SG-SST. Con un enfoque práctico y basado en normativas vigentes, aprenderá a identificar peligros, gestionar riesgos y fomentar una cultura de prevención en su organización. También desarrollará competencias clave para promover el bienestar físico y mental de los trabajadores, alineando las políticas y responsabilidades del SG-SST con las mejores prácticas internacionales.',
     objectives: [
       'Entender los fundamentos del SG-SST y sus principios fundamentales.',
@@ -143,7 +143,7 @@ export const seedCourses = [
     format: 'topics', completionTrackingEnabled: true,
     requiresPassword: false, password: '', selfEnrollment: true, guestAccess: false,
     capacity: 100, color: '#7c3aed',
-    listed: true, image: '/assets/fundadores.png', duration: '40 horas', modality: 'Virtual', certified: true,
+    listed: true, image: '/assets/fundadores.jpg', duration: '40 horas', modality: 'Virtual', certified: true,
     intro: 'Este curso le brinda las competencias necesarias para liderar procesos educativos innovadores y efectivos. Con una sólida base en pedagogía, andragogía y educación disruptiva, será capaz de diseñar programas formativos adaptados a las necesidades de los adultos, empleando metodologías modernas y herramientas tecnológicas avanzadas.',
     objectives: [
       'Comprender las diferencias y aplicaciones de pedagogía, andragogía y pedagogía para adultos.',
@@ -164,16 +164,16 @@ export const seedCourses = [
   },
   // ── Cursos de ejemplo adicionales (para probar búsquedas y paginación) ──
   ...[
-    ['c7', 'Trabajo seguro en alturas — nivel avanzado', 'SST', 't3', ['s5', 's6', 's7', 's8'], '/assets/SG-SST.png', '#d97706', true],
-    ['c8', 'Plan de Manejo Integral de Residuos Sólidos', 'Ambiental', 't4', ['s9', 's10', 's11'], '/assets/PMIRS.png', '#16a34a', true],
-    ['c9', 'Primeros auxilios en el entorno laboral', 'SST', 't5', ['s5', 's12', 's13', 's14', 's15'], '/assets/sst.png', '#dc2626', true],
-    ['c10', 'Brigadas de emergencia y evacuación', 'SST', 't6', ['s6', 's16'], '/assets/seguridad_salud_trabajo.png', '#d97706', false],
-    ['c11', 'Comité de Convivencia Laboral (COCOLA)', 'Gestión', 't7', ['s7', 's8', 's9'], '/assets/Capacitacion.png', '#005187', true],
-    ['c12', 'COPASST: funciones y responsabilidades', 'SST', 't8', ['s10', 's11'], '/assets/sst.png', '#d97706', true],
-    ['c13', 'Riesgo psicosocial y bienestar laboral', 'Bienestar', 't9', ['s12', 's13'], '/assets/formacion.png', '#7c3aed', false],
-    ['c14', 'Manejo seguro de sustancias químicas', 'SST', 't10', ['s14', 's15', 's16'], '/assets/SG-SST.png', '#dc2626', true],
-    ['c15', 'Liderazgo y comunicación asertiva', 'Liderazgo', 't11', ['s5', 's9'], '/assets/Capacitacion.png', '#005187', true],
-    ['c16', 'Gestión del cambio organizacional', 'Gestión', 't12', [], '/assets/formacion.png', '#4d82bc', false],
+    ['c7', 'Trabajo seguro en alturas — nivel avanzado', 'SST', 't3', ['s5', 's6', 's7', 's8'], '/assets/SG-SST.jpg', '#d97706', true],
+    ['c8', 'Plan de Manejo Integral de Residuos Sólidos', 'Ambiental', 't4', ['s9', 's10', 's11'], '/assets/PMIRS.jpg', '#16a34a', true],
+    ['c9', 'Primeros auxilios en el entorno laboral', 'SST', 't5', ['s5', 's12', 's13', 's14', 's15'], '/assets/sst.jpg', '#dc2626', true],
+    ['c10', 'Brigadas de emergencia y evacuación', 'SST', 't6', ['s6', 's16'], '/assets/seguridad_salud_trabajo.jpg', '#d97706', false],
+    ['c11', 'Comité de Convivencia Laboral (COCOLA)', 'Gestión', 't7', ['s7', 's8', 's9'], '/assets/Capacitacion.jpg', '#005187', true],
+    ['c12', 'COPASST: funciones y responsabilidades', 'SST', 't8', ['s10', 's11'], '/assets/sst.jpg', '#d97706', true],
+    ['c13', 'Riesgo psicosocial y bienestar laboral', 'Bienestar', 't9', ['s12', 's13'], '/assets/formacion.jpg', '#7c3aed', false],
+    ['c14', 'Manejo seguro de sustancias químicas', 'SST', 't10', ['s14', 's15', 's16'], '/assets/SG-SST.jpg', '#dc2626', true],
+    ['c15', 'Liderazgo y comunicación asertiva', 'Liderazgo', 't11', ['s5', 's9'], '/assets/Capacitacion.jpg', '#005187', true],
+    ['c16', 'Gestión del cambio organizacional', 'Gestión', 't12', [], '/assets/formacion.jpg', '#4d82bc', false],
   ].map(([id, name, category, teacherId, studentIds, image, color, published], i) => ({
     id, name, shortName: `${category.slice(0, 3).toUpperCase()}-${String(i + 7).padStart(3, '0')}`,
     description: `Curso práctico de ${name.toLowerCase()} orientado a empresas e instituciones.`, category,

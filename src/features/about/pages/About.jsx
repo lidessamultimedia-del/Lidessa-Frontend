@@ -22,17 +22,17 @@ const infoTabs = [
 
 const timelineItems = [
   {
-    image: '/assets/Servicio-cliente.png',
+    image: '/assets/Servicio-cliente.jpg',
     title: 'Servicio al cliente',
     text: 'En nuestra empresa, el servicio al cliente es nuestra prioridad número uno. Nos esforzamos por brindar una experiencia excepcional a cada uno de nuestros clientes en cada interacción. Nuestro equipo de atención al cliente está altamente capacitado y dedicado a satisfacer sus necesidades y resolver cualquier pregunta o problema que pueda tener.',
   },
   {
-    image: '/assets/SG-SST.png',
+    image: '/assets/SG-SST.jpg',
     title: 'SG-SST',
     text: 'El SG-SST se dedica a garantizar la seguridad y el bienestar en el entorno laboral. Nuestra prioridad es proporcionar soluciones efectivas en seguridad y salud en el trabajo. Contamos con un equipo altamente capacitado en normativas y medidas preventivas. Estamos aquí para acompañarlo en cualquier aspecto relacionado con la seguridad laboral: confíe en nosotros para un entorno laboral más seguro y saludable.',
   },
   {
-    image: '/assets/Multimedia.png',
+    image: '/assets/Multimedia.jpg',
     title: 'Recursos',
     text: 'Contamos con una variedad de recursos, incluyendo videos educativos, infografías informativas y testimonios de clientes satisfechos. Estos recursos están diseñados para brindar información relevante y útil sobre SST y servicio al cliente, ayudando a nuestros clientes a comprender mejor estos temas y cómo pueden beneficiar a sus empresas.',
   },
@@ -180,7 +180,7 @@ export default function About() {
       <section
         className="py-20 relative"
         style={{
-          backgroundImage: 'url("/assets/nosotros.png")',
+          backgroundImage: 'url("/assets/nosotros.jpg")',
           backgroundSize: 'cover',
           backgroundPosition: 'center',
         }}

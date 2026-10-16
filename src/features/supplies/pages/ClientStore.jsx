@@ -401,7 +401,7 @@ export default function ClientStore({ theme, setTheme }) {
           <>
             {/* Bienvenida */}
             <section className="relative overflow-hidden" style={{ background: 'linear-gradient(120deg, #10294d 0%, #071426 60%, #0b1d36 100%)' }}>
-              <img src="/assets/suministros.png" alt="" aria-hidden="true"
+              <img src="/assets/suministros.jpg" alt="" aria-hidden="true"
                 className="absolute right-0 top-0 h-full w-1/2 object-cover hidden md:block"
                 style={{ opacity: 0.35, maskImage: 'linear-gradient(90deg, transparent, black 45%)', WebkitMaskImage: 'linear-gradient(90deg, transparent, black 45%)' }} />
               <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-10 sm:py-12">

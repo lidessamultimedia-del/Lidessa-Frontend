@@ -107,7 +107,7 @@ export default function ServicesOverview() {
           Conozca todo acerca de<span className="gradient-text">...</span>
         </h2>
         <p className="text-sm sm:text-base leading-relaxed" style={{ color: 'var(--muted-foreground)' }}>
-          Lidessa, con más de 15 años de experiencia en procesos de consultoría de Gestión, ha acompañado a
+          Lidessa, con más de 2 años de experiencia en procesos de consultoría de Gestión, ha acompañado a
           más de 350 empresarios a nivel nacional en la gestión del cumplimiento normativo. Con un amplio
           portafolio empresarial llegamos a nuestros usuarios con beneficios integradores, que les permite
           efectividad y eficiencia en el alcance de sus objetivos.

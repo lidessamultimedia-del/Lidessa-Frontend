@@ -241,7 +241,7 @@ export default function Home() {
             <div>
               <p className="text-xs uppercase tracking-widest font-bold mb-3 opacity-70">Sobre nosotros</p>
               <h3 className="text-xl font-black" style={{ fontFamily: 'var(--font-display)' }}>
-                12 años construyendo excelencia organizacional
+                Más de 2 años construyendo excelencia organizacional
               </h3>
             </div>
             <span

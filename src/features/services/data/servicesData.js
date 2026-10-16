@@ -4,7 +4,7 @@ export const servicesData = [
     category: 'Gestión empresarial',
     title: 'Gestión de Calidad',
     description: 'En Lidessa enfocamos nuestros esfuerzos para garantizar que su empresa cumpla con los más altos estándares de calidad. Implementando sistemas de gestión de calidad personalizados que se alineen con sus objetivos y aseguren el cumplimiento normativo. Nuestra meta es mejorar la eficiencia operativa, reducir errores y aumentar la satisfacción de sus clientes, promoviendo una cultura organizacional orientada hacia la excelencia.',
-    hero: '/assets/Ips.png',
+    hero: '/assets/Ips.jpg',
     tabs: [
       {
         label: 'ISO',
@@ -59,7 +59,7 @@ export const servicesData = [
     category: 'Gestión empresarial',
     title: 'Gestión de Desarrollo Empresarial',
     description: 'Diseñamos estrategias de crecimiento y transformación organizacional que fortalecen las capacidades internas de su empresa, optimizan recursos y potencian la competitividad en el mercado.',
-    hero: '/assets/Servicio-cliente.png',
+    hero: '/assets/Servicio-cliente.jpg',
     tabs: [
       {
         label: 'RIT',
@@ -333,7 +333,7 @@ export const servicesData = [
     category: 'Instituciones educativas',
     title: 'Manuales de Convivencia Escolar',
     description: 'Creamos y actualizamos manuales de convivencia claros, inclusivos y conformes a la normativa educativa vigente en Colombia.',
-    hero: '/assets/Manuales de Convivencia.png',
+    hero: '/assets/Manuales de Convivencia.jpg',
     tabs: [
       {
         label: 'Manuales de Convivencia',
@@ -367,7 +367,7 @@ export const servicesData = [
     category: 'Instituciones educativas',
     title: 'Diseño de PEI',
     description: 'Diseñamos e implementamos el Proyecto Educativo Institucional, alineado con la misión, visión y directrices del Ministerio de Educación Nacional.',
-    hero: '/assets/Diseño de PEI.png',
+    hero: '/assets/Diseño de PEI.jpg',
     tabs: [
       {
         label: 'Diseño de PEI',
@@ -398,7 +398,7 @@ export const servicesData = [
     category: 'Instituciones educativas',
     title: 'Diseño de Mallas Curriculares',
     description: 'Elaboramos y revisamos mallas curriculares que organizan los contenidos educativos de forma secuencial y coherente, garantizando el desarrollo progresivo de competencias en los estudiantes.',
-    hero: '/assets/Mallas Curriculares.png',
+    hero: '/assets/Mallas Curriculares.jpg',
     tabs: [
       {
         label: 'Mallas Curriculares',
@@ -433,7 +433,7 @@ export const servicesData = [
     category: 'Instituciones educativas',
     title: 'Evaluación Docente',
     description: 'Ofrecemos un servicio integral de evaluación de docentes, basado en criterios objetivos y alineado con las normativas del Ministerio de Educación Nacional.',
-    hero: '/assets/Evaluación Docente.png',
+    hero: '/assets/Evaluación Docente.jpg',
     tabs: [
       {
         label: 'Evaluación Docente',
@@ -467,7 +467,7 @@ export const servicesData = [
     category: 'Instituciones educativas',
     title: 'Evaluación Institucional',
     description: 'Ofrecemos un servicio de evaluación institucional exhaustivo que acompaña a las instituciones educativas en su proceso de mejora continua y cumplimiento normativo.',
-    hero: '/assets/Evaluación Institucional.png',
+    hero: '/assets/Evaluación Institucional.jpg',
     tabs: [
       {
         label: 'Evaluación Institucional',
@@ -501,7 +501,7 @@ export const servicesData = [
     category: 'Educación y formación',
     title: 'Formación Continua',
     description: 'Ofrecemos programas de formación continua para profesionales y equipos de trabajo, orientados a actualizar competencias, fortalecer habilidades y mantenerse al día con las normativas del sector.',
-    hero: '/assets/Formación_Continua.png',
+    hero: '/assets/Formación_Continua.jpg',
     tabs: [
       {
         label: 'Nuestro enfoque',
@@ -525,7 +525,7 @@ export const servicesData = [
     category: 'Educación y formación',
     title: 'Formación a la Medida',
     description: 'Diseñamos programas de capacitación corporativa completamente personalizados, adaptados a los objetivos estratégicos, la cultura organizacional y las necesidades específicas de su equipo.',
-    hero: '/assets/Formación_Medida.png',
+    hero: '/assets/Formación_Medida.jpg',
     tabs: [
       {
         label: 'Beneficios',
@@ -549,7 +549,7 @@ export const servicesData = [
     category: 'Educación y formación',
     title: 'Programas para Instituciones Educativas',
     description: 'Diseñamos e implementamos programas formativos integrales dirigidos a directivos docentes, docentes y personal administrativo de instituciones educativas públicas y privadas.',
-    hero: '/assets/educativa.png',
+    hero: '/assets/educativa.jpg',
     tabs: [
       {
         label: 'Instituciones educativas',
@@ -574,7 +574,7 @@ export const servicesData = [
     category: 'Propiedades horizontales',
     title: 'Seguridad y Salud en el Trabajo (SG-SST)',
     description: 'Proveemos a su empresa con un servicio integral de consultoría gerencial para fortalecer la toma de decisiones estratégicas. A través de nuestro enfoque en la Inteligencia y Planificación Estratégica (IPS), le ayudamos a anticipar cambios en el entorno empresarial, gestionar riesgos y aprovechar oportunidades. Trabajamos de la mano con la alta dirección para diseñar y ejecutar planes que maximicen el rendimiento de su empresa.',
-    hero: '/assets/seguridad_salud_trabajo.png',
+    hero: '/assets/seguridad_salud_trabajo.jpg',
     tabs: [
       {
         label: 'SG-SST',
@@ -669,7 +669,7 @@ export const servicesData = [
     category: 'Propiedades horizontales',
     title: 'Plan de Manejo de Residuos',
     description: 'Diseñamos estrategias de crecimiento y transformación organizacional que fortalecen las capacidades internas de su empresa, optimizan recursos y potencian la competitividad en el mercado.',
-    hero: '/assets/plan_de_manejo_residuales.png',
+    hero: '/assets/plan_de_manejo_residuales.jpg',
     tabs: [
       {
         label: 'RIT',
@@ -956,7 +956,7 @@ export const servicesData = [
     category: 'Supervisión e interventoría',
     title: 'Supervisión e Interventoría',
     description: 'Prestamos servicios de supervisión técnica, administrativa y financiera, e interventoría integral —técnica, administrativa, financiera y jurídica— de proyectos de obra civil e infraestructura, garantizando el cumplimiento del objeto contractual y velando por los intereses del contratante en cada etapa del proyecto.',
-    hero: '/assets/programacion.png',
+    hero: '/assets/programacion.jpg',
     tabs: [
       {
         label: 'Gestión',

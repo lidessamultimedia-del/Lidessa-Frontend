@@ -71,7 +71,7 @@ export default function Home() {
 
       {/* ── Hero ── */}
       <section
-        className="relative min-h-[90vh] flex items-center overflow-hidden"
+        className="relative min-h-[auto] sm:min-h-[90vh] flex items-center overflow-hidden"
         style={{ background: 'linear-gradient(135deg, #10294d 0%, #071426 55%, #0c0c0c 100%)' }}
       >
         {/* Animated orbs */}
@@ -81,7 +81,7 @@ export default function Home() {
           <div style={{ position: 'absolute', top: '50%', left: '50%', width: 600, height: 600, transform: 'translate(-50%,-50%)', borderRadius: '50%', background: 'radial-gradient(circle, rgba(0,81,135,0.12) 0%, transparent 65%)' }} />
         </div>
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-24 w-full grid lg:grid-cols-2 gap-14 items-center">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-24 w-full grid lg:grid-cols-2 gap-14 items-center">
           {/* Copy */}
           <div style={{ animation: 'fadeUp 0.7s ease forwards' }}>
             <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full mb-6"

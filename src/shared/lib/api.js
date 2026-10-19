@@ -200,3 +200,14 @@ export function apiRespondPqrsf(id, response, token) {
 export function apiMarkPqrsfRead(id, token) {
   return request(`/api/pqrsf-tickets/${id}/read`, { method: 'PUT', headers: authHeaders(token) })
 }
+
+// ── Configuración del sitio (datos de contacto del footer) ──
+// Lectura pública; guardar solo admin.
+export function apiGetSiteSettings() {
+  return request('/api/site-settings')
+}
+
+// payload: { phone, email, address, schedule }
+export function apiUpdateSiteSettings(payload, token) {
+  return request('/api/site-settings', { method: 'PUT', headers: authHeaders(token), body: JSON.stringify(payload) })
+}

@@ -152,7 +152,7 @@ export default function Footer() {
             {/* Contact strip */}
             <div className="mt-10 pt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 text-center text-sm" style={{ borderTop: '1px solid rgba(132,182,244,0.15)' }}>
               <a href="mailto:gerencia@lidessa.com" className="hover:text-white transition-colors">gerencia@lidessa.com</a>
-              <a href="mailto:administrativo@lidessa.com" className="hover:text-white transition-colors">administrativo@lidessa.com</a>
+              <a href={`mailto:${settings.email}`} className="hover:text-white transition-colors">{settings.email}</a>
               <a href={`tel:${settings.phone.replace(/[^\d+]/g, '')}`} className="hover:text-white transition-colors">{settings.phone}</a>
             </div>
 

@@ -321,7 +321,11 @@ export default function AdminDashboard({ theme, setTheme }) {
   const [directoryPage, setDirectoryPage] = useState(1)
   const [adminMessagesPage, setAdminMessagesPage] = useState(1)
   const lmsSelectedCourse = lmsSelectedCourseId ? lms.courses.find(c => c.id === lmsSelectedCourseId) : null
-  const { settings, setSettings } = useSiteSettings()
+  const { settings, saveSettings } = useSiteSettings()
+  // El formulario edita una copia; el footer solo cambia al guardar.
+  const [settingsDraft, setSettingsDraft] = useState(settings)
+  const [settingsSaving, setSettingsSaving] = useState(false)
+  useEffect(() => { setSettingsDraft(settings) }, [settings])
 
   function handleLogout() {
     logout()
@@ -648,9 +652,21 @@ export default function AdminDashboard({ theme, setTheme }) {
     }
   }
 
-  function handleSettingsSave(e) {
+  async function handleSettingsSave(e) {
     e.preventDefault()
-    toast('success', 'Configuración guardada', 'Los cambios fueron aplicados exitosamente.')
+    if (Object.values(settingsDraft).some(v => !v.trim())) {
+      toast('error', 'Campos incompletos', 'Teléfono, correo, dirección y horario son obligatorios.')
+      return
+    }
+    setSettingsSaving(true)
+    try {
+      await saveSettings(settingsDraft)
+      toast('success', 'Configuración guardada', 'Los cambios fueron aplicados exitosamente.')
+    } catch (err) {
+      toast('error', 'No se pudo guardar', err.message)
+    } finally {
+      setSettingsSaving(false)
+    }
   }
 
   const conversations = lms.staffConversations(user.id)
@@ -2725,8 +2741,8 @@ export default function AdminDashboard({ theme, setTheme }) {
                       ].map(f => (
                         <div key={f.key}>
                           <label className="block text-xs font-semibold mb-1.5" style={{ color: 'var(--foreground)' }}>{f.label}</label>
-                          <input value={settings[f.key]} placeholder={f.placeholder}
-                            onChange={e => setSettings(prev => ({ ...prev, [f.key]: e.target.value }))}
+                          <input value={settingsDraft[f.key]} placeholder={f.placeholder}
+                            onChange={e => setSettingsDraft(prev => ({ ...prev, [f.key]: e.target.value }))}
                             className="w-full px-3 py-2.5 rounded-lg text-sm outline-none"
                             style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--foreground)' }}
                             onFocus={e => e.target.style.borderColor = '#005187'}
@@ -2734,10 +2750,10 @@ export default function AdminDashboard({ theme, setTheme }) {
                           />
                         </div>
                       ))}
-                      <button type="submit"
+                      <button type="submit" disabled={settingsSaving}
                         className="w-full py-2.5 rounded-lg text-sm font-bold text-white mt-2"
-                        style={{ backgroundColor: '#005187' }}>
-                        Guardar configuración
+                        style={{ backgroundColor: '#005187', opacity: settingsSaving ? 0.6 : 1 }}>
+                        {settingsSaving ? 'Guardando…' : 'Guardar configuración'}
                       </button>
                     </form>
                   </div>

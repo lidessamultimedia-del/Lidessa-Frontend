@@ -71,7 +71,7 @@ export default function Home() {
 
       {/* ── Hero ── */}
       <section
-        className="relative min-h-[auto] sm:min-h-[90vh] flex items-center overflow-hidden"
+        className="relative min-h-auto sm:min-h-[90vh] flex items-center overflow-hidden"
         style={{ background: 'linear-gradient(135deg, #10294d 0%, #071426 55%, #0c0c0c 100%)' }}
       >
         {/* Animated orbs */}

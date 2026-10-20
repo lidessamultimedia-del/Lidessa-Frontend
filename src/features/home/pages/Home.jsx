@@ -10,7 +10,7 @@ import { clients } from '@/shared/data/clients'
 import { MapPin, Phone, Mail, Check } from '@/shared/components/Icons'
 import { BACKEND_LIVE } from '@/shared/lib/features'
 
-const allyNames = ['Dental Service', 'Hydro Bombas', 'Converge', 'CEET', 'Ópticas Visión Éxito']
+const allyNames = ['Dental Service', 'Hydro Bombas', 'Converge', 'CEET']
 const allies = allyNames.map(n => clients.find(c => c.name === n)).filter(Boolean)
 const alliesLoop = [...allies, ...allies]
 

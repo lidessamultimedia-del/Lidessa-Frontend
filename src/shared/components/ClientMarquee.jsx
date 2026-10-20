@@ -1,9 +1,9 @@
-import { clients } from '@/shared/data/clients'
+import { clients as allClients } from '@/shared/data/clients'
 
-export default function ClientMarquee() {
+export default function ClientMarquee({ title = 'Empresas que confían en nosotros', items = allClients }) {
   const renderClients = (group) => (
     <div className="flex gap-6 shrink-0 pr-6" aria-hidden={group > 0}>
-      {clients.map((c, i) => (
+      {items.map((c, i) => (
         <div
           key={`${group}-${i}`}
           className="flex items-center justify-center rounded-xl cursor-default select-none shrink-0"
@@ -45,7 +45,7 @@ export default function ClientMarquee() {
         className="text-center text-xs font-bold uppercase tracking-widest mb-7"
         style={{ color: 'var(--muted-foreground)' }}
       >
-        Empresas que confían en nosotros
+        {title}
       </p>
 
       <div className="relative" style={{ maskImage: 'linear-gradient(to right, transparent, black 8%, black 92%, transparent)' }}>

@@ -10,9 +10,8 @@ import { clients } from '@/shared/data/clients'
 import { MapPin, Phone, Mail, Check } from '@/shared/components/Icons'
 import { BACKEND_LIVE } from '@/shared/lib/features'
 
-const allyNames = ['Dental Service', 'Hydro Bombas', 'Converge', 'CEET']
+const allyNames = ['Dental Service', 'Hydro Bombas', 'Converge', 'CEET', 'La Pampa', 'Reno']
 const allies = allyNames.map(n => clients.find(c => c.name === n)).filter(Boolean)
-const alliesLoop = [...allies, ...allies]
 
 const FEATURED_SERVICE_IMAGES = {
   'seguridad-salud': '/assets/Inicio-destacados-sst.jpg',
@@ -454,35 +453,7 @@ export default function Home() {
       </section>
 
       {/* ── Allies ── */}
-      <section className="py-14 overflow-hidden" style={{ backgroundColor: 'var(--muted)', borderTop: '1px solid var(--border)' }}>
-        <p className="text-center text-xs font-bold uppercase tracking-widest mb-6 reveal" style={{ color: 'var(--muted-foreground)' }}>
-          Aliados estratégicos
-        </p>
-        <div className="relative" style={{ maskImage: 'linear-gradient(to right, transparent, black 8%, black 92%, transparent)' }}>
-          <div className="flex gap-6 animate-marquee w-max">
-            {alliesLoop.map((a, i) => (
-              <div key={i}
-                title={a.name}
-                className="flex items-center justify-center rounded-xl cursor-default select-none shrink-0 card-interactive"
-                style={{
-                  height: 76,
-                  width: 150,
-                  padding: '10px 18px',
-                  backgroundColor: a.dark ? '#1a1a1a' : 'var(--card)',
-                  border: '1px solid var(--border)',
-                }}
-              >
-                <img
-                  src={a.logo}
-                  alt={a.name}
-                  className="max-h-full max-w-full"
-                  style={{ objectFit: 'contain' }}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      <ClientMarquee title="Aliados estratégicos" items={allies} />
 
       {selectedPost && <BlogModal post={selectedPost} onClose={() => setSelectedPost(null)} />}
       {selectedService && (

@@ -10,4 +10,5 @@ export const clients = [
   { name: 'El Comedor de Chava', logo: '/assets/chava.jpg' },
   { name: 'Hydro Bombas', logo: '/assets/hydro.png', dark: true },
   { name: 'Cultivos Lima', logo: '/assets/lima.png', dark: true },
+  { name: 'Seguros Que Te Protegen', logo: '/assets/Logonew.ico' },
 ]

@@ -552,35 +552,44 @@ export default function AdminDashboard({ theme, setTheme }) {
     setLmsCourseModal(null)
   }
 
-  function handleSaveDirectoryUser(form) {
+  // Profesores/estudiantes nuevos se crean por invitación en la API: la
+  // contraseña del formulario no se usa, la persona elige la suya al activar.
+  async function handleSaveDirectoryUser(form) {
     const { password, ...directoryData } = form
     if (directoryModal.mode === 'edit') {
       const userId = directoryModal.user.id
       const hasAccount = allUsers.some(u => u.id === userId)
+      let invited = null
       try {
         if (hasAccount) {
           const creds = { name: directoryData.name, email: directoryData.email, phone: directoryData.phone }
           if (password) creds.password = password
           updateUserCredentials(userId, creds)
         } else if (password) {
-          createUser({ id: userId, name: directoryData.name, email: directoryData.email, password, phone: directoryData.phone, role: directoryData.role })
+          invited = await createUser({ name: directoryData.name, email: directoryData.email, phone: directoryData.phone, role: directoryData.role })
         }
       } catch (err) {
         toast('error', 'No se pudo actualizar el acceso', err.message)
         return
       }
-      lms.updateDirectoryUser(userId, directoryData)
-      toast('success', 'Usuario actualizado', form.name)
+      if (invited && invited.id !== userId) {
+        // La ficha pasa a usar el id real de la cuenta en el backend.
+        lms.deleteDirectoryUser(userId)
+        lms.addDirectoryUser({ ...directoryModal.user, ...directoryData, id: invited.id })
+      } else {
+        lms.updateDirectoryUser(userId, directoryData)
+      }
+      toast('success', 'Usuario actualizado', invited ? `Se envió a ${invited.email} el enlace para activar su cuenta.` : form.name)
     } else {
       let account
       try {
-        account = createUser({ name: directoryData.name, email: directoryData.email, password, phone: directoryData.phone, role: directoryData.role })
+        account = await createUser({ name: directoryData.name, email: directoryData.email, phone: directoryData.phone, role: directoryData.role })
       } catch (err) {
         toast('error', 'No se pudo crear el usuario', err.message)
         return
       }
       lms.addDirectoryUser({ ...directoryData, id: account.id })
-      toast('success', `${form.role === 'profesor' ? 'Profesor' : 'Estudiante'} creado`, form.name)
+      toast('success', `${form.role === 'profesor' ? 'Profesor' : 'Estudiante'} invitado`, `Se envió a ${account.email} el enlace para activar su cuenta.`)
     }
     setDirectoryModal(null)
   }
@@ -612,22 +621,28 @@ export default function AdminDashboard({ theme, setTheme }) {
 
   // Crear / editar desde Configuración → Usuarios y Roles. Mantiene en
   // sincronía la ficha del LMS cuando el rol es profesor o estudiante.
-  function handleSaveAccount(data) {
+  async function handleSaveAccount(data) {
     const { role, password, ...fields } = data
     const isLmsRole = role === 'profesor' || role === 'estudiante'
     if (accountModal.mode === 'new') {
       let account
       try {
-        account = createUser({ ...fields, password, role })
+        account = await createUser({ ...fields, password, role })
       } catch (err) {
         toast('error', 'No se pudo crear el usuario', err.message)
         return
       }
       if (isLmsRole) lms.addDirectoryUser({ ...fields, role, id: account.id })
-      toast('success', 'Usuario creado', `${fields.name} · ${ROLE_LABELS[role]}`)
+      toast('success', account.pendingActivation ? 'Usuario invitado' : 'Usuario creado',
+        account.pendingActivation ? `Se envió a ${account.email} el enlace para activar su cuenta.` : `${fields.name} · ${ROLE_LABELS[role]}`)
     } else {
       const target = accountModal.account
-      updateUserCredentials(target.id, password ? { ...fields, password } : fields)
+      try {
+        updateUserCredentials(target.id, password ? { ...fields, password } : fields)
+      } catch (err) {
+        toast('error', 'No se pudo actualizar el acceso', err.message)
+        return
+      }
       if (role !== target.role) handleRoleChange(target, role)
       const dirEntry = lms.directory.find(d => d.id === target.id)
       if (dirEntry) lms.updateDirectoryUser(target.id, isLmsRole ? { ...fields, role } : fields)
@@ -2989,10 +3004,10 @@ export default function AdminDashboard({ theme, setTheme }) {
           client={clientModal === 'new' ? null : clientModal}
           documentTypes={lms.documentTypes}
           onManageDocumentTypes={() => { setClientModal(null); setSection('settings'); setSettingsTab('documentTypes') }}
-          onSave={data => {
+          onSave={async data => {
             try {
               if (clientModal === 'new') {
-                createUser({ ...data, role: 'cliente' })
+                await createUser({ ...data, role: 'cliente' })
                 toast('success', 'Cliente creado', data.name)
               } else {
                 updateUserCredentials(clientModal.id, data)

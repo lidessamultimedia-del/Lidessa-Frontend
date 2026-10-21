@@ -22,7 +22,11 @@ async function request(path, options = {}, { allow404 = false } = {}) {
   }
   const data = await res.json().catch(() => null)
   if (!res.ok) {
-    throw new Error(data?.message || 'Ocurrió un error inesperado.')
+    // `status` permite distinguir un 401 (sesión inválida) de un fallo de red,
+    // que lanza el Error de arriba sin status.
+    const err = new Error(data?.message || 'Ocurrió un error inesperado.')
+    err.status = res.status
+    throw err
   }
   return data
 }
@@ -35,11 +39,50 @@ export function apiLogin(email, password) {
   return request('/api/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) })
 }
 
-export function apiRegister({ name, email, password, phone, role }) {
+// Con token de admin se pueden crear también cuentas de profesor/admin.
+export function apiRegister({ name, email, password, phone, role }, token) {
   return request('/api/auth/register', {
     method: 'POST',
+    headers: authHeaders(token),
     body: JSON.stringify({ name, email, password, phone: phone ?? '', role: role ?? 'estudiante' }),
   })
+}
+
+export function apiMe(token) {
+  return request('/api/auth/me', { headers: authHeaders(token) })
+}
+
+// Devuelve { token, expiresAt, refreshToken } — el refresh token usado queda revocado.
+export function apiRefresh(refreshToken) {
+  return request('/api/auth/refresh', { method: 'POST', body: JSON.stringify({ refreshToken }) })
+}
+
+export function apiLogout(refreshToken) {
+  return request('/api/auth/logout', { method: 'POST', body: JSON.stringify({ refreshToken }) })
+}
+
+// Solo admin. Crea la cuenta inactiva (profesor/estudiante) y le envía a la
+// persona el enlace para elegir su contraseña.
+export function apiInviteAccount({ name, email, phone, role }, token) {
+  return request('/api/auth/invite', {
+    method: 'POST',
+    headers: authHeaders(token),
+    body: JSON.stringify({ name, email, phone: phone ?? '', role }),
+  })
+}
+
+export function apiActivateAccount(token, password) {
+  return request('/api/auth/activate-account', { method: 'POST', body: JSON.stringify({ token, password }) })
+}
+
+// Respuesta genérica exista o no el correo; `devCode` trae el código mientras
+// no haya envío de correo real.
+export function apiForgotPassword(email) {
+  return request('/api/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) })
+}
+
+export function apiResetPassword(email, code, newPassword) {
+  return request('/api/auth/reset-password', { method: 'POST', body: JSON.stringify({ email, code, newPassword }) })
 }
 
 // null cuando el estudiante todavía no tiene entrega para esa tarea.

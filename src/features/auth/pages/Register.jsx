@@ -92,7 +92,7 @@ function RegisterForm() {
       })
       const greeting = `¡Bienvenido, ${newUser.name.split(' ')[0]}!`
       if (selectedCourse?.selfEnrollment) {
-        const result = lms.enrollStudent(selectedCourse.id, newUser.id)
+        const result = await lms.enrollStudent(selectedCourse.id, newUser.id)
         if (result === 'ok') {
           toast('success', greeting, `Tu cuenta fue creada y quedaste inscrito en "${selectedCourse.name}".`)
         } else if (result === 'full') {

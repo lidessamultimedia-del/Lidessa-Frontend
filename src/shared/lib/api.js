@@ -5,7 +5,7 @@ export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5144'
 // abrir/descargar. Las URLs ya absolutas se dejan tal cual.
 export function toFileUrl(path) {
   if (!path) return ''
-  return /^https?:\/\//.test(path) ? path : `${API_URL}${path}`
+  return /^(https?:|data:)/.test(path) ? path : `${API_URL}${path}`
 }
 
 async function request(path, options = {}, { allow404 = false } = {}) {
@@ -167,6 +167,45 @@ export function apiGetQuizAttempts(quizId, token) {
 // en los que está inscrito), cada uno con sus estudiantes en `students`.
 export function apiGetMyCourses(token) {
   return request('/api/courses/mine', { headers: authHeaders(token) })
+}
+
+// Solo admin.
+export function apiCreateCourse(payload, token) {
+  return request('/api/courses', { method: 'POST', headers: authHeaders(token), body: JSON.stringify(payload) })
+}
+
+export function apiUpdateCourse(id, payload, token) {
+  return request(`/api/courses/${id}`, { method: 'PUT', headers: authHeaders(token), body: JSON.stringify(payload) })
+}
+
+export function apiDeleteCourse(id, token) {
+  return request(`/api/courses/${id}`, { method: 'DELETE', headers: authHeaders(token) })
+}
+
+// Solo admin.
+export function apiEnrollStudent(courseId, studentId, token) {
+  return request(`/api/courses/${courseId}/enrollments`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify({ studentId }) })
+}
+
+export function apiUnenrollStudent(courseId, studentId, token) {
+  return request(`/api/courses/${courseId}/enrollments/${studentId}`, { method: 'DELETE', headers: authHeaders(token) })
+}
+
+export function apiGetLessons(courseId, token) {
+  return request(`/api/courses/${courseId}/lessons`, { headers: authHeaders(token) })
+}
+
+// Solo admin/profesor dueño del curso.
+export function apiCreateLesson(courseId, payload, token) {
+  return request(`/api/courses/${courseId}/lessons`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify(payload) })
+}
+
+export function apiUpdateLesson(id, payload, token) {
+  return request(`/api/lessons/${id}`, { method: 'PUT', headers: authHeaders(token), body: JSON.stringify(payload) })
+}
+
+export function apiDeleteLesson(id, token) {
+  return request(`/api/lessons/${id}`, { method: 'DELETE', headers: authHeaders(token) })
 }
 
 export function apiGetTopics(courseId, token) {

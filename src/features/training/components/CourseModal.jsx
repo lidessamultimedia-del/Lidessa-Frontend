@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Check } from '@/shared/components/Icons'
 import { useLMS } from '@/features/lms/context/LMSContext'
+import { toFileUrl } from '@/shared/lib/api'
 
 export default function CourseModal({ course, onClose }) {
   const { lessonsByCourse, isPublished } = useLMS()
@@ -31,7 +32,7 @@ export default function CourseModal({ course, onClose }) {
       <div className="rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden max-h-[90vh] overflow-y-auto" style={{ backgroundColor: 'var(--card)' }}>
         {/* Image header */}
         <div className="h-48 overflow-hidden relative" style={{ backgroundColor: 'var(--secondary)' }}>
-          <img src={course.image} alt={course.name} className="w-full h-full object-cover" />
+          <img src={toFileUrl(course.image)} alt={course.name} className="w-full h-full object-cover" />
           <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.7), transparent)' }} />
           <button onClick={onClose}
             className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-lg"

@@ -5,6 +5,7 @@ import { useToast } from '@/shared/context/ToastContext'
 import { useBlog } from '@/features/blog/context/BlogContext'
 import { usePQRSF, isIdentified } from '@/features/pqrsf/context/PQRSFContext'
 import { useLMS, MAX_GRADE } from '@/features/lms/context/LMSContext'
+import { toFileUrl } from '@/shared/lib/api'
 import { downloadCsv } from '@/features/lms/utils/csv'
 import { useServicesData } from '@/features/services/context/ServicesDataContext'
 import { useSupplies } from '@/features/supplies/context/SuppliesContext'
@@ -382,21 +383,25 @@ export default function AdminDashboard({ theme, setTheme }) {
     setDeleteConfirm({ type: 'documentType', id: name, label: name })
   }
 
-  function handleSaveCatalogCourse(form) {
-    if (catalogModal.mode === 'edit') {
-      lms.updateCourse(catalogModal.course.id, form)
-      toast('success', 'Curso actualizado', form.name)
-    } else {
-      lms.addCourse({
-        listed: true, published: false, visible: true,
-        teacherId: null, format: 'topics', completionTrackingEnabled: true,
-        requiresPassword: false, password: '', selfEnrollment: true, guestAccess: false,
-        capacity: 100, color: 'var(--primary)', startDate: '', endDate: '',
-        ...form,
-      })
-      toast('success', 'Curso creado', 'Ya aparece en la página pública de CEET y en Cursos (LMS) para que un profesor lo complete.')
+  async function handleSaveCatalogCourse(form) {
+    try {
+      if (catalogModal.mode === 'edit') {
+        await lms.updateCourse(catalogModal.course.id, form)
+        toast('success', 'Curso actualizado', form.name)
+      } else {
+        await lms.addCourse({
+          listed: true, published: false, visible: true,
+          teacherId: null, format: 'topics', completionTrackingEnabled: true,
+          requiresPassword: false, password: '', selfEnrollment: true, guestAccess: false,
+          capacity: 100, color: 'var(--primary)', startDate: '', endDate: '',
+          ...form,
+        })
+        toast('success', 'Curso creado', 'Ya aparece en la página pública de CEET y en Cursos (LMS) para que un profesor lo complete.')
+      }
+      setCatalogModal(null)
+    } catch (err) {
+      toast('error', 'No se pudo guardar el curso', err.message)
     }
-    setCatalogModal(null)
   }
 
   function todayISO() {
@@ -413,9 +418,13 @@ export default function AdminDashboard({ theme, setTheme }) {
     return Math.round(pcts.reduce((a, b) => a + b, 0) / pcts.length)
   }
 
-  function togglePublishLmsCourse(course) {
-    lms.updateCourse(course.id, { published: !course.published })
-    toast(course.published ? 'warning' : 'success', course.published ? 'Curso despublicado' : 'Curso publicado', course.name)
+  async function togglePublishLmsCourse(course) {
+    try {
+      await lms.updateCourse(course.id, { published: !course.published })
+      toast(course.published ? 'warning' : 'success', course.published ? 'Curso despublicado' : 'Curso publicado', course.name)
+    } catch (err) {
+      toast('error', 'No se pudo actualizar el curso', err.message)
+    }
   }
 
   function handleOpenPublishModal(course) {
@@ -478,9 +487,13 @@ export default function AdminDashboard({ theme, setTheme }) {
         toast('error', 'No se pudo eliminar la publicación', err.message)
       }
     } else if (deleteConfirm.type === 'lmsCourse') {
-      lms.deleteCourse(deleteConfirm.id)
-      if (lmsSelectedCourseId === deleteConfirm.id) setLmsSelectedCourseId(null)
-      toast('success', 'Curso eliminado', deleteConfirm.label)
+      try {
+        await lms.deleteCourse(deleteConfirm.id)
+        if (lmsSelectedCourseId === deleteConfirm.id) setLmsSelectedCourseId(null)
+        toast('success', 'Curso eliminado', deleteConfirm.label)
+      } catch (err) {
+        toast('error', 'No se pudo eliminar el curso', err.message)
+      }
     } else if (deleteConfirm.type === 'topic') {
       try {
         await lms.deleteTopic(deleteConfirm.id)
@@ -489,8 +502,12 @@ export default function AdminDashboard({ theme, setTheme }) {
         toast('error', 'No se pudo eliminar', err.message)
       }
     } else if (deleteConfirm.type === 'lesson') {
-      lms.deleteLesson(deleteConfirm.id)
-      toast('success', 'Eliminado', deleteConfirm.label)
+      try {
+        await lms.deleteLesson(deleteConfirm.id)
+        toast('success', 'Eliminado', deleteConfirm.label)
+      } catch (err) {
+        toast('error', 'No se pudo eliminar', err.message)
+      }
     } else if (deleteConfirm.type === 'assignment') {
       lms.deleteAssignment(deleteConfirm.id)
       toast('success', 'Eliminado', deleteConfirm.label)
@@ -509,9 +526,13 @@ export default function AdminDashboard({ theme, setTheme }) {
       deleteService(deleteConfirm.id)
       toast('success', 'Servicio eliminado', deleteConfirm.label)
     } else if (deleteConfirm.type === 'catalogCourse') {
-      lms.deleteCourse(deleteConfirm.id)
-      if (lmsSelectedCourseId === deleteConfirm.id) setLmsSelectedCourseId(null)
-      toast('success', 'Curso eliminado', deleteConfirm.label)
+      try {
+        await lms.deleteCourse(deleteConfirm.id)
+        if (lmsSelectedCourseId === deleteConfirm.id) setLmsSelectedCourseId(null)
+        toast('success', 'Curso eliminado', deleteConfirm.label)
+      } catch (err) {
+        toast('error', 'No se pudo eliminar el curso', err.message)
+      }
     } else if (deleteConfirm.type === 'category') {
       deleteCategory(deleteConfirm.id)
       if (servicesCategoryFilter === deleteConfirm.id) setServicesCategoryFilter('all')
@@ -540,16 +561,20 @@ export default function AdminDashboard({ theme, setTheme }) {
     setDeleteConfirm(null)
   }
 
-  function handleSaveLmsCourse(form) {
-    if (lmsCourseModal.mode === 'edit') {
-      lms.updateCourse(lmsCourseModal.course.id, form)
-      toast('success', 'Curso actualizado', form.name)
-    } else {
-      const created = lms.addCourse(form)
-      toast('success', 'Curso creado como borrador', form.name)
-      openLmsCourseDetail(created.id)
+  async function handleSaveLmsCourse(form) {
+    try {
+      if (lmsCourseModal.mode === 'edit') {
+        await lms.updateCourse(lmsCourseModal.course.id, form)
+        toast('success', 'Curso actualizado', form.name)
+      } else {
+        const created = await lms.addCourse(form)
+        toast('success', 'Curso creado como borrador', form.name)
+        openLmsCourseDetail(created.id)
+      }
+      setLmsCourseModal(null)
+    } catch (err) {
+      toast('error', 'No se pudo guardar el curso', err.message)
     }
-    setLmsCourseModal(null)
   }
 
   // Profesores/estudiantes nuevos se crean por invitación en la API: la
@@ -1703,7 +1728,7 @@ export default function AdminDashboard({ theme, setTheme }) {
                     backgroundColor: 'var(--card)',
                   }}>
                     {c.image ? (
-                      <img src={c.image} alt={c.name} className="w-12 h-10 object-cover rounded-lg shrink-0" />
+                      <img src={toFileUrl(c.image)} alt={c.name} className="w-12 h-10 object-cover rounded-lg shrink-0" />
                     ) : (
                       <div className="w-12 h-10 rounded-lg shrink-0" style={{ backgroundColor: 'var(--muted)' }} />
                     )}
@@ -2095,10 +2120,14 @@ export default function AdminDashboard({ theme, setTheme }) {
                 onAddQuiz={topicId => setLmsQuizModal({ mode: 'new', topicId })}
                 onEditQuiz={quiz => setLmsQuizModal({ mode: 'edit', quiz })}
                 onDeleteQuiz={quiz => setDeleteConfirm({ type: 'quiz', id: quiz.id, label: quiz.title })}
-                onPublishLesson={lesson => {
+                onPublishLesson={async lesson => {
                   const next = lesson.publishAt ? '' : todayISO()
-                  lms.updateLesson(lesson.id, { publishAt: next })
-                  toast(next ? 'success' : 'warning', next ? 'Material publicado' : 'Publicación cancelada', lesson.title)
+                  try {
+                    await lms.updateLesson(lesson.id, { publishAt: next })
+                    toast(next ? 'success' : 'warning', next ? 'Material publicado' : 'Publicación cancelada', lesson.title)
+                  } catch (err) {
+                    toast('error', 'No se pudo actualizar la lección', err.message)
+                  }
                 }}
                 onPublishAssignment={assignment => {
                   const next = assignment.publishAt ? null : todayISO()
@@ -2191,10 +2220,14 @@ export default function AdminDashboard({ theme, setTheme }) {
                             </div>
                             <select
                               value={c.teacherId ?? ''}
-                              onChange={e => {
+                              onChange={async e => {
                                 const teacherId = e.target.value || null
-                                lms.updateCourse(c.id, { teacherId })
-                                toast('success', teacherId ? 'Profesor asignado' : 'Profesor removido', teacherId ? lms.teacherName(teacherId) : c.name)
+                                try {
+                                  await lms.updateCourse(c.id, { teacherId })
+                                  toast('success', teacherId ? 'Profesor asignado' : 'Profesor removido', teacherId ? lms.teacherName(teacherId) : c.name)
+                                } catch (err) {
+                                  toast('error', 'No se pudo actualizar el curso', err.message)
+                                }
                               }}
                               className="text-sm px-2 py-1.5 rounded-lg outline-none w-full mb-3"
                               style={{
@@ -3144,10 +3177,14 @@ export default function AdminDashboard({ theme, setTheme }) {
           lesson={lmsLessonModal.mode === 'edit' ? lmsLessonModal.lesson : null}
           topics={lms.topicsByCourse(lmsSelectedCourse.id)}
           initialTopicId={lmsLessonModal.topicId}
-          onSave={form => {
-            if (lmsLessonModal.mode === 'edit') { lms.updateLesson(lmsLessonModal.lesson.id, form); toast('success', 'Lección actualizada', form.title) }
-            else { lms.addLesson(lmsSelectedCourse.id, form); toast('success', 'Lección creada', form.title) }
-            setLmsLessonModal(null)
+          onSave={async form => {
+            try {
+              if (lmsLessonModal.mode === 'edit') { await lms.updateLesson(lmsLessonModal.lesson.id, form); toast('success', 'Lección actualizada', form.title) }
+              else { await lms.addLesson(lmsSelectedCourse.id, form); toast('success', 'Lección creada', form.title) }
+              setLmsLessonModal(null)
+            } catch (err) {
+              toast('error', 'No se pudo guardar la lección', err.message)
+            }
           }}
           onClose={() => setLmsLessonModal(null)}
         />
@@ -3191,10 +3228,14 @@ export default function AdminDashboard({ theme, setTheme }) {
           lessonsCount={lms.lessonsByCourse(lmsPublishModal.id).length}
           assignmentsCount={lms.assignmentsByCourse(lmsPublishModal.id).length}
           quizzesCount={lms.quizzesByCourse(lmsPublishModal.id).length}
-          onConfirm={() => {
-            lms.updateCourse(lmsPublishModal.id, { published: true, listed: true })
-            toast('success', 'Curso publicado', `${lmsPublishModal.name} ya aparece en la página pública de CEET.`)
-            setLmsPublishModal(null)
+          onConfirm={async () => {
+            try {
+              await lms.updateCourse(lmsPublishModal.id, { published: true, listed: true })
+              toast('success', 'Curso publicado', `${lmsPublishModal.name} ya aparece en la página pública de CEET.`)
+              setLmsPublishModal(null)
+            } catch (err) {
+              toast('error', 'No se pudo publicar el curso', err.message)
+            }
           }}
           onClose={() => setLmsPublishModal(null)}
         />
@@ -3366,11 +3407,16 @@ function AdminLmsCourseDetail({
                   {availableStudents.map(s => <option key={s.id} value={s.id}>{s.name} ({s.email})</option>)}
                 </select>
                 <button disabled={!addStudentId || isFull}
-                  onClick={() => {
-                    const result = lms.enrollStudent(course.id, addStudentId)
-                    if (result === 'full') toast('error', 'Cupo lleno', 'El curso ya alcanzó su capacidad máxima.')
-                    else toast('success', 'Estudiante inscrito', lms.studentName(addStudentId))
-                    setAddStudentId('')
+                  onClick={async () => {
+                    try {
+                      const result = await lms.enrollStudent(course.id, addStudentId)
+                      if (result === 'full') toast('error', 'Cupo lleno', 'El curso ya alcanzó su capacidad máxima.')
+                      else if (result === 'already-enrolled') toast('warning', 'Ya estaba inscrito', lms.studentName(addStudentId))
+                      else toast('success', 'Estudiante inscrito', lms.studentName(addStudentId))
+                      setAddStudentId('')
+                    } catch (err) {
+                      toast('error', 'No se pudo inscribir', err.message)
+                    }
                   }}
                   className="px-4 py-2 rounded-lg text-sm font-bold text-white disabled:opacity-50" style={{ backgroundColor: '#005187' }}>
                   Inscribir
@@ -3384,7 +3430,13 @@ function AdminLmsCourseDetail({
                       <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{s.name}</p>
                       <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{s.email}</p>
                     </div>
-                    <button onClick={() => lms.unenrollStudent(course.id, s.id)}
+                    <button onClick={async () => {
+                      try {
+                        await lms.unenrollStudent(course.id, s.id)
+                      } catch (err) {
+                        toast('error', 'No se pudo retirar al estudiante', err.message)
+                      }
+                    }}
                       className="text-xs px-3 py-1.5 rounded-lg font-medium shrink-0" style={{ border: '1px solid rgba(220,38,38,0.3)', color: '#dc2626' }}>
                       Quitar
                     </button>
@@ -3402,7 +3454,14 @@ function AdminLmsCourseDetail({
       {tab === 'settings' && (
         <CourseSettingsForm
           course={course}
-          onSave={data => { lms.updateCourse(course.id, data); toast('success', 'Configuración guardada', course.name) }}
+          onSave={async data => {
+            try {
+              await lms.updateCourse(course.id, data)
+              toast('success', 'Configuración guardada', course.name)
+            } catch (err) {
+              toast('error', 'No se pudo guardar la configuración', err.message)
+            }
+          }}
         />
       )}
     </div>

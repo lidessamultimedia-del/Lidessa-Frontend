@@ -8,8 +8,11 @@ import {
   apiGetSubmission, apiSaveSubmission, apiMarkSubmissionSeen, apiGradeSubmission,
   apiGetQuizAttempt, apiSubmitQuizAttempt, apiReviewQuizAttempt, apiAllowQuizRetry, apiMarkQuizAttemptSeen,
   apiStartQuizAttempt, apiGetQuizAttempts,
-  apiGetMyCourses, apiGetTopics, apiCreateTopic, apiUpdateTopic, apiDeleteTopic,
+  apiGetMyCourses, apiCreateCourse, apiUpdateCourse, apiDeleteCourse, apiEnrollStudent, apiUnenrollStudent,
+  apiGetLessons, apiCreateLesson, apiUpdateLesson, apiDeleteLesson,
+  apiGetTopics, apiCreateTopic, apiUpdateTopic, apiDeleteTopic,
   apiGetQuizzes, apiCreateQuiz, apiUpdateQuiz, apiDeleteQuiz,
+  apiUploadAttachment,
 } from '@/shared/lib/api'
 
 const LMSContext = createContext(null)
@@ -137,6 +140,39 @@ function fromApiTopic(t) {
   return { id: String(t.id), remoteId: t.id, courseId: String(t.courseId), title: t.title, order: t.sortOrder }
 }
 
+// Traduce una Lesson real del backend. Igual que en Submission, el adjunto
+// viaja en `fileUrl` (ruta del backend) en vez de `fileData` (base64 que
+// usan las lecciones mock) — la UI ya sabe mostrar el que corresponda.
+function fromApiLesson(l) {
+  return {
+    id: String(l.id),
+    remoteId: l.id,
+    courseId: String(l.courseId),
+    topicId: l.topicId ? String(l.topicId) : null,
+    title: l.title,
+    content: l.content ?? '',
+    order: l.sortOrder,
+    publishAt: l.publishAt ?? null,
+    fileName: l.attachmentFileName ?? '',
+    fileUrl: l.attachmentUrl ?? '',
+    fileSize: l.attachmentSizeBytes ?? 0,
+    fileData: '',
+  }
+}
+
+// El material de lección y la imagen de portada del curso se editan como
+// base64 en el formulario (sin backend de archivos cuando están en modo
+// mock); contra la API real hay que subirlos primero y guardar la URL corta
+// que devuelve el servidor.
+function dataUrlToFile(dataUrl, fileName) {
+  const [header, base64] = dataUrl.split(',')
+  const mime = header.match(/data:([^;]+)/)?.[1] ?? 'application/octet-stream'
+  const bytes = atob(base64)
+  const array = new Uint8Array(bytes.length)
+  for (let i = 0; i < bytes.length; i++) array[i] = bytes.charCodeAt(i)
+  return new File([array], fileName, { type: mime })
+}
+
 function fromApiQuiz(q) {
   return {
     id: String(q.id),
@@ -182,8 +218,10 @@ async function fetchRemoteLms(user) {
   const token = user.token
   const apiCourses = await apiGetMyCourses(token)
   const perCourse = await Promise.all(apiCourses.map(async c => {
-    const [courseTopics, courseQuizzes] = await Promise.all([apiGetTopics(c.id, token), apiGetQuizzes(c.id, token)])
-    return { courseTopics, courseQuizzes }
+    const [courseTopics, courseQuizzes, courseLessons] = await Promise.all([
+      apiGetTopics(c.id, token), apiGetQuizzes(c.id, token), apiGetLessons(c.id, token),
+    ])
+    return { courseTopics, courseQuizzes, courseLessons }
   }))
   const apiQuizzes = perCourse.flatMap(p => p.courseQuizzes)
   const isStaff = user.role === 'admin' || user.role === 'profesor'
@@ -194,6 +232,7 @@ async function fetchRemoteLms(user) {
   return {
     courses: apiCourses.map(fromApiCourse),
     topics: perCourse.flatMap(p => p.courseTopics).map(fromApiTopic),
+    lessons: perCourse.flatMap(p => p.courseLessons).map(fromApiLesson),
     quizzes: apiQuizzes.map(fromApiQuiz),
     quizAttempts: apiAttempts.map(a => fromApiQuizAttempt(a, String(a.quizId))),
     people: directoryEntriesFromApiCourses(apiCourses),
@@ -246,6 +285,7 @@ export function LMSProvider({ children }) {
             ...s,
             courses: [...s.courses.filter(c => !c.remoteId), ...remote.courses],
             topics: [...s.topics.filter(t => !t.remoteId), ...remote.topics],
+            lessons: [...s.lessons.filter(l => !l.remoteId), ...remote.lessons],
             quizzes: [...s.quizzes.filter(q => !q.remoteId), ...remote.quizzes],
             quizAttempts: [...s.quizAttempts.filter(a => !a.remoteId), ...remote.quizAttempts],
             directory: [...s.directory, ...remote.people.filter(p => !knownIds.has(p.id))],
@@ -311,15 +351,80 @@ export function LMSProvider({ children }) {
   }
 
   // ── Courses ──
-  function addCourse(data) {
+  // La imagen de portada se edita en el formulario como base64; el backend
+  // solo acepta una URL corta (CourseRequest.Image tiene MaxLength(500)), así
+  // que si es una foto nueva (data URL) se sube primero como adjunto.
+  async function resolveCourseImage(image, token) {
+    if (!image || !image.startsWith('data:')) return image || null
+    const ext = image.startsWith('data:image/png') ? 'png' : 'jpg'
+    const uploaded = await apiUploadAttachment(dataUrlToFile(image, `portada.${ext}`), token)
+    return uploaded.url
+  }
+  function toApiCoursePayload(course, image) {
+    return {
+      name: course.name,
+      shortName: course.shortName || null,
+      description: course.description || null,
+      category: course.category || null,
+      teacherId: course.teacherId ? Number(course.teacherId) : null,
+      format: course.format,
+      capacity: Number(course.capacity) || 1,
+      color: course.color || null,
+      image,
+      requiresPassword: !!course.requiresPassword,
+      password: course.requiresPassword ? course.password : null,
+      selfEnrollment: !!course.selfEnrollment,
+      guestAccess: !!course.guestAccess,
+      published: !!course.published,
+    }
+  }
+  // Un curso nuevo se crea en la API real si hay sesión conectada a la API
+  // (user.token); los cursos mock ya existentes (sin remoteId) nunca se tocan.
+  async function addCourse(data) {
+    if (user?.token) {
+      const image = await resolveCourseImage(data.image, user.token)
+      const course = fromApiCourse(await apiCreateCourse(toApiCoursePayload(data, image), user.token))
+      setState(s => ({ ...s, courses: [course, ...s.courses] }))
+      return course
+    }
+
     const course = { id: `c${Date.now()}`, studentIds: [], createdAt: new Date().toISOString().slice(0, 10), ...data }
     setState(s => ({ ...s, courses: [course, ...s.courses] }))
     return course
   }
-  function updateCourse(id, data) {
+  // En cursos reales (remoteId) se guardan en CoursesController; en los mock, solo en local.
+  // El PUT no devuelve los estudiantes inscritos (solo GET /mine los trae), así
+  // que se conservan los que ya había en el estado local. Tampoco existen en
+  // CourseRequest los campos propios del catálogo público (intro, duration,
+  // modality, objectives, certified) — fromApiCourse los resetea a su valor
+  // por defecto, así que se restauran desde `merged` para no perder lo que el
+  // admin acaba de escribir en CatalogCourseFormModal.
+  async function updateCourse(id, data) {
+    const course = courses.find(c => c.id === id)
+    if (course?.remoteId) {
+      const merged = { ...course, ...data }
+      const image = await resolveCourseImage(merged.image, user.token)
+      const updated = fromApiCourse(await apiUpdateCourse(course.remoteId, toApiCoursePayload(merged, image), user.token))
+      setState(s => ({
+        ...s,
+        courses: s.courses.map(c => c.id === id ? {
+          ...updated, studentIds: c.studentIds,
+          visible: merged.visible, startDate: merged.startDate, endDate: merged.endDate,
+          duration: merged.duration, modality: merged.modality, certified: merged.certified,
+          intro: merged.intro, objectives: merged.objectives, completionTrackingEnabled: merged.completionTrackingEnabled,
+        } : c),
+      }))
+      return
+    }
+
     setState(s => ({ ...s, courses: s.courses.map(c => c.id === id ? { ...c, ...data } : c) }))
   }
-  function deleteCourse(id) {
+  async function deleteCourse(id) {
+    const course = courses.find(c => c.id === id)
+    if (course?.remoteId) {
+      await apiDeleteCourse(course.remoteId, user.token)
+    }
+
     setState(s => {
       const courseQuizIds = s.quizzes.filter(q => q.courseId === id).map(q => q.id)
       return {
@@ -336,11 +441,29 @@ export function LMSProvider({ children }) {
     })
   }
   // Devuelve 'ok', 'already-enrolled' o 'full' — el llamador decide qué avisarle
-  // al admin. La capacidad se valida acá (no solo en el formulario del curso)
-  // para que sea imposible pasarse del cupo sin importar desde dónde se inscriba.
-  function enrollStudent(courseId, studentId) {
+  // al admin. En cursos reales la validación la hace el backend (CourseEnrollmentService);
+  // en los mock se valida acá, para que sea imposible pasarse del cupo sin
+  // importar desde dónde se inscriba.
+  async function enrollStudent(courseId, studentId) {
     const course = courses.find(c => c.id === courseId)
     if (!course) return 'not-found'
+
+    if (course.remoteId) {
+      try {
+        await apiEnrollStudent(course.remoteId, Number(studentId), user.token)
+      } catch (err) {
+        if (err.message === 'El estudiante ya está inscrito en este curso') return 'already-enrolled'
+        if (err.message === 'El curso ya alcanzó su capacidad máxima') return 'full'
+        throw err
+      }
+      setState(s => ({
+        ...s,
+        courses: s.courses.map(c => c.id === courseId && !c.studentIds.includes(studentId)
+          ? { ...c, studentIds: [...c.studentIds, studentId] } : c),
+      }))
+      return 'ok'
+    }
+
     if (course.studentIds.includes(studentId)) return 'already-enrolled'
     if (course.capacity && course.studentIds.length >= course.capacity) return 'full'
     setState(s => ({
@@ -350,7 +473,12 @@ export function LMSProvider({ children }) {
     }))
     return 'ok'
   }
-  function unenrollStudent(courseId, studentId) {
+  async function unenrollStudent(courseId, studentId) {
+    const course = courses.find(c => c.id === courseId)
+    if (course?.remoteId) {
+      await apiUnenrollStudent(course.remoteId, Number(studentId), user.token)
+    }
+
     setState(s => ({
       ...s,
       courses: s.courses.map(c => c.id === courseId ? { ...c, studentIds: c.studentIds.filter(id => id !== studentId) } : c),
@@ -398,16 +526,63 @@ export function LMSProvider({ children }) {
   }
 
   // ── Lessons ──
-  function addLesson(courseId, data) {
+  // El material adjunto se edita en el formulario como base64 (fileData); si
+  // es un archivo nuevo se sube primero. Si no hay fileData pero sigue
+  // habiendo fileName, se conserva el adjunto remoto que ya tenía la lección
+  // (fileUrl) — así una edición que no toca el archivo no lo borra.
+  async function resolveLessonAttachment(merged, token) {
+    if (merged.fileData && merged.fileData.startsWith('data:')) {
+      const uploaded = await apiUploadAttachment(dataUrlToFile(merged.fileData, merged.fileName || 'adjunto'), token)
+      return { attachmentFileName: uploaded.fileName, attachmentUrl: uploaded.url, attachmentSizeBytes: uploaded.sizeBytes }
+    }
+    if (!merged.fileName) {
+      return { attachmentFileName: null, attachmentUrl: null, attachmentSizeBytes: null }
+    }
+    return { attachmentFileName: merged.fileName, attachmentUrl: merged.fileUrl ?? null, attachmentSizeBytes: merged.fileSize ?? null }
+  }
+  async function toApiLessonPayload(lesson, token) {
+    const topic = lesson.topicId ? topics.find(t => t.id === lesson.topicId) : null
+    const attachment = await resolveLessonAttachment(lesson, token)
+    return {
+      title: lesson.title,
+      content: lesson.content ?? '',
+      topicId: topic?.remoteId ?? null,
+      publishAt: lesson.publishAt || null,
+      ...attachment,
+    }
+  }
+  // En cursos reales (remoteId) se guardan en LessonsController; en los mock, solo en local.
+  async function addLesson(courseId, data) {
+    const course = courses.find(c => c.id === courseId)
+    if (course?.remoteId) {
+      const payload = await toApiLessonPayload(data, user.token)
+      const lesson = fromApiLesson(await apiCreateLesson(course.remoteId, payload, user.token))
+      setState(s => ({ ...s, lessons: [...s.lessons, lesson] }))
+      return lesson
+    }
+
     const order = lessons.filter(l => l.courseId === courseId).length + 1
     const lesson = { id: `l${Date.now()}`, courseId, order, ...data }
     setState(s => ({ ...s, lessons: [...s.lessons, lesson] }))
     return lesson
   }
-  function updateLesson(id, data) {
+  async function updateLesson(id, data) {
+    const lesson = lessons.find(l => l.id === id)
+    if (lesson?.remoteId) {
+      const payload = await toApiLessonPayload({ ...lesson, ...data }, user.token)
+      const updated = fromApiLesson(await apiUpdateLesson(lesson.remoteId, payload, user.token))
+      setState(s => ({ ...s, lessons: s.lessons.map(l => l.id === id ? updated : l) }))
+      return
+    }
+
     setState(s => ({ ...s, lessons: s.lessons.map(l => l.id === id ? { ...l, ...data } : l) }))
   }
-  function deleteLesson(id) {
+  async function deleteLesson(id) {
+    const lesson = lessons.find(l => l.id === id)
+    if (lesson?.remoteId) {
+      await apiDeleteLesson(lesson.remoteId, user.token)
+    }
+
     setState(s => ({ ...s, lessons: s.lessons.filter(l => l.id !== id) }))
   }
   function markLessonComplete(studentId, courseId, lessonId) {

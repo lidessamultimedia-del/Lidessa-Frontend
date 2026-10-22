@@ -898,13 +898,13 @@ function LessonViewModal({ lesson, studentId, course, lms, onToast, onClose }) {
           <div className="mb-4">
             <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--muted-foreground)' }}>Material adjunto</p>
             {isImageFile(lesson.fileName) ? (
-              <img src={lesson.fileData} alt={lesson.fileName} className="w-full rounded-lg mb-2"
+              <img src={lesson.fileData || toFileUrl(lesson.fileUrl)} alt={lesson.fileName} className="w-full rounded-lg mb-2"
                 style={{ maxHeight: 360, objectFit: 'contain', backgroundColor: 'var(--muted)' }} />
             ) : isPdfFile(lesson.fileName) ? (
-              <iframe src={lesson.fileData} title={lesson.fileName} className="w-full rounded-lg mb-2"
+              <iframe src={lesson.fileData || toFileUrl(lesson.fileUrl)} title={lesson.fileName} className="w-full rounded-lg mb-2"
                 style={{ height: 360, border: '1px solid var(--border)' }} />
             ) : null}
-            <a href={lesson.fileData} download={lesson.fileName}
+            <a href={lesson.fileData || toFileUrl(lesson.fileUrl)} download={lesson.fileName}
               className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold transition-colors max-w-full"
               style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: 'var(--accent)', border: '1px solid rgba(0,81,135,0.2)' }}>
               <Paperclip size={14} className="shrink-0" />
@@ -951,7 +951,7 @@ function LessonRow({ lms, studentId, course, lesson, onOpen }) {
         {!done && unlocked && <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{lesson.content}</p>}
         {!unlocked && <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>Bloqueada — completa la lección anterior</p>}
         {unlocked && lesson.fileName && (
-          <a href={lesson.fileData} download={lesson.fileName}
+          <a href={lesson.fileData || toFileUrl(lesson.fileUrl)} download={lesson.fileName}
             className="text-xs flex items-start gap-1 mt-0.5 max-w-full" style={{ color: 'var(--accent)' }}>
             <Paperclip size={11} className="shrink-0 mt-0.5" /> <span className="wrap-break-word">{lesson.fileName}</span>
           </a>

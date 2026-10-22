@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useLMS } from '@/features/lms/context/LMSContext'
+import { toFileUrl } from '@/shared/lib/api'
 import CourseModal from '../components/CourseModal'
 import { useScrollReveal } from '@/shared/hooks/useScrollReveal'
 import ComingSoon from '@/shared/components/ComingSoon'
@@ -67,7 +68,7 @@ export default function Training() {
                 <div className="flip-card-front rounded-2xl overflow-hidden cursor-pointer"
                   style={{ backgroundColor: 'var(--secondary)', border: '1px solid var(--border)' }}
                   onClick={() => setSelectedCourse(course)}>
-                  <img src={course.image} alt={course.name} className="w-full h-full object-cover" />
+                  <img src={toFileUrl(course.image)} alt={course.name} className="w-full h-full object-cover" />
                   <div className="absolute inset-0" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.85), rgba(0,0,0,0.15) 55%, transparent)' }} />
                   <div className="absolute top-3 right-3">
                     <span className="text-xs font-bold px-2 py-1 rounded-full text-white"

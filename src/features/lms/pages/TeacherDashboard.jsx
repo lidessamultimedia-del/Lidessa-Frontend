@@ -133,12 +133,12 @@ export default function TeacherDashboard({ theme, setTheme }) {
     const { type, id, label } = deleteConfirm
     try {
       if (type === 'course') {
-        lms.deleteCourse(id)
+        await lms.deleteCourse(id)
         if (selectedCourseId === id) { setSelectedCourseId(null); setSection('courses') }
       } else if (type === 'topic') {
         await lms.deleteTopic(id)
       } else if (type === 'lesson') {
-        lms.deleteLesson(id)
+        await lms.deleteLesson(id)
       } else if (type === 'assignment') {
         lms.deleteAssignment(id)
       } else if (type === 'quiz') {
@@ -487,10 +487,14 @@ export default function TeacherDashboard({ theme, setTheme }) {
               onAddQuiz={topicId => setQuizModal({ mode: 'new', topicId })}
               onEditQuiz={quiz => setQuizModal({ mode: 'edit', quiz })}
               onDeleteQuiz={quiz => setDeleteConfirm({ type: 'quiz', id: quiz.id, label: quiz.title })}
-              onPublishLesson={lesson => {
+              onPublishLesson={async lesson => {
                 const next = lesson.publishAt ? '' : todayISO()
-                lms.updateLesson(lesson.id, { publishAt: next })
-                toast(next ? 'success' : 'warning', next ? 'Material publicado' : 'Publicación cancelada', lesson.title)
+                try {
+                  await lms.updateLesson(lesson.id, { publishAt: next })
+                  toast(next ? 'success' : 'warning', next ? 'Material publicado' : 'Publicación cancelada', lesson.title)
+                } catch (err) {
+                  toast('error', 'No se pudo actualizar la lección', err.message)
+                }
               }}
               onPublishAssignment={assignment => {
                 const next = assignment.publishAt ? null : todayISO()
@@ -851,10 +855,14 @@ export default function TeacherDashboard({ theme, setTheme }) {
           lesson={lessonModal.mode === 'edit' ? lessonModal.lesson : null}
           topics={lms.topicsByCourse(selectedCourse.id)}
           initialTopicId={lessonModal.topicId}
-          onSave={form => {
-            if (lessonModal.mode === 'edit') { lms.updateLesson(lessonModal.lesson.id, form); toast('success', 'Lección actualizada', form.title) }
-            else { lms.addLesson(selectedCourse.id, form); toast('success', 'Lección creada', form.title) }
-            setLessonModal(null)
+          onSave={async form => {
+            try {
+              if (lessonModal.mode === 'edit') { await lms.updateLesson(lessonModal.lesson.id, form); toast('success', 'Lección actualizada', form.title) }
+              else { await lms.addLesson(selectedCourse.id, form); toast('success', 'Lección creada', form.title) }
+              setLessonModal(null)
+            } catch (err) {
+              toast('error', 'No se pudo guardar la lección', err.message)
+            }
           }}
           onClose={() => setLessonModal(null)}
         />

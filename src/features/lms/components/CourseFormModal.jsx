@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, forwardRef } from 'react'
 import { errorInputStyle } from '@/shared/components/FormField'
 import { Plus, Eye, EyeOff } from '@/shared/components/Icons'
+import { toFileUrl } from '@/shared/lib/api'
 import { COURSE_COLORS, COURSE_COLOR_NAMES } from '../utils/courseCard'
 
 const CATEGORIES = ['Liderazgo', 'Formación', 'SST', 'Auditoría', 'Gestión']
@@ -252,7 +253,7 @@ export default function CourseFormModal({ course, teachers, showTeacherSelect = 
             <Field label="Imagen de portada (opcional)" error={errors.image}>
               <div className="flex items-center gap-2">
                 {form.image ? (
-                  <img src={form.image} alt="" className="w-11 h-11 object-cover rounded-lg shrink-0" style={{ border: '1px solid var(--border)' }} />
+                  <img src={toFileUrl(form.image)} alt="" className="w-11 h-11 object-cover rounded-lg shrink-0" style={{ border: '1px solid var(--border)' }} />
                 ) : (
                   <div className="w-11 h-11 rounded-lg shrink-0" style={{ backgroundColor: form.color }} />
                 )}

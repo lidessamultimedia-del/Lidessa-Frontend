@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import FormField, { errorInputStyle } from '@/shared/components/FormField'
 import { Plus, Trash, X } from '@/shared/components/Icons'
+import { toFileUrl } from '@/shared/lib/api'
 
 const MODALITIES = ['Virtual', 'Presencial', 'Semipresencial']
 
@@ -137,7 +138,7 @@ export default function CatalogCourseFormModal({ course, categories = [], onSave
           <FormField label="Imagen del curso" required error={errors.image}>
             <div className="flex items-center gap-2">
               {form.image ? (
-                <img src={form.image} alt="" className="w-11 h-11 object-cover rounded-lg shrink-0" style={{ border: '1px solid var(--border)' }} />
+                <img src={toFileUrl(form.image)} alt="" className="w-11 h-11 object-cover rounded-lg shrink-0" style={{ border: '1px solid var(--border)' }} />
               ) : (
                 <div className="w-11 h-11 rounded-lg shrink-0 flex items-center justify-center"
                   style={{ backgroundColor: 'var(--muted)', border: '1px solid var(--border)', ...errorInputStyle(!!errors.image) }}>

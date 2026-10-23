@@ -509,8 +509,12 @@ export default function AdminDashboard({ theme, setTheme }) {
         toast('error', 'No se pudo eliminar', err.message)
       }
     } else if (deleteConfirm.type === 'assignment') {
-      lms.deleteAssignment(deleteConfirm.id)
-      toast('success', 'Eliminado', deleteConfirm.label)
+      try {
+        await lms.deleteAssignment(deleteConfirm.id)
+        toast('success', 'Eliminado', deleteConfirm.label)
+      } catch (err) {
+        toast('error', 'No se pudo eliminar', err.message)
+      }
     } else if (deleteConfirm.type === 'quiz') {
       try {
         await lms.deleteQuiz(deleteConfirm.id)
@@ -2129,9 +2133,14 @@ export default function AdminDashboard({ theme, setTheme }) {
                     toast('error', 'No se pudo actualizar la lección', err.message)
                   }
                 }}
-                onPublishAssignment={assignment => {
+                onPublishAssignment={async assignment => {
                   const next = assignment.publishAt ? null : todayISO()
-                  lms.updateAssignment(assignment.id, { publishAt: next })
+                  try {
+                    await lms.updateAssignment(assignment.id, { publishAt: next })
+                  } catch (err) {
+                    toast('error', 'No se pudo cambiar la publicación', err.message)
+                    return
+                  }
                   toast(next ? 'success' : 'warning', next ? 'Tarea publicada' : 'Publicación cancelada', assignment.title)
                 }}
                 onPublishQuiz={async quiz => {
@@ -3195,10 +3204,14 @@ export default function AdminDashboard({ theme, setTheme }) {
           topics={lms.topicsByCourse(lmsSelectedCourse.id)}
           students={lmsSelectedCourse.studentIds.map(id => lms.directoryById(id)).filter(Boolean)}
           initialTopicId={lmsAssignmentModal.topicId}
-          onSave={form => {
-            if (lmsAssignmentModal.mode === 'edit') { lms.updateAssignment(lmsAssignmentModal.assignment.id, form); toast('success', 'Tarea actualizada', form.title) }
-            else { lms.addAssignment(lmsSelectedCourse.id, form); toast('success', 'Tarea creada', form.title) }
-            setLmsAssignmentModal(null)
+          onSave={async form => {
+            try {
+              if (lmsAssignmentModal.mode === 'edit') { await lms.updateAssignment(lmsAssignmentModal.assignment.id, form); toast('success', 'Tarea actualizada', form.title) }
+              else { await lms.addAssignment(lmsSelectedCourse.id, form); toast('success', 'Tarea creada', form.title) }
+              setLmsAssignmentModal(null)
+            } catch (err) {
+              toast('error', 'No se pudo guardar la tarea', err.message)
+            }
           }}
           onClose={() => setLmsAssignmentModal(null)}
         />

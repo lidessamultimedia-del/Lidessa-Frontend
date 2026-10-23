@@ -112,6 +112,15 @@ export function apiGradeSubmission(id, payload, token) {
   })
 }
 
+export function apiAllowSubmissionRetry(id, token) {
+  return request(`/api/submissions/${id}/allow-retry`, { method: 'PUT', headers: authHeaders(token) })
+}
+
+// Todas las entregas de una tarea (solo profesor del curso / admin).
+export function apiGetSubmissions(assignmentId, token) {
+  return request(`/api/assignments/${assignmentId}/submissions`, { headers: authHeaders(token) })
+}
+
 export function apiUploadAttachment(file, token) {
   const formData = new FormData()
   formData.append('file', file)
@@ -238,6 +247,22 @@ export function apiUpdateQuiz(id, payload, token) {
 
 export function apiDeleteQuiz(id, token) {
   return request(`/api/quizzes/${id}`, { method: 'DELETE', headers: authHeaders(token) })
+}
+
+export function apiGetAssignments(courseId, token) {
+  return request(`/api/courses/${courseId}/assignments`, { headers: authHeaders(token) })
+}
+
+export function apiCreateAssignment(courseId, payload, token) {
+  return request(`/api/courses/${courseId}/assignments`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify(payload) })
+}
+
+export function apiUpdateAssignment(id, payload, token) {
+  return request(`/api/assignments/${id}`, { method: 'PUT', headers: authHeaders(token), body: JSON.stringify(payload) })
+}
+
+export function apiDeleteAssignment(id, token) {
+  return request(`/api/assignments/${id}`, { method: 'DELETE', headers: authHeaders(token) })
 }
 
 // ── Converge (blog) ──

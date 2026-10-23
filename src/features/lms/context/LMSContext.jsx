@@ -12,6 +12,8 @@ import {
   apiGetLessons, apiCreateLesson, apiUpdateLesson, apiDeleteLesson,
   apiGetTopics, apiCreateTopic, apiUpdateTopic, apiDeleteTopic,
   apiGetQuizzes, apiCreateQuiz, apiUpdateQuiz, apiDeleteQuiz,
+  apiGetAssignments, apiCreateAssignment, apiUpdateAssignment, apiDeleteAssignment,
+  apiGetSubmissions, apiAllowSubmissionRetry,
   apiUploadAttachment,
 } from '@/shared/lib/api'
 
@@ -56,14 +58,13 @@ const defaultState = {
 }
 
 // Traduce una Submission real del backend (Lidessa.Api) al shape que ya usa
-// toda la UI del LMS — el resto del LMS (cursos, tareas, inscripciones)
-// sigue en datos mock, así que este es el único punto donde algo "de
-// submissions" viene de la API real en vez del seed.
+// toda la UI del LMS. `assignmentId` es el id local de la tarea (el número
+// del backend como string, igual que en fromApiAssignment).
 function fromApiSubmission(s) {
   return {
     id: `sub_api_${s.id}`,
     remoteId: s.id,
-    assignmentId: s.assignmentId,
+    assignmentId: String(s.assignmentId),
     studentId: String(s.studentId),
     fileName: s.attachmentFileName ?? '',
     fileUrl: s.attachmentUrl ?? '',
@@ -173,6 +174,28 @@ function dataUrlToFile(dataUrl, fileName) {
   return new File([array], fileName, { type: mime })
 }
 
+// Igual que en Lesson, el adjunto de la tarea viaja en `fileUrl`; las tareas
+// mock lo traen en `fileData` (base64).
+function fromApiAssignment(a) {
+  return {
+    id: String(a.id),
+    remoteId: a.id,
+    courseId: String(a.courseId),
+    topicId: a.topicId ? String(a.topicId) : null,
+    title: a.title,
+    description: a.description ?? '',
+    // Fecha y hora límite (el form usa datetime-local: 'YYYY-MM-DDTHH:mm').
+    dueDate: a.dueDate?.slice(0, 16) ?? '',
+    maxScore: Number(a.maxScore),
+    publishAt: a.publishAt ?? null,
+    fileName: a.attachmentFileName ?? '',
+    fileUrl: a.attachmentUrl ?? '',
+    fileSize: a.attachmentSizeBytes ?? 0,
+    fileData: '',
+    assignedStudentIds: (a.assignedStudentIds ?? []).map(String),
+  }
+}
+
 function fromApiQuiz(q) {
   return {
     id: String(q.id),
@@ -211,28 +234,38 @@ function directoryEntriesFromApiCourses(apiCourses) {
   return [...byId.values()]
 }
 
-// Trae todo lo real que le corresponde al usuario: sus cursos, los temas y
-// exámenes de cada uno, y los intentos (todos si es staff; solo el propio si
-// es estudiante).
+// Trae todo lo real que le corresponde al usuario: sus cursos, los temas,
+// lecciones, tareas y exámenes de cada uno, y las entregas/intentos (todos si
+// es staff; solo los propios si es estudiante).
 async function fetchRemoteLms(user) {
   const token = user.token
   const apiCourses = await apiGetMyCourses(token)
   const perCourse = await Promise.all(apiCourses.map(async c => {
-    const [courseTopics, courseQuizzes, courseLessons] = await Promise.all([
-      apiGetTopics(c.id, token), apiGetQuizzes(c.id, token), apiGetLessons(c.id, token),
+    const [courseTopics, courseQuizzes, courseLessons, courseAssignments] = await Promise.all([
+      apiGetTopics(c.id, token), apiGetQuizzes(c.id, token), apiGetLessons(c.id, token), apiGetAssignments(c.id, token),
     ])
-    return { courseTopics, courseQuizzes, courseLessons }
+    return { courseTopics, courseQuizzes, courseLessons, courseAssignments }
   }))
   const apiQuizzes = perCourse.flatMap(p => p.courseQuizzes)
+  const apiAssignments = perCourse.flatMap(p => p.courseAssignments)
   const isStaff = user.role === 'admin' || user.role === 'profesor'
-  // Un estudiante no asignado a un examen recibe 403 en su intento — se ignora.
-  const apiAttempts = isStaff
-    ? (await Promise.all(apiQuizzes.map(q => apiGetQuizAttempts(q.id, token)))).flat()
-    : (await Promise.all(apiQuizzes.map(q => apiGetQuizAttempt(q.id, token).catch(() => null)))).filter(Boolean)
+  // Un estudiante no asignado a un examen/tarea recibe 403 en su intento o
+  // entrega — se ignora.
+  const [apiAttempts, apiSubmissions] = await Promise.all(isStaff
+    ? [
+        Promise.all(apiQuizzes.map(q => apiGetQuizAttempts(q.id, token))).then(r => r.flat()),
+        Promise.all(apiAssignments.map(a => apiGetSubmissions(a.id, token))).then(r => r.flat()),
+      ]
+    : [
+        Promise.all(apiQuizzes.map(q => apiGetQuizAttempt(q.id, token).catch(() => null))).then(r => r.filter(Boolean)),
+        Promise.all(apiAssignments.map(a => apiGetSubmission(a.id, token).catch(() => null))).then(r => r.filter(Boolean)),
+      ])
   return {
     courses: apiCourses.map(fromApiCourse),
     topics: perCourse.flatMap(p => p.courseTopics).map(fromApiTopic),
     lessons: perCourse.flatMap(p => p.courseLessons).map(fromApiLesson),
+    assignments: apiAssignments.map(fromApiAssignment),
+    submissions: apiSubmissions.map(fromApiSubmission),
     quizzes: apiQuizzes.map(fromApiQuiz),
     quizAttempts: apiAttempts.map(a => fromApiQuizAttempt(a, String(a.quizId))),
     people: directoryEntriesFromApiCourses(apiCourses),
@@ -268,7 +301,7 @@ export function LMSProvider({ children }) {
     }))
   }, [registeredStudents, directory])
 
-  // Al iniciar sesión (hay token) se cargan los cursos/temas/exámenes reales
+  // Al iniciar sesión (hay token) se cargan los cursos/temas/tareas/exámenes reales
   // y se reemplazan los que ya hubiera de la API; los mock no se tocan. Si la
   // API no responde, el LMS sigue funcionando solo con los datos mock.
   const [remoteSyncError, setRemoteSyncError] = useState('')
@@ -286,6 +319,8 @@ export function LMSProvider({ children }) {
             courses: [...s.courses.filter(c => !c.remoteId), ...remote.courses],
             topics: [...s.topics.filter(t => !t.remoteId), ...remote.topics],
             lessons: [...s.lessons.filter(l => !l.remoteId), ...remote.lessons],
+            assignments: [...s.assignments.filter(a => !a.remoteId), ...remote.assignments],
+            submissions: [...s.submissions.filter(sub => !sub.remoteId), ...remote.submissions],
             quizzes: [...s.quizzes.filter(q => !q.remoteId), ...remote.quizzes],
             quizAttempts: [...s.quizAttempts.filter(a => !a.remoteId), ...remote.quizAttempts],
             directory: [...s.directory, ...remote.people.filter(p => !knownIds.has(p.id))],
@@ -526,11 +561,11 @@ export function LMSProvider({ children }) {
   }
 
   // ── Lessons ──
-  // El material adjunto se edita en el formulario como base64 (fileData); si
-  // es un archivo nuevo se sube primero. Si no hay fileData pero sigue
-  // habiendo fileName, se conserva el adjunto remoto que ya tenía la lección
-  // (fileUrl) — así una edición que no toca el archivo no lo borra.
-  async function resolveLessonAttachment(merged, token) {
+  // El material adjunto (de lecciones y tareas) se edita en el formulario
+  // como base64 (fileData); si es un archivo nuevo se sube primero. Si no hay
+  // fileData pero sigue habiendo fileName, se conserva el adjunto remoto que
+  // ya tenía (fileUrl) — así una edición que no toca el archivo no lo borra.
+  async function resolveAttachment(merged, token) {
     if (merged.fileData && merged.fileData.startsWith('data:')) {
       const uploaded = await apiUploadAttachment(dataUrlToFile(merged.fileData, merged.fileName || 'adjunto'), token)
       return { attachmentFileName: uploaded.fileName, attachmentUrl: uploaded.url, attachmentSizeBytes: uploaded.sizeBytes }
@@ -542,7 +577,7 @@ export function LMSProvider({ children }) {
   }
   async function toApiLessonPayload(lesson, token) {
     const topic = lesson.topicId ? topics.find(t => t.id === lesson.topicId) : null
-    const attachment = await resolveLessonAttachment(lesson, token)
+    const attachment = await resolveAttachment(lesson, token)
     return {
       title: lesson.title,
       content: lesson.content ?? '',
@@ -593,15 +628,54 @@ export function LMSProvider({ children }) {
   }
 
   // ── Assignments ──
-  function addAssignment(courseId, data) {
+  async function toApiAssignmentPayload(assignment, token) {
+    const topic = assignment.topicId ? topics.find(t => t.id === assignment.topicId) : null
+    const attachment = await resolveAttachment(assignment, token)
+    return {
+      title: assignment.title,
+      description: assignment.description ?? '',
+      dueDate: assignment.dueDate,
+      topicId: topic?.remoteId ?? null,
+      publishAt: assignment.publishAt || null,
+      assignedStudentIds: (assignment.assignedStudentIds ?? []).map(Number),
+      ...attachment,
+    }
+  }
+  // En cursos reales (remoteId) se guardan en AssignmentsController; en los mock, solo en local.
+  async function addAssignment(courseId, data) {
+    const course = courses.find(c => c.id === courseId)
+    if (course?.remoteId) {
+      const payload = await toApiAssignmentPayload(data, user.token)
+      const assignment = fromApiAssignment(await apiCreateAssignment(course.remoteId, payload, user.token))
+      setState(s => ({ ...s, assignments: [...s.assignments, assignment] }))
+      return assignment
+    }
+
     const assignment = { id: `a${Date.now()}`, courseId, maxScore: MAX_GRADE, ...data }
     setState(s => ({ ...s, assignments: [...s.assignments, assignment] }))
     return assignment
   }
-  function updateAssignment(id, data) {
+  // Acepta cambios parciales (ej. solo publishAt desde el botón de publicar):
+  // para el backend se mezclan con la tarea actual y se manda completa.
+  async function updateAssignment(id, data) {
+    const assignment = assignments.find(a => a.id === id)
+    if (assignment?.remoteId) {
+      const payload = await toApiAssignmentPayload({ ...assignment, ...data }, user.token)
+      const updated = fromApiAssignment(await apiUpdateAssignment(assignment.remoteId, payload, user.token))
+      setState(s => ({ ...s, assignments: s.assignments.map(a => a.id === id ? updated : a) }))
+      return
+    }
+
     setState(s => ({ ...s, assignments: s.assignments.map(a => a.id === id ? { ...a, ...data } : a) }))
   }
-  function deleteAssignment(id) {
+  // Las entregas de una tarea real las borra el backend en cascada; acá solo
+  // se limpian del estado local.
+  async function deleteAssignment(id) {
+    const assignment = assignments.find(a => a.id === id)
+    if (assignment?.remoteId) {
+      await apiDeleteAssignment(assignment.remoteId, user.token)
+    }
+
     setState(s => ({
       ...s,
       assignments: s.assignments.filter(a => a.id !== id),
@@ -750,13 +824,19 @@ export function LMSProvider({ children }) {
   }
   // El profesor autoriza puntualmente que el estudiante reintente una
   // actividad o examen ya reprobado, sin tener que volver a calificarlo.
-  // Si el intento de examen viene del backend real, además se persiste con
-  // PUT /api/quiz-attempts/{id}/allow-retry (mismo esquema que markGradeSeen).
+  // Si el intento/entrega viene del backend real, además se persiste con
+  // PUT /api/quiz-attempts/{id}/allow-retry o /api/submissions/{id}/allow-retry
+  // (mismo esquema que markGradeSeen).
   function allowRetry(kind, id) {
     if (kind === 'quiz') {
       const attempt = quizAttempts.find(a => a.id === id)
       if (attempt?.remoteId && user?.token) {
         apiAllowQuizRetry(attempt.remoteId, user.token).catch(() => {})
+      }
+    } else {
+      const sub = submissions.find(s => s.id === id)
+      if (sub?.remoteId && user?.token) {
+        apiAllowSubmissionRetry(sub.remoteId, user.token).catch(() => {})
       }
     }
     setState(s => (
@@ -842,11 +922,10 @@ export function LMSProvider({ children }) {
   }
 
   // ── Submissions ──
-  // Guardar borrador y entregar ya hablan con el backend real
-  // (SubmissionsController: PUT /api/assignments/{id}/submissions/me), que
-  // aplica la máquina de estados draft → submitted. El resto del LMS (cursos,
-  // tareas, inscripciones) sigue en mock, así que esto solo funciona de
-  // verdad contra un assignmentId que exista en la base de datos.
+  // En tareas reales (remoteId) guardar borrador y entregar hablan con
+  // SubmissionsController (PUT /api/assignments/{id}/submissions/me), que
+  // aplica la máquina de estados draft → submitted. En las tareas mock la
+  // entrega solo se guarda en local.
   function upsertLocalSubmission(mapped) {
     setState(s => ({
       ...s,
@@ -860,8 +939,9 @@ export function LMSProvider({ children }) {
   // Trae el borrador/entrega existente del estudiante para una tarea, si hay
   // una. Se llama al abrir el formulario de entrega para no partir de cero.
   async function loadSubmission(assignmentId) {
-    if (!user?.token) return null
-    const result = await apiGetSubmission(assignmentId, user.token)
+    const assignment = assignments.find(a => a.id === assignmentId)
+    if (!assignment?.remoteId || !user?.token) return null
+    const result = await apiGetSubmission(assignment.remoteId, user.token)
     if (!result) return null
     const mapped = fromApiSubmission(result)
     upsertLocalSubmission(mapped)
@@ -869,16 +949,32 @@ export function LMSProvider({ children }) {
   }
 
   async function submitAssignment({ assignmentId, fileName = '', fileUrl = '', fileSize = 0, textResponse = '', notes = '', draft = false }) {
-    const payload = {
-      textResponse,
-      notes,
-      attachmentFileName: fileName || null,
-      attachmentUrl: fileUrl || null,
-      attachmentSizeBytes: fileSize || null,
-      submit: !draft,
+    const assignment = assignments.find(a => a.id === assignmentId)
+    if (assignment?.remoteId) {
+      const payload = {
+        textResponse,
+        notes,
+        attachmentFileName: fileName || null,
+        attachmentUrl: fileUrl || null,
+        attachmentSizeBytes: fileSize || null,
+        submit: !draft,
+      }
+      const result = await apiSaveSubmission(assignment.remoteId, payload, user.token)
+      const mapped = fromApiSubmission(result)
+      upsertLocalSubmission(mapped)
+      return mapped
     }
-    const result = await apiSaveSubmission(assignmentId, payload, user.token)
-    const mapped = fromApiSubmission(result)
+
+    // Tarea mock: un nuevo envío reemplaza el anterior y resetea la nota,
+    // igual que hace el backend al reabrir una entrega con reintento.
+    const previous = submissionFor(assignmentId, user.id)
+    const mapped = {
+      id: previous?.id ?? `sub${Date.now()}`, assignmentId, studentId: user.id,
+      fileName, fileUrl, fileSize, textResponse, notes,
+      status: draft ? 'draft' : 'submitted',
+      submittedAt: draft ? (previous?.submittedAt ?? null) : new Date().toISOString(),
+      grade: null, feedback: '', gradedAt: null, retryAllowed: false, seen: false,
+    }
     upsertLocalSubmission(mapped)
     return mapped
   }

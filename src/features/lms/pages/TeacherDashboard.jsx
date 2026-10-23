@@ -140,7 +140,7 @@ export default function TeacherDashboard({ theme, setTheme }) {
       } else if (type === 'lesson') {
         await lms.deleteLesson(id)
       } else if (type === 'assignment') {
-        lms.deleteAssignment(id)
+        await lms.deleteAssignment(id)
       } else if (type === 'quiz') {
         await lms.deleteQuiz(id)
       }
@@ -496,9 +496,14 @@ export default function TeacherDashboard({ theme, setTheme }) {
                   toast('error', 'No se pudo actualizar la lección', err.message)
                 }
               }}
-              onPublishAssignment={assignment => {
+              onPublishAssignment={async assignment => {
                 const next = assignment.publishAt ? null : todayISO()
-                lms.updateAssignment(assignment.id, { publishAt: next })
+                try {
+                  await lms.updateAssignment(assignment.id, { publishAt: next })
+                } catch (err) {
+                  toast('error', 'No se pudo cambiar la publicación', err.message)
+                  return
+                }
                 toast(next ? 'success' : 'warning', next ? 'Tarea publicada' : 'Publicación cancelada', assignment.title)
               }}
               onPublishQuiz={async quiz => {
@@ -873,10 +878,14 @@ export default function TeacherDashboard({ theme, setTheme }) {
           topics={lms.topicsByCourse(selectedCourse.id)}
           students={selectedCourse.studentIds.map(id => lms.directoryById(id)).filter(Boolean)}
           initialTopicId={assignmentModal.topicId}
-          onSave={form => {
-            if (assignmentModal.mode === 'edit') { lms.updateAssignment(assignmentModal.assignment.id, form); toast('success', 'Tarea actualizada', form.title) }
-            else { lms.addAssignment(selectedCourse.id, form); toast('success', 'Tarea creada', form.title) }
-            setAssignmentModal(null)
+          onSave={async form => {
+            try {
+              if (assignmentModal.mode === 'edit') { await lms.updateAssignment(assignmentModal.assignment.id, form); toast('success', 'Tarea actualizada', form.title) }
+              else { await lms.addAssignment(selectedCourse.id, form); toast('success', 'Tarea creada', form.title) }
+              setAssignmentModal(null)
+            } catch (err) {
+              toast('error', 'No se pudo guardar la tarea', err.message)
+            }
           }}
           onClose={() => setAssignmentModal(null)}
         />

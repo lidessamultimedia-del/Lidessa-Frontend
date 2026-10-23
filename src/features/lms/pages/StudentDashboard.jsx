@@ -978,7 +978,7 @@ function AssignmentRow({ lms, studentId, assignment, onSubmit }) {
         <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{assignment.title}</p>
         <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>Vence: {formatDate(assignment.dueDate)}</p>
         {assignment.fileName && (
-          <a href={assignment.fileData} download={assignment.fileName}
+          <a href={assignment.fileData || toFileUrl(assignment.fileUrl)} download={assignment.fileName}
             className="text-xs flex items-start gap-1 mt-0.5 max-w-full" style={{ color: '#7c3aed' }}>
             <Paperclip size={11} className="shrink-0 mt-0.5" /> <span className="wrap-break-word">{assignment.fileName}</span>
           </a>
@@ -1253,7 +1253,7 @@ function SubmitAssignmentForm({ assignment, course, existing, token, onSubmit, o
       <div className="rounded-xl p-4 mb-5" style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}>
         <p className="text-sm mb-2 wrap-break-word" style={{ color: 'var(--foreground)' }}>{assignment.description}</p>
         {assignment.fileName && (
-          <a href={assignment.fileData} download={assignment.fileName}
+          <a href={assignment.fileData || toFileUrl(assignment.fileUrl)} download={assignment.fileName}
             className="flex items-start gap-2 px-3 py-2 mb-2 rounded-lg text-sm font-semibold max-w-full"
             style={{ backgroundColor: 'rgba(124,58,237,0.1)', color: '#7c3aed', border: '1px solid rgba(124,58,237,0.2)' }}>
             <Paperclip size={14} className="shrink-0 mt-0.5" />

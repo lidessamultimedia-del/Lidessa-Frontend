@@ -866,10 +866,14 @@ function isPdfFile(name) {
 function LessonViewModal({ lesson, studentId, course, lms, onToast, onClose }) {
   const done = lms.lessonProgress.some(p => p.studentId === studentId && p.lessonId === lesson.id)
 
-  function handleComplete() {
-    lms.markLessonComplete(studentId, course.id, lesson.id)
-    onToast('success', 'Lección completada', lesson.title)
-    onClose()
+  async function handleComplete() {
+    try {
+      await lms.markLessonComplete(studentId, course.id, lesson.id)
+      onToast('success', 'Lección completada', lesson.title)
+      onClose()
+    } catch (err) {
+      onToast('error', 'No se pudo completar', err.message)
+    }
   }
 
   return (

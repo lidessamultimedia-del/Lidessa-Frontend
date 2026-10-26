@@ -217,6 +217,12 @@ export function apiDeleteLesson(id, token) {
   return request(`/api/lessons/${id}`, { method: 'DELETE', headers: authHeaders(token) })
 }
 
+// Marca la lección como completada y devuelve el progreso ya recalculado
+// del curso ({ completedLessonIds, lessonsCompleted, lessonsTotal, ... }).
+export function apiCompleteLesson(lessonId, token) {
+  return request(`/api/lessons/${lessonId}/complete`, { method: 'POST', headers: authHeaders(token) })
+}
+
 export function apiGetTopics(courseId, token) {
   return request(`/api/courses/${courseId}/topics`, { headers: authHeaders(token) })
 }

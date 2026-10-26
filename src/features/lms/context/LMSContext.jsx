@@ -9,7 +9,7 @@ import {
   apiGetQuizAttempt, apiSubmitQuizAttempt, apiReviewQuizAttempt, apiAllowQuizRetry, apiMarkQuizAttemptSeen,
   apiStartQuizAttempt, apiGetQuizAttempts,
   apiGetMyCourses, apiCreateCourse, apiUpdateCourse, apiDeleteCourse, apiEnrollStudent, apiUnenrollStudent,
-  apiGetLessons, apiCreateLesson, apiUpdateLesson, apiDeleteLesson,
+  apiGetLessons, apiCreateLesson, apiUpdateLesson, apiDeleteLesson, apiCompleteLesson,
   apiGetTopics, apiCreateTopic, apiUpdateTopic, apiDeleteTopic,
   apiGetQuizzes, apiCreateQuiz, apiUpdateQuiz, apiDeleteQuiz,
   apiGetAssignments, apiCreateAssignment, apiUpdateAssignment, apiDeleteAssignment,
@@ -620,7 +620,26 @@ export function LMSProvider({ children }) {
 
     setState(s => ({ ...s, lessons: s.lessons.filter(l => l.id !== id) }))
   }
-  function markLessonComplete(studentId, courseId, lessonId) {
+  // En cursos reales (remoteId) se marca en LessonProgressController, que
+  // recalcula el progreso del curso completo y lo devuelve — se usa esa
+  // respuesta como fuente de verdad en vez de solo agregar la lección local,
+  // para quedar sincronizados si ya había avance de otra sesión. En cursos
+  // mock se marca solo en local.
+  async function markLessonComplete(studentId, courseId, lessonId) {
+    const lesson = lessons.find(l => l.id === lessonId)
+    if (lesson?.remoteId) {
+      const result = await apiCompleteLesson(lesson.remoteId, user.token)
+      const completedIds = result.completedLessonIds.map(String)
+      setState(s => ({
+        ...s,
+        lessonProgress: [
+          ...s.lessonProgress.filter(p => !(p.studentId === studentId && p.courseId === courseId)),
+          ...completedIds.map(id => ({ studentId, courseId, lessonId: id, completedAt: new Date().toISOString() })),
+        ],
+      }))
+      return
+    }
+
     setState(s => {
       if (s.lessonProgress.some(p => p.studentId === studentId && p.lessonId === lessonId)) return s
       return { ...s, lessonProgress: [...s.lessonProgress, { studentId, courseId, lessonId, completedAt: new Date().toISOString() }] }

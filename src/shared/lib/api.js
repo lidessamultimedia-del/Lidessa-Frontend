@@ -24,7 +24,10 @@ async function request(path, options = {}, { allow404 = false } = {}) {
   if (!res.ok) {
     // `status` permite distinguir un 401 (sesión inválida) de un fallo de red,
     // que lanza el Error de arriba sin status.
-    const err = new Error(data?.message || 'Ocurrió un error inesperado.')
+    // Los errores de validación de ASP.NET (ProblemDetails) no traen `message`
+    // sino `errors: { Campo: ['detalle', ...] }` — se muestra el primero.
+    const validationError = data?.errors && Object.values(data.errors).flat()[0]
+    const err = new Error(data?.message || validationError || 'Ocurrió un error inesperado.')
     err.status = res.status
     throw err
   }
@@ -50,6 +53,11 @@ export function apiRegister({ name, email, password, phone, role }, token) {
 
 export function apiMe(token) {
   return request('/api/auth/me', { headers: authHeaders(token) })
+}
+
+// Solo admin. Cuentas reales (sin contraseña); `role` opcional filtra.
+export function apiGetUsers(token, role) {
+  return request(`/api/auth/users${role ? `?role=${encodeURIComponent(role)}` : ''}`, { headers: authHeaders(token) })
 }
 
 // Devuelve { token, expiresAt, refreshToken } — el refresh token usado queda revocado.
@@ -221,6 +229,11 @@ export function apiDeleteLesson(id, token) {
 // del curso ({ completedLessonIds, lessonsCompleted, lessonsTotal, ... }).
 export function apiCompleteLesson(lessonId, token) {
   return request(`/api/lessons/${lessonId}/complete`, { method: 'POST', headers: authHeaders(token) })
+}
+
+// Solo estudiante: { completedLessonIds, lessonsCompleted, lessonsTotal, ... }.
+export function apiGetCourseProgress(courseId, token) {
+  return request(`/api/courses/${courseId}/progress/me`, { headers: authHeaders(token) })
 }
 
 export function apiGetTopics(courseId, token) {

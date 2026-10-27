@@ -14,7 +14,7 @@ import {
   apiGetQuizzes, apiCreateQuiz, apiUpdateQuiz, apiDeleteQuiz,
   apiGetAssignments, apiCreateAssignment, apiUpdateAssignment, apiDeleteAssignment,
   apiGetSubmissions, apiAllowSubmissionRetry,
-  apiUploadAttachment,
+  apiUploadAttachment, apiGetCourseProgress, apiGetUsers,
 } from '@/shared/lib/api'
 
 const LMSContext = createContext(null)
@@ -57,6 +57,14 @@ const defaultState = {
   certifications: [],
 }
 
+// Las fechas que pone el servidor (DateTime.UtcNow) vuelven de la base sin
+// zona ("2026-10-27T13:28:22"), y el navegador las leería como hora local.
+// Se marcan como UTC. No aplica a dueDate, que es hora local del formulario.
+function utcStamp(value) {
+  if (!value) return value ?? null
+  return /(Z|[+-]\d\d:\d\d)$/.test(value) ? value : `${value}Z`
+}
+
 // Traduce una Submission real del backend (Lidessa.Api) al shape que ya usa
 // toda la UI del LMS. `assignmentId` es el id local de la tarea (el número
 // del backend como string, igual que en fromApiAssignment).
@@ -72,10 +80,10 @@ function fromApiSubmission(s) {
     textResponse: s.textResponse ?? '',
     notes: s.notes ?? '',
     status: s.status,
-    submittedAt: s.submittedAt,
+    submittedAt: utcStamp(s.submittedAt),
     grade: s.grade,
     feedback: s.feedback ?? '',
-    gradedAt: s.gradedAt,
+    gradedAt: utcStamp(s.gradedAt),
     retryAllowed: s.retryAllowed,
     seen: s.seen ?? false,
   }
@@ -96,7 +104,7 @@ function fromApiQuizAttempt(a, localQuizId) {
     reviewed: a.reviewed,
     retryAllowed: a.retryAllowed,
     seen: a.seen ?? false,
-    submittedAt: a.submittedAt,
+    submittedAt: utcStamp(a.submittedAt),
   }
 }
 
@@ -260,6 +268,19 @@ async function fetchRemoteLms(user) {
         Promise.all(apiQuizzes.map(q => apiGetQuizAttempt(q.id, token).catch(() => null))).then(r => r.filter(Boolean)),
         Promise.all(apiAssignments.map(a => apiGetSubmission(a.id, token).catch(() => null))).then(r => r.filter(Boolean)),
       ])
+  // Lecciones ya completadas por el estudiante: sin esto, al recargar se
+  // volverían a bloquear las siguientes (isLessonUnlocked).
+  const lessonProgress = user.role === 'estudiante'
+    ? (await Promise.all(apiCourses.map(async c => {
+        const progress = await apiGetCourseProgress(c.id, token)
+        return (progress?.completedLessonIds ?? []).map(id => ({
+          studentId: user.id, courseId: String(c.id), lessonId: String(id), completedAt: null,
+        }))
+      }))).flat()
+    : []
+  // El admin necesita las cuentas reales (no solo las que ya están en algún
+  // curso) para asignar profesores e inscribir estudiantes.
+  const accounts = user.role === 'admin' ? (await apiGetUsers(token)) ?? [] : []
   return {
     courses: apiCourses.map(fromApiCourse),
     topics: perCourse.flatMap(p => p.courseTopics).map(fromApiTopic),
@@ -268,7 +289,13 @@ async function fetchRemoteLms(user) {
     submissions: apiSubmissions.map(fromApiSubmission),
     quizzes: apiQuizzes.map(fromApiQuiz),
     quizAttempts: apiAttempts.map(a => fromApiQuizAttempt(a, String(a.quizId))),
-    people: directoryEntriesFromApiCourses(apiCourses),
+    lessonProgress,
+    people: [
+      ...accounts
+        .filter(u => u.role === 'profesor' || u.role === 'estudiante')
+        .map(u => ({ id: String(u.id), name: u.name, email: u.email, phone: u.phone ?? '', role: u.role, active: true, joined: '' })),
+      ...directoryEntriesFromApiCourses(apiCourses),
+    ],
   }
 }
 
@@ -314,6 +341,7 @@ export function LMSProvider({ children }) {
         setRemoteSyncError('')
         setState(s => {
           const knownIds = new Set(s.directory.map(u => u.id))
+          const remoteCourseIds = new Set(remote.courses.map(c => c.id))
           return {
             ...s,
             courses: [...s.courses.filter(c => !c.remoteId), ...remote.courses],
@@ -323,7 +351,14 @@ export function LMSProvider({ children }) {
             submissions: [...s.submissions.filter(sub => !sub.remoteId), ...remote.submissions],
             quizzes: [...s.quizzes.filter(q => !q.remoteId), ...remote.quizzes],
             quizAttempts: [...s.quizAttempts.filter(a => !a.remoteId), ...remote.quizAttempts],
-            directory: [...s.directory, ...remote.people.filter(p => !knownIds.has(p.id))],
+            lessonProgress: [
+              ...s.lessonProgress.filter(p => !(p.studentId === user.id && remoteCourseIds.has(p.courseId))),
+              ...remote.lessonProgress,
+            ],
+            directory: [
+              ...s.directory,
+              ...remote.people.filter((p, i, all) => !knownIds.has(p.id) && all.findIndex(o => o.id === p.id) === i),
+            ],
           }
         })
       })
@@ -1041,6 +1076,14 @@ export function LMSProvider({ children }) {
   const directoryById = id => directory.find(u => u.id === id) ?? allUsers.find(u => u.id === id)
   const teacherName = id => directoryById(id)?.name ?? 'Sin asignar'
   const studentName = id => directoryById(id)?.name ?? 'Estudiante'
+  // Profesores/estudiantes que se pueden asignar a un curso. A los cursos
+  // reales (o a uno nuevo, que se crea en la API si hay sesión) solo se pueden
+  // asignar cuentas reales — los ids del seed ('t3', 's5') no existen allá.
+  const isApiAccount = u => /^\d+$/.test(u.id)
+  function assignablePeople(role, course = null) {
+    const remote = course ? !!course.remoteId : !!user?.token
+    return directory.filter(u => u.role === role && (!remote || isApiAccount(u)))
+  }
   const coursesByTeacher = teacherId => courses.filter(c => c.teacherId === teacherId)
   const coursesByStudent = studentId => courses.filter(c => c.studentIds.includes(studentId))
   const listedCourses = courses.filter(c => c.listed)
@@ -1245,7 +1288,7 @@ export function LMSProvider({ children }) {
     addAssignment, updateAssignment, deleteAssignment,
     addQuiz, updateQuiz, deleteQuiz, submitQuizAttempt, loadQuizAttempt, startQuizAttempt, remoteSyncError,
     submitAssignment, loadSubmission, gradeSubmission,
-    directoryById, teacherName, studentName,
+    directoryById, teacherName, studentName, assignablePeople,
     coursesByTeacher, coursesByStudent, listedCourses, publicCourses, isPublished, isAssignedTo, lessonsByCourse, assignmentsByCourse, submissionFor,
     quizzesByCourse, attemptFor,
     progressForStudentCourse, isLessonUnlocked,

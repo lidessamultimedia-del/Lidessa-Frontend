@@ -2246,7 +2246,7 @@ export default function AdminDashboard({ theme, setTheme }) {
                               }}
                             >
                               <option value="">Sin asignar</option>
-                              {lms.directory.filter(u => u.role === 'profesor').map(t => (
+                              {lms.assignablePeople('profesor', c).map(t => (
                                 <option key={t.id} value={t.id}>{t.name}</option>
                               ))}
                             </select>
@@ -3160,7 +3160,7 @@ export default function AdminDashboard({ theme, setTheme }) {
       {lmsCourseModal && (
         <CourseFormModal
           course={lmsCourseModal.mode === 'edit' ? lmsCourseModal.course : null}
-          teachers={lms.directory.filter(u => u.role === 'profesor')}
+          teachers={lms.assignablePeople('profesor', lmsCourseModal.mode === 'edit' ? lmsCourseModal.course : null)}
           showTeacherSelect
           onSave={handleSaveLmsCourse}
           onClose={() => setLmsCourseModal(null)}
@@ -3312,7 +3312,7 @@ function AdminLmsCourseDetail({
   onAddQuiz, onEditQuiz, onDeleteQuiz, onPublishLesson, onPublishAssignment, onPublishQuiz,
 }) {
   const enrolledStudents = course.studentIds.map(id => lms.directoryById(id)).filter(Boolean)
-  const availableStudents = lms.directory.filter(u => u.role === 'estudiante' && u.active && !course.studentIds.includes(u.id))
+  const availableStudents = lms.assignablePeople('estudiante', course).filter(u => u.active && !course.studentIds.includes(u.id))
   const isFull = !!course.capacity && course.studentIds.length >= course.capacity
 
   return (

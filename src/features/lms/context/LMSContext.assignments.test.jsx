@@ -121,6 +121,45 @@ describe('carga inicial de tareas y entregas', () => {
     await waitFor(() => expect(result.current.assignments.filter(a => a.remoteId === 7)).toHaveLength(1))
     expect(result.current.submissions.filter(s => s.remoteId === 70)).toHaveLength(1)
   })
+
+  it('las fechas del servidor sin zona se leen como UTC; dueDate no se toca', async () => {
+    const { result } = await renderSynced()
+
+    expect(result.current.submissionFor('7', '10').submittedAt).toBe('2026-10-20T10:00:00Z')
+    expect(result.current.assignments.find(a => a.remoteId === 7).dueDate).toBe('2026-11-15T23:59')
+  })
+
+  it('el estudiante recupera sus lecciones completadas al cargar', async () => {
+    auth = { user: student, registeredStudents: [], allUsers: [] }
+    api.apiGetLessons.mockResolvedValue([
+      { id: 30, courseId: 5, topicId: 9, title: 'L1', sortOrder: 1, publishAt: '2026-01-01' },
+      { id: 31, courseId: 5, topicId: 9, title: 'L2', sortOrder: 2, publishAt: '2026-01-01' },
+    ])
+    api.apiGetCourseProgress.mockResolvedValue({ completedLessonIds: [30] })
+
+    const { result } = await renderSynced()
+
+    expect(api.apiGetCourseProgress).toHaveBeenCalledWith(5, TOKEN)
+    expect(result.current.isLessonUnlocked('10', '5', '31')).toBe(true)
+  })
+
+  it('el admin solo puede asignar cuentas reales a cursos reales', async () => {
+    auth = { user: { id: '1', role: 'admin', token: TOKEN }, registeredStudents: [], allUsers: [] }
+    api.apiGetUsers.mockResolvedValue([
+      { id: 40, name: 'Profe nuevo', email: 'p@x.co', role: 'profesor' },
+      { id: 41, name: 'Estudiante nuevo', email: 'n@x.co', role: 'estudiante' },
+    ])
+
+    const { result } = await renderSynced()
+    const realCourse = result.current.courses.find(c => c.remoteId === 5)
+
+    const students = result.current.assignablePeople('estudiante', realCourse).map(u => u.id)
+    expect(students).toEqual(expect.arrayContaining(['10', '11', '41']))
+    expect(students.every(id => /^\d+$/.test(id))).toBe(true)
+    expect(result.current.assignablePeople('profesor', realCourse).map(u => u.id)).toContain('40')
+    // Los cursos mock siguen viendo el directorio del seed.
+    expect(result.current.assignablePeople('estudiante', result.current.courses.find(c => c.id === 'c1')).some(u => !/^\d+$/.test(u.id))).toBe(true)
+  })
 })
 
 describe('CRUD de tareas', () => {

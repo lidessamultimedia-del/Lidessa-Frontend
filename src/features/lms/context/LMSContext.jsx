@@ -14,7 +14,9 @@ import {
   apiGetQuizzes, apiCreateQuiz, apiUpdateQuiz, apiDeleteQuiz,
   apiGetAssignments, apiCreateAssignment, apiUpdateAssignment, apiDeleteAssignment,
   apiGetSubmissions, apiAllowSubmissionRetry,
-  apiUploadAttachment, apiGetCourseProgress, apiGetUsers,
+  apiUploadAttachment, apiGetCourseProgress, apiGetUsers, apiGetAdminContact,
+  apiSendMessage, apiGetThread, apiMarkThreadRead, apiGetStaffConversations, apiGetStudentConversations,
+  apiGetCertifications, apiMarkCertification, apiUnmarkCertification,
 } from '@/shared/lib/api'
 
 const LMSContext = createContext(null)
@@ -63,6 +65,34 @@ const defaultState = {
 function utcStamp(value) {
   if (!value) return value ?? null
   return /(Z|[+-]\d\d:\d\d)$/.test(value) ? value : `${value}Z`
+}
+
+// Traduce un Message real del backend — mismo shape que ya usan
+// sendMessage/threadMessages/staffConversations/studentConversations para los
+// mock, así que esas funciones no necesitan tocarse: solo hay que llenar
+// `messages` con lo real durante fetchRemoteLms.
+function fromApiMessage(m) {
+  return {
+    id: `msg_api_${m.id}`,
+    remoteId: m.id,
+    courseId: String(m.courseId),
+    fromId: String(m.fromUserId),
+    toId: String(m.toUserId),
+    body: m.body,
+    createdAt: utcStamp(m.createdAt),
+    read: m.isRead,
+  }
+}
+
+// Traduce una Certification real del backend.
+function fromApiCertification(c) {
+  return {
+    id: `cert_api_${c.id}`,
+    remoteId: c.id,
+    studentId: String(c.studentId),
+    courseId: String(c.courseId),
+    markedAt: utcStamp(c.markedAt),
+  }
 }
 
 // Traduce una Submission real del backend (Lidessa.Api) al shape que ya usa
@@ -225,6 +255,12 @@ function fromApiQuiz(q) {
   }
 }
 
+// Traduce un UserResponse del backend (apiGetUsers/apiGetAdminContact) a una
+// entrada de directorio.
+function toDirectoryEntry(u) {
+  return { id: String(u.id), name: u.name, email: u.email, phone: u.phone ?? '', role: u.role, active: true, joined: '' }
+}
+
 // Personas que aparecen en los cursos reales (profesor + inscritos), para que
 // studentName/teacherName las encuentren en el directorio del LMS.
 function directoryEntriesFromApiCourses(apiCourses) {
@@ -281,6 +317,24 @@ async function fetchRemoteLms(user) {
   // El admin necesita las cuentas reales (no solo las que ya están en algún
   // curso) para asignar profesores e inscribir estudiantes.
   const accounts = user.role === 'admin' ? (await apiGetUsers(token)) ?? [] : []
+  // El estudiante necesita saber quién es el admin para poder escribirle
+  // (GetUsers es admin-only, por eso este endpoint aparte).
+  const adminContact = user.role === 'estudiante' ? await apiGetAdminContact(token).catch(() => null) : null
+  // Mensajería: el backend ya agrupa las conversaciones (una por curso +
+  // contraparte); se usa esa lista solo para saber qué hilos existen y traer
+  // cada uno completo — así threadMessages/staffConversations/
+  // studentConversations (que ya existían para los mock) siguen funcionando
+  // igual, calculando sobre el estado local ya sincronizado.
+  const conversationPairs = (isStaff
+    ? (await apiGetStaffConversations(token)) ?? []
+    : (await apiGetStudentConversations(token)) ?? []
+  ).map(c => ({ courseId: c.courseId, otherUserId: c.otherUserId }))
+  const apiMessages = (await Promise.all(
+    conversationPairs.map(({ courseId, otherUserId }) => apiGetThread(courseId, otherUserId, token))
+  )).flat()
+  // Historial de certificaciones (admin-only en el backend); sin esto, al
+  // recargar se volverían a mostrar como "listos para certificar".
+  const certifications = user.role === 'admin' ? (await apiGetCertifications(token)) ?? [] : []
   return {
     courses: apiCourses.map(fromApiCourse),
     topics: perCourse.flatMap(p => p.courseTopics).map(fromApiTopic),
@@ -290,10 +344,11 @@ async function fetchRemoteLms(user) {
     quizzes: apiQuizzes.map(fromApiQuiz),
     quizAttempts: apiAttempts.map(a => fromApiQuizAttempt(a, String(a.quizId))),
     lessonProgress,
+    messages: apiMessages.map(fromApiMessage),
+    certifications: certifications.map(fromApiCertification),
     people: [
-      ...accounts
-        .filter(u => u.role === 'profesor' || u.role === 'estudiante')
-        .map(u => ({ id: String(u.id), name: u.name, email: u.email, phone: u.phone ?? '', role: u.role, active: true, joined: '' })),
+      ...accounts.filter(u => u.role === 'profesor' || u.role === 'estudiante').map(toDirectoryEntry),
+      ...(adminContact ? [toDirectoryEntry(adminContact)] : []),
       ...directoryEntriesFromApiCourses(apiCourses),
     ],
   }
@@ -355,6 +410,8 @@ export function LMSProvider({ children }) {
               ...s.lessonProgress.filter(p => !(p.studentId === user.id && remoteCourseIds.has(p.courseId))),
               ...remote.lessonProgress,
             ],
+            messages: [...s.messages.filter(m => !m.remoteId), ...remote.messages],
+            certifications: [...s.certifications.filter(c => !c.remoteId), ...remote.certifications],
             directory: [
               ...s.directory,
               ...remote.people.filter((p, i, all) => !knownIds.has(p.id) && all.findIndex(o => o.id === p.id) === i),
@@ -901,7 +958,15 @@ export function LMSProvider({ children }) {
   }
 
   // ── Mensajes (estudiante ↔ profesor, por curso) ──
-  function sendMessage({ courseId, fromId, toId, body }) {
+  // En cursos reales (remoteId) se guarda en MessagesController; en los mock, solo en local.
+  async function sendMessage({ courseId, fromId, toId, body }) {
+    const course = courses.find(c => c.id === courseId)
+    if (course?.remoteId) {
+      const msg = fromApiMessage(await apiSendMessage(course.remoteId, Number(toId), body, user.token))
+      setState(s => ({ ...s, messages: [...s.messages, msg] }))
+      return msg
+    }
+
     const msg = { id: `msg${Date.now()}`, courseId, fromId, toId, body, createdAt: new Date().toISOString(), read: false }
     setState(s => ({ ...s, messages: [...s.messages, msg] }))
     return msg
@@ -913,7 +978,13 @@ export function LMSProvider({ children }) {
       ))
       .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
   }
+  // Actualiza el estado local al toque y, si el curso es real, persiste con
+  // PUT .../read (mismo esquema de "fire and forget" que markGradeSeen).
   function markThreadRead(courseId, readerId, otherId) {
+    const course = courses.find(c => c.id === courseId)
+    if (course?.remoteId && user?.token) {
+      apiMarkThreadRead(course.remoteId, Number(otherId), user.token).catch(() => {})
+    }
     setState(s => ({
       ...s,
       messages: s.messages.map(m => (m.courseId === courseId && m.toId === readerId && m.fromId === otherId && !m.read) ? { ...m, read: true } : m),
@@ -945,7 +1016,9 @@ export function LMSProvider({ children }) {
   // escribirse (su profesor y el admin) — así siempre puede iniciar aunque
   // todavía no haya ningún mensaje con esa persona.
   function studentConversations(studentId) {
-    const adminId = allUsers.find(u => u.role === 'admin')?.id
+    // Primero el admin real sincronizado (adminContact); si no hay (sesión
+    // mock), el admin de referencia del directorio local de AuthContext.
+    const adminId = directory.find(u => u.role === 'admin')?.id ?? allUsers.find(u => u.role === 'admin')?.id
     return coursesByStudent(studentId).flatMap(course => {
       const parties = [...new Set([course.teacherId, adminId].filter(Boolean))]
       return parties.map(otherId => {
@@ -1259,7 +1332,15 @@ export function LMSProvider({ children }) {
     return results
   }
 
-  function markCertified(studentId, courseId) {
+  // En cursos reales (remoteId) se guarda en CertificationsController; en los mock, solo en local.
+  async function markCertified(studentId, courseId) {
+    const course = courses.find(c => c.id === courseId)
+    if (course?.remoteId) {
+      const cert = fromApiCertification(await apiMarkCertification(Number(studentId), course.remoteId, user.token))
+      setState(s => ({ ...s, certifications: [...s.certifications, cert] }))
+      return
+    }
+
     setState(s => ({
       ...s,
       certifications: [...s.certifications, { id: `cert_${Date.now()}`, studentId, courseId, markedAt: new Date().toISOString() }],
@@ -1268,7 +1349,12 @@ export function LMSProvider({ children }) {
 
   // Por si el admin marcó "contactado" por error — lo regresa a la lista de
   // pendientes por contactar.
-  function unmarkCertified(id) {
+  async function unmarkCertified(id) {
+    const cert = certifications.find(c => c.id === id)
+    if (cert?.remoteId) {
+      await apiUnmarkCertification(cert.remoteId, user.token)
+    }
+
     setState(s => ({ ...s, certifications: s.certifications.filter(c => c.id !== id) }))
   }
 

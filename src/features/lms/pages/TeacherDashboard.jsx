@@ -780,7 +780,13 @@ export default function TeacherDashboard({ theme, setTheme }) {
               <ChatThread
                 messages={lms.threadMessages(messageConversation.courseId, teacherId, messageConversation.studentId)}
                 currentUserId={teacherId}
-                onSend={body => lms.sendMessage({ courseId: messageConversation.courseId, fromId: teacherId, toId: messageConversation.studentId, body })}
+                onSend={async body => {
+                  try {
+                    await lms.sendMessage({ courseId: messageConversation.courseId, fromId: teacherId, toId: messageConversation.studentId, body })
+                  } catch (err) {
+                    toast('error', 'No se pudo enviar', err.message)
+                  }
+                }}
               />
             </div>
           ) : (

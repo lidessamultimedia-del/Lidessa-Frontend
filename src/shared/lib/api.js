@@ -60,6 +60,11 @@ export function apiGetUsers(token, role) {
   return request(`/api/auth/users${role ? `?role=${encodeURIComponent(role)}` : ''}`, { headers: authHeaders(token) })
 }
 
+// Cualquier rol autenticado. Null si no hay ningún admin.
+export function apiGetAdminContact(token) {
+  return request('/api/auth/admin-contact', { headers: authHeaders(token) }, { allow404: true })
+}
+
 // Devuelve { token, expiresAt, refreshToken } — el refresh token usado queda revocado.
 export function apiRefresh(refreshToken) {
   return request('/api/auth/refresh', { method: 'POST', body: JSON.stringify({ refreshToken }) })
@@ -282,6 +287,47 @@ export function apiUpdateAssignment(id, payload, token) {
 
 export function apiDeleteAssignment(id, token) {
   return request(`/api/assignments/${id}`, { method: 'DELETE', headers: authHeaders(token) })
+}
+
+// ── Mensajería (estudiante ↔ profesor/admin, por curso) ──
+export function apiSendMessage(courseId, toUserId, body, token) {
+  return request(`/api/courses/${courseId}/messages`, { method: 'POST', headers: authHeaders(token), body: JSON.stringify({ toUserId, body }) })
+}
+
+export function apiGetThread(courseId, otherUserId, token) {
+  return request(`/api/courses/${courseId}/messages/${otherUserId}`, { headers: authHeaders(token) })
+}
+
+export function apiMarkThreadRead(courseId, otherUserId, token) {
+  return request(`/api/courses/${courseId}/messages/${otherUserId}/read`, { method: 'PUT', headers: authHeaders(token) })
+}
+
+// Solo admin/profesor.
+export function apiGetStaffConversations(token) {
+  return request('/api/messages/staff-conversations', { headers: authHeaders(token) })
+}
+
+// Solo estudiante.
+export function apiGetStudentConversations(token) {
+  return request('/api/messages/student-conversations', { headers: authHeaders(token) })
+}
+
+// ── Certificaciones (constancia de que el admin ya contactó al estudiante) ──
+// Solo admin. courseId/studentId opcionales filtran el historial.
+export function apiGetCertifications(token, { courseId, studentId } = {}) {
+  const params = new URLSearchParams()
+  if (courseId) params.set('courseId', courseId)
+  if (studentId) params.set('studentId', studentId)
+  const query = params.toString()
+  return request(`/api/certifications${query ? `?${query}` : ''}`, { headers: authHeaders(token) })
+}
+
+export function apiMarkCertification(studentId, courseId, token) {
+  return request('/api/certifications', { method: 'POST', headers: authHeaders(token), body: JSON.stringify({ studentId, courseId }) })
+}
+
+export function apiUnmarkCertification(id, token) {
+  return request(`/api/certifications/${id}`, { method: 'DELETE', headers: authHeaders(token) })
 }
 
 // ── Converge (blog) ──

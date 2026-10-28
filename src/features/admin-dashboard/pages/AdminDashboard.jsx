@@ -2048,7 +2048,14 @@ export default function AdminDashboard({ theme, setTheme }) {
                             <Mail size={12} /> Enviar correo
                           </a>
                         )}
-                        <button onClick={() => { lms.markCertified(r.studentId, r.courseId); toast('success', 'Marcado como contactado', `${r.student?.name ?? 'Estudiante'} — ${r.course.name}`) }}
+                        <button onClick={async () => {
+                          try {
+                            await lms.markCertified(r.studentId, r.courseId)
+                            toast('success', 'Marcado como contactado', `${r.student?.name ?? 'Estudiante'} — ${r.course.name}`)
+                          } catch (err) {
+                            toast('error', 'No se pudo marcar', err.message)
+                          }
+                        }}
                           className="text-xs px-3 py-1.5 rounded-lg font-bold text-white" style={{ backgroundColor: '#16a34a' }}>
                           Marcar como contactado
                         </button>
@@ -2077,7 +2084,14 @@ export default function AdminDashboard({ theme, setTheme }) {
                         <p className="text-sm font-semibold" style={{ color: 'var(--foreground)' }}>{c.student?.name ?? 'Estudiante'}</p>
                         <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{c.course?.name ?? 'Curso eliminado'} · Contactado: {fmt(c.markedAt)}</p>
                       </div>
-                      <button onClick={() => { lms.unmarkCertified(c.id); toast('info', 'Deshecho', `${c.student?.name ?? 'Estudiante'} vuelve a "Listos para certificar"`) }}
+                      <button onClick={async () => {
+                        try {
+                          await lms.unmarkCertified(c.id)
+                          toast('info', 'Deshecho', `${c.student?.name ?? 'Estudiante'} vuelve a "Listos para certificar"`)
+                        } catch (err) {
+                          toast('error', 'No se pudo deshacer', err.message)
+                        }
+                      }}
                         className="text-xs px-3 py-1.5 rounded-lg font-semibold shrink-0"
                         style={{ color: 'var(--muted-foreground)' }}>
                         Deshacer
@@ -2394,7 +2408,13 @@ export default function AdminDashboard({ theme, setTheme }) {
                   <ChatThread
                     messages={lms.threadMessages(messageConversation.courseId, user.id, messageConversation.studentId)}
                     currentUserId={user.id}
-                    onSend={body => lms.sendMessage({ courseId: messageConversation.courseId, fromId: user.id, toId: messageConversation.studentId, body })}
+                    onSend={async body => {
+                      try {
+                        await lms.sendMessage({ courseId: messageConversation.courseId, fromId: user.id, toId: messageConversation.studentId, body })
+                      } catch (err) {
+                        toast('error', 'No se pudo enviar', err.message)
+                      }
+                    }}
                   />
                 </div>
               ) : (

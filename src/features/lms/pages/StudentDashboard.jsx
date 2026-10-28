@@ -76,7 +76,8 @@ export default function StudentDashboard({ theme, setTheme }) {
   const selectedCourseTeacher = selectedCourse ? lms.directoryById(selectedCourse.teacherId) : null
   const selectedCourseTeacherAvatar = selectedCourse ? allUsers.find(u => u.id === selectedCourse.teacherId)?.avatar : null
   const selectedCourseWg = selectedCourse ? lms.courseWeightedGrade(studentId, selectedCourse.id) : null
-  const adminId = allUsers.find(u => u.role === 'admin')?.id
+  // Primero el admin real sincronizado; si no hay (sesión mock), el de referencia.
+  const adminId = lms.directory.find(u => u.role === 'admin')?.id ?? allUsers.find(u => u.role === 'admin')?.id
 
   const myAssignments = useMemo(() => {
     const courseIds = myCourses.map(c => c.id)
@@ -835,7 +836,13 @@ export default function StudentDashboard({ theme, setTheme }) {
             <ChatThread
               messages={lms.threadMessages(messageTarget.courseId, studentId, messageTarget.otherId)}
               currentUserId={studentId}
-              onSend={body => lms.sendMessage({ courseId: messageTarget.courseId, fromId: studentId, toId: messageTarget.otherId, body })}
+              onSend={async body => {
+                try {
+                  await lms.sendMessage({ courseId: messageTarget.courseId, fromId: studentId, toId: messageTarget.otherId, body })
+                } catch (err) {
+                  toast('error', 'No se pudo enviar', err.message)
+                }
+              }}
             />
           </div>
         </div>

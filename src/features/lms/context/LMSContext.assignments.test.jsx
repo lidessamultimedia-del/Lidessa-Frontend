@@ -13,6 +13,7 @@ vi.mock('@/features/auth/context/AuthContext', () => ({ useAuth: () => auth }))
 const TOKEN = 'jwt-de-prueba'
 const teacher = { id: '2', role: 'profesor', token: TOKEN }
 const student = { id: '10', role: 'estudiante', token: TOKEN }
+const admin = { id: '1', role: 'admin', token: TOKEN }
 
 // ── Respuestas del backend (shape de los DTOs de Lidessa.Api) ──
 const apiCourse = {
@@ -31,6 +32,13 @@ const apiSubmission = {
   attachmentSizeBytes: 2048, textResponse: 'Respuesta', notes: '', status: 'submitted',
   submittedAt: '2026-10-20T10:00:00', grade: null, feedback: '', gradedAt: null, retryAllowed: false, seen: false,
 }
+const apiMessage = {
+  id: 100, courseId: 5, fromUserId: 10, toUserId: 2, body: 'Hola profe', createdAt: '2026-10-20T15:00:00', isRead: false,
+}
+const apiCertification = {
+  id: 50, studentId: 10, studentName: 'Estudiante real', studentEmail: 'e@x.co',
+  courseId: 5, courseName: 'Curso real', markedAt: '2026-10-25T12:00:00',
+}
 
 function mockBackend({ courses = [apiCourse], topics = [apiTopic], assignments = [apiAssignment], submissions = [apiSubmission] } = {}) {
   api.apiGetMyCourses.mockResolvedValue(courses)
@@ -40,6 +48,11 @@ function mockBackend({ courses = [apiCourse], topics = [apiTopic], assignments =
   api.apiGetAssignments.mockResolvedValue(assignments)
   api.apiGetSubmissions.mockResolvedValue(submissions)
   api.apiGetSubmission.mockImplementation(async id => submissions.find(s => s.assignmentId === id) ?? null)
+  api.apiGetStaffConversations.mockResolvedValue([])
+  api.apiGetStudentConversations.mockResolvedValue([])
+  api.apiGetThread.mockResolvedValue([])
+  api.apiGetCertifications.mockResolvedValue([])
+  api.apiGetAdminContact.mockResolvedValue(null)
 }
 
 function renderLMS() {
@@ -392,5 +405,156 @@ describe('calificar y reintentos (staff)', () => {
 
     await waitFor(() => expect(api.apiAllowSubmissionRetry).toHaveBeenCalled())
     expect(result.current.submissionFor('7', '10').retryAllowed).toBe(true)
+  })
+})
+
+describe('carga inicial de mensajería y certificaciones', () => {
+  it('el staff trae sus conversaciones y el hilo completo', async () => {
+    api.apiGetStaffConversations.mockResolvedValue([{ courseId: 5, otherUserId: 10, lastMessage: apiMessage, unreadCount: 1 }])
+    api.apiGetThread.mockResolvedValue([apiMessage])
+    const { result } = await renderSynced()
+
+    expect(api.apiGetStudentConversations).not.toHaveBeenCalled()
+    expect(api.apiGetThread).toHaveBeenCalledWith(5, 10, TOKEN)
+    expect(result.current.threadMessages('5', '2', '10')).toMatchObject([
+      { remoteId: 100, fromId: '10', toId: '2', body: 'Hola profe', read: false },
+    ])
+  })
+
+  it('el estudiante trae sus conversaciones', async () => {
+    auth = { user: student, registeredStudents: [], allUsers: [] }
+    api.apiGetStudentConversations.mockResolvedValue([{ courseId: 5, otherUserId: 2, lastMessage: apiMessage, unreadCount: 0 }])
+    api.apiGetThread.mockResolvedValue([apiMessage])
+    const { result } = await renderSynced()
+
+    expect(api.apiGetStaffConversations).not.toHaveBeenCalled()
+    expect(result.current.threadMessages('5', '10', '2')).toHaveLength(1)
+  })
+
+  it('el estudiante conoce al admin real (no solo el de referencia) para poder escribirle', async () => {
+    auth = { user: student, registeredStudents: [], allUsers: [] }
+    api.apiGetAdminContact.mockResolvedValue({ id: 99, name: 'Admin Real', email: 'admin@x.co', role: 'admin', phone: '' })
+    const { result } = await renderSynced()
+
+    expect(api.apiGetUsers).not.toHaveBeenCalled()
+    const conv = result.current.studentConversations('10')
+    expect(conv.some(c => c.otherId === '99')).toBe(true)
+  })
+
+  it('el admin trae el historial de certificaciones', async () => {
+    auth = { user: admin, registeredStudents: [], allUsers: [] }
+    api.apiGetUsers.mockResolvedValue([])
+    api.apiGetCertifications.mockResolvedValue([apiCertification])
+    const { result } = await renderSynced()
+
+    expect(result.current.certifications).toMatchObject([{ remoteId: 50, studentId: '10', courseId: '5' }])
+  })
+
+  it('un profesor no pide el historial de certificaciones (es admin-only)', async () => {
+    const { result } = await renderSynced()
+
+    expect(api.apiGetCertifications).not.toHaveBeenCalled()
+    expect(result.current.certifications).toEqual([])
+  })
+})
+
+describe('mensajería', () => {
+  it('enviar en un curso real llama a la API y guarda con el id remoto', async () => {
+    api.apiSendMessage.mockResolvedValue({ ...apiMessage, id: 101, body: 'Nuevo mensaje' })
+    const { result } = await renderSynced()
+
+    let sent
+    await act(async () => { sent = await result.current.sendMessage({ courseId: '5', fromId: '2', toId: '10', body: 'Nuevo mensaje' }) })
+
+    expect(api.apiSendMessage).toHaveBeenCalledWith(5, 10, 'Nuevo mensaje', TOKEN)
+    expect(sent).toMatchObject({ remoteId: 101, body: 'Nuevo mensaje' })
+    expect(result.current.threadMessages('5', '2', '10').some(m => m.remoteId === 101)).toBe(true)
+  })
+
+  it('enviar en un curso mock queda solo en local', async () => {
+    const { result } = await renderSynced()
+
+    let sent
+    await act(async () => { sent = await result.current.sendMessage({ courseId: 'c1', fromId: 't1', toId: 's1', body: 'Hola mock' }) })
+
+    expect(api.apiSendMessage).not.toHaveBeenCalled()
+    expect(sent.id).toMatch(/^msg\d+$/)
+  })
+
+  it('si la API rechaza el envío, el error sube y no se agrega el mensaje', async () => {
+    api.apiSendMessage.mockRejectedValue(new Error('El destinatario no existe'))
+    const { result } = await renderSynced()
+    const before = result.current.threadMessages('5', '2', '10').length
+
+    await act(async () => {
+      await expect(result.current.sendMessage({ courseId: '5', fromId: '2', toId: '10', body: 'x' })).rejects.toThrow('El destinatario no existe')
+    })
+    expect(result.current.threadMessages('5', '2', '10')).toHaveLength(before)
+  })
+
+  it('marcar un hilo real como leído persiste en la API sin romper si falla', async () => {
+    api.apiMarkThreadRead.mockResolvedValue({ updated: 1 })
+    api.apiGetThread.mockResolvedValue([apiMessage])
+    api.apiGetStaffConversations.mockResolvedValue([{ courseId: 5, otherUserId: 10, lastMessage: apiMessage, unreadCount: 1 }])
+    const { result } = await renderSynced()
+
+    act(() => { result.current.markThreadRead('5', '2', '10') })
+
+    expect(api.apiMarkThreadRead).toHaveBeenCalledWith(5, 10, TOKEN)
+    expect(result.current.threadMessages('5', '2', '10').every(m => m.read)).toBe(true)
+  })
+
+  it('marcar un hilo mock como leído no llama a la API', async () => {
+    const { result } = await renderSynced()
+
+    act(() => { result.current.markThreadRead('c1', 't1', 's1') })
+
+    expect(api.apiMarkThreadRead).not.toHaveBeenCalled()
+  })
+})
+
+describe('certificaciones', () => {
+  beforeEach(() => { auth = { user: admin, registeredStudents: [], allUsers: [] } })
+
+  it('marcar certificado en un curso real llama a la API', async () => {
+    api.apiMarkCertification.mockResolvedValue(apiCertification)
+    const { result } = await renderSynced()
+
+    await act(async () => { await result.current.markCertified('10', '5') })
+
+    expect(api.apiMarkCertification).toHaveBeenCalledWith(10, 5, TOKEN)
+    expect(result.current.certifications.some(c => c.remoteId === 50)).toBe(true)
+  })
+
+  it('marcar certificado en un curso mock queda solo en local', async () => {
+    const { result } = await renderSynced()
+
+    await act(async () => { await result.current.markCertified('s1', 'c1') })
+
+    expect(api.apiMarkCertification).not.toHaveBeenCalled()
+    expect(result.current.certifications.some(c => c.studentId === 's1' && c.courseId === 'c1')).toBe(true)
+  })
+
+  it('desmarcar una certificación real llama a la API', async () => {
+    api.apiGetCertifications.mockResolvedValue([apiCertification])
+    api.apiUnmarkCertification.mockResolvedValue(null)
+    const { result } = await renderSynced()
+    const certId = result.current.certifications.find(c => c.remoteId === 50).id
+
+    await act(async () => { await result.current.unmarkCertified(certId) })
+
+    expect(api.apiUnmarkCertification).toHaveBeenCalledWith(50, TOKEN)
+    expect(result.current.certifications.some(c => c.remoteId === 50)).toBe(false)
+  })
+
+  it('desmarcar una certificación mock no llama a la API', async () => {
+    const { result } = await renderSynced()
+    await act(async () => { await result.current.markCertified('s1', 'c1') })
+    const certId = result.current.certifications.find(c => c.studentId === 's1').id
+
+    await act(async () => { await result.current.unmarkCertified(certId) })
+
+    expect(api.apiUnmarkCertification).not.toHaveBeenCalled()
+    expect(result.current.certifications.some(c => c.id === certId)).toBe(false)
   })
 })

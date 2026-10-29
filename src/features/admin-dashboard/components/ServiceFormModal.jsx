@@ -2,6 +2,8 @@ import { useState, useRef } from 'react'
 import FormField, { errorInputStyle } from '@/shared/components/FormField'
 import { Plus, Trash, Lock, X, AlertTriangle } from '@/shared/components/Icons'
 import { serviceThumbUrl } from '@/features/services/utils/thumbnail'
+import { useAuth } from '@/features/auth/context/AuthContext'
+import { apiUploadAttachment } from '@/shared/lib/api'
 
 function existingSections(service) {
   const sections = service?.tabs?.[0]?.sections ?? []
@@ -25,13 +27,14 @@ const inputStyle = { backgroundColor: 'var(--muted)', border: '1px solid var(--b
 function focusRing(e) { e.target.style.borderColor = '#4d82bc' }
 function blurRing(e) { e.target.style.borderColor = 'var(--border)' }
 
-// La imagen se guarda como base64 directo en memoria (sin backend de
-// archivos todavía) — se limita el tamaño de cada foto para no inflar el
-// estado de la página.
-const MAX_IMAGE_MB = 1.5
+// La foto se sube al backend como adjunto y el servicio guarda solo la ruta
+// (/uploads/...). El límite es más bajo que el de la API porque la portada
+// se muestra a pantalla completa en la página pública.
+const MAX_IMAGE_MB = 5
 const MAX_IMAGE_BYTES = MAX_IMAGE_MB * 1024 * 1024
 
 export default function ServiceFormModal({ service, categories, onAddCategory, onSave, onClose }) {
+  const { user } = useAuth()
   const isMultiTab = (service?.tabs?.length ?? 0) > 1
   const [form, setForm] = useState({
     title: service?.title ?? '',
@@ -44,7 +47,29 @@ export default function ServiceFormModal({ service, categories, onAddCategory, o
   const [confirmDiscard, setConfirmDiscard] = useState(false)
   const [addingCategory, setAddingCategory] = useState(false)
   const [newCategoryName, setNewCategoryName] = useState('')
+  const [uploading, setUploading] = useState(false)
+  const [saving, setSaving] = useState(false)
   const initialSnapshot = useRef(JSON.stringify({ form, extraSections }))
+
+  async function handleHeroChange(e) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    if (file.size > MAX_IMAGE_BYTES) {
+      setErrors(er => ({ ...er, hero: `La imagen pesa ${(file.size / 1024 / 1024).toFixed(1)} MB. Use una de máximo ${MAX_IMAGE_MB} MB.` }))
+      return
+    }
+    setUploading(true)
+    try {
+      const uploaded = await apiUploadAttachment(file, user?.token)
+      setForm(f => ({ ...f, hero: uploaded.url }))
+      setErrors(er => ({ ...er, hero: null }))
+    } catch (err) {
+      setErrors(er => ({ ...er, hero: err.message }))
+    } finally {
+      setUploading(false)
+    }
+  }
 
   function isDirty() {
     return JSON.stringify({ form, extraSections }) !== initialSnapshot.current
@@ -55,10 +80,10 @@ export default function ServiceFormModal({ service, categories, onAddCategory, o
     else onClose()
   }
 
-  function confirmNewCategory() {
+  async function confirmNewCategory() {
     const name = newCategoryName.trim()
     if (!name) { setAddingCategory(false); return }
-    onAddCategory(name)
+    if (!(await onAddCategory(name))) return
     setForm(f => ({ ...f, category: name }))
     setNewCategoryName('')
     setAddingCategory(false)
@@ -102,12 +127,18 @@ export default function ServiceFormModal({ service, categories, onAddCategory, o
     return errs
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
+    if (uploading || saving) return
     const errs = validate()
     setErrors(errs)
     if (Object.keys(errs).length > 0) return
-    onSave({ ...form, extraSections })
+    setSaving(true)
+    try {
+      await onSave({ ...form, extraSections })
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -198,19 +229,8 @@ export default function ServiceFormModal({ service, categories, onAddCategory, o
                         className="flex-1 cursor-pointer text-xs px-3 py-2.5 rounded-lg text-center font-semibold transition-colors"
                         style={{ backgroundColor: 'rgba(0,81,135,0.1)', color: 'var(--primary)', border: '1px solid rgba(0,81,135,0.2)' }}
                       >
-                        {form.hero ? 'Cambiar' : 'Elegir foto…'}
-                        <input type="file" accept="image/*" className="hidden" onChange={e => {
-                          const file = e.target.files?.[0]
-                          e.target.value = ''
-                          if (!file) return
-                          if (file.size > MAX_IMAGE_BYTES) {
-                            setErrors(er => ({ ...er, hero: `La imagen pesa ${(file.size / 1024 / 1024).toFixed(1)} MB. Use una de máximo ${MAX_IMAGE_MB} MB.` }))
-                            return
-                          }
-                          const reader = new FileReader()
-                          reader.onload = () => { setForm(f => ({ ...f, hero: reader.result })); setErrors(er => ({ ...er, hero: null })) }
-                          reader.readAsDataURL(file)
-                        }} />
+                        {uploading ? 'Subiendo…' : form.hero ? 'Cambiar' : 'Elegir foto…'}
+                        <input type="file" accept="image/*" className="hidden" disabled={uploading} onChange={handleHeroChange} />
                       </label>
                     </div>
                   </FormField>
@@ -297,13 +317,13 @@ export default function ServiceFormModal({ service, categories, onAddCategory, o
             style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>
             Cancelar
           </button>
-          <button type="submit"
-            className="flex-1 py-2.5 rounded-lg text-sm font-bold text-white transition-transform"
+          <button type="submit" disabled={uploading || saving}
+            className="flex-1 py-2.5 rounded-lg text-sm font-bold text-white transition-transform disabled:opacity-60"
             style={{ background: 'linear-gradient(135deg, #005187 0%, #4d82bc 55%, #b8860b 100%)', boxShadow: '0 4px 14px rgba(0,81,135,0.25)' }}
             onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
             onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
           >
-            Guardar
+            {saving ? 'Guardando…' : 'Guardar'}
           </button>
         </div>
         </form>

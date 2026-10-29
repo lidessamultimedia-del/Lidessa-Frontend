@@ -373,6 +373,51 @@ export function apiMarkPqrsfRead(id, token) {
   return request(`/api/pqrsf-tickets/${id}/read`, { method: 'PUT', headers: authHeaders(token) })
 }
 
+// ── Servicios (/servicios) ──
+// Lectura pública: solo los activos. El admin usa apiGetAllServices para ver
+// también los inactivos.
+export function apiGetServices() {
+  return request('/api/services')
+}
+
+export function apiGetAllServices(token) {
+  return request('/api/services/admin', { headers: authHeaders(token) })
+}
+
+// payload: { categoryId, title, description, heroImageUrl, active, locked, tabs }
+// El slug lo genera el backend a partir del título.
+export function apiCreateService(payload, token) {
+  return request('/api/services', { method: 'POST', headers: authHeaders(token), body: JSON.stringify(payload) })
+}
+
+export function apiUpdateService(id, payload, token) {
+  return request(`/api/services/${id}`, { method: 'PUT', headers: authHeaders(token), body: JSON.stringify(payload) })
+}
+
+// Los servicios con locked = true no se pueden borrar (el backend responde 400).
+export function apiDeleteService(id, token) {
+  return request(`/api/services/${id}`, { method: 'DELETE', headers: authHeaders(token) })
+}
+
+// Lectura pública (incluye inactivas, con `active`); el resto solo admin.
+export function apiGetServiceCategories() {
+  return request('/api/service-categories')
+}
+
+// payload: { name, active }
+export function apiCreateServiceCategory(payload, token) {
+  return request('/api/service-categories', { method: 'POST', headers: authHeaders(token), body: JSON.stringify(payload) })
+}
+
+export function apiUpdateServiceCategory(id, payload, token) {
+  return request(`/api/service-categories/${id}`, { method: 'PUT', headers: authHeaders(token), body: JSON.stringify(payload) })
+}
+
+// Falla (400) si todavía hay servicios en esa categoría.
+export function apiDeleteServiceCategory(id, token) {
+  return request(`/api/service-categories/${id}`, { method: 'DELETE', headers: authHeaders(token) })
+}
+
 // ── Configuración del sitio (datos de contacto del footer) ──
 // Lectura pública; guardar solo admin.
 export function apiGetSiteSettings() {

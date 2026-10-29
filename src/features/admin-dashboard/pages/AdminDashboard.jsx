@@ -334,32 +334,60 @@ export default function AdminDashboard({ theme, setTheme }) {
     navigate('/')
   }
 
-  function toggleService(slug) {
+  async function toggleService(slug) {
     const svc = services.find(s => s.slug === slug)
-    toggleServiceActive(slug)
-    toast(svc.active === false ? 'success' : 'warning', svc.active === false ? 'Servicio activado' : 'Servicio desactivado', svc.title)
-  }
-
-  function handleAddCategory(name) {
-    addCategory(name)
-    toast('success', 'Categoría creada', name)
-  }
-
-  function toggleCategory(name) {
-    const cat = serviceCategories.find(c => c.name === name)
-    toggleCategoryActive(name)
-    toast(cat.active === false ? 'success' : 'warning', cat.active === false ? 'Categoría activada' : 'Categoría desactivada', name)
-  }
-
-  function handleSaveService(form) {
-    if (serviceModal.mode === 'edit') {
-      updateService(serviceModal.service.slug, form)
-      toast('success', 'Servicio actualizado', form.title)
-    } else {
-      addService(form)
-      toast('success', 'Servicio creado', form.title)
+    try {
+      await toggleServiceActive(slug)
+      toast(svc.active === false ? 'success' : 'warning', svc.active === false ? 'Servicio activado' : 'Servicio desactivado', svc.title)
+    } catch (err) {
+      toast('error', 'No se pudo cambiar el estado', err.message)
     }
-    setServiceModal(null)
+  }
+
+  // Devuelve si se creó, para que el formulario de servicio sepa si puede
+  // seleccionar la categoría nueva.
+  async function handleAddCategory(name) {
+    try {
+      await addCategory(name)
+      toast('success', 'Categoría creada', name)
+      return true
+    } catch (err) {
+      toast('error', 'No se pudo crear la categoría', err.message)
+      return false
+    }
+  }
+
+  async function handleUpdateCategory(oldName, newName) {
+    try {
+      await updateCategory(oldName, newName)
+    } catch (err) {
+      toast('error', 'No se pudo renombrar la categoría', err.message)
+    }
+  }
+
+  async function toggleCategory(name) {
+    const cat = serviceCategories.find(c => c.name === name)
+    try {
+      await toggleCategoryActive(name)
+      toast(cat.active === false ? 'success' : 'warning', cat.active === false ? 'Categoría activada' : 'Categoría desactivada', name)
+    } catch (err) {
+      toast('error', 'No se pudo cambiar el estado', err.message)
+    }
+  }
+
+  async function handleSaveService(form) {
+    try {
+      if (serviceModal.mode === 'edit') {
+        await updateService(serviceModal.service.slug, form)
+        toast('success', 'Servicio actualizado', form.title)
+      } else {
+        await addService(form)
+        toast('success', 'Servicio creado', form.title)
+      }
+      setServiceModal(null)
+    } catch (err) {
+      toast('error', 'No se pudo guardar el servicio', err.message)
+    }
   }
 
   function handleRequestDeleteCategory(name, inUse) {
@@ -527,8 +555,12 @@ export default function AdminDashboard({ theme, setTheme }) {
       lms.deleteDirectoryUser(deleteConfirm.id)
       toast('success', 'Usuario eliminado', deleteConfirm.label)
     } else if (deleteConfirm.type === 'service') {
-      deleteService(deleteConfirm.id)
-      toast('success', 'Servicio eliminado', deleteConfirm.label)
+      try {
+        await deleteService(deleteConfirm.id)
+        toast('success', 'Servicio eliminado', deleteConfirm.label)
+      } catch (err) {
+        toast('error', 'No se pudo eliminar el servicio', err.message)
+      }
     } else if (deleteConfirm.type === 'catalogCourse') {
       try {
         await lms.deleteCourse(deleteConfirm.id)
@@ -538,9 +570,13 @@ export default function AdminDashboard({ theme, setTheme }) {
         toast('error', 'No se pudo eliminar el curso', err.message)
       }
     } else if (deleteConfirm.type === 'category') {
-      deleteCategory(deleteConfirm.id)
-      if (servicesCategoryFilter === deleteConfirm.id) setServicesCategoryFilter('all')
-      toast('success', 'Categoría eliminada', deleteConfirm.label)
+      try {
+        await deleteCategory(deleteConfirm.id)
+        if (servicesCategoryFilter === deleteConfirm.id) setServicesCategoryFilter('all')
+        toast('success', 'Categoría eliminada', deleteConfirm.label)
+      } catch (err) {
+        toast('error', 'No se pudo eliminar la categoría', err.message)
+      }
     } else if (deleteConfirm.type === 'documentType') {
       lms.deleteDocumentType(deleteConfirm.id)
       toast('success', 'Tipo de documento eliminado', deleteConfirm.label)
@@ -1523,7 +1559,7 @@ export default function AdminDashboard({ theme, setTheme }) {
                   categories={serviceCategories}
                   services={services}
                   onAdd={handleAddCategory}
-                  onUpdate={updateCategory}
+                  onUpdate={handleUpdateCategory}
                   onToggleActive={toggleCategory}
                   onRequestDelete={handleRequestDeleteCategory}
                 />
@@ -3298,7 +3334,7 @@ export default function AdminDashboard({ theme, setTheme }) {
         <ServiceFormModal
           service={serviceModal.mode === 'edit' ? serviceModal.service : null}
           categories={serviceCategories.map(c => c.name)}
-          onAddCategory={addCategory}
+          onAddCategory={handleAddCategory}
           onSave={handleSaveService}
           onClose={() => setServiceModal(null)}
         />

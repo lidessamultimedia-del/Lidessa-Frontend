@@ -11,4 +11,9 @@ export const clients = [
   { name: 'Hydro Bombas', logo: '/assets/hydro.png', dark: true },
   { name: 'Cultivos Lima', logo: '/assets/lima.png', dark: true },
   { name: 'Seguros Que Te Protegen', logo: '/assets/Logonew.ico' },
+  { name: 'Artes Cerámicas', logo: '/assets/artes-ceramicas.ico' },
+  { name: 'Instituto Nueva Generación', logo: '/assets/instituto-nueva-generacion.ico' },
+  { name: 'Reloj de Arena', logo: '/assets/reloj-de-arena.ico' },
+  { name: 'The Best School', logo: '/assets/the-best-school.ico' },
+  { name: 'Andrea Iglesias García', logo: '/assets/andrea-iglesias.ico' },
 ]

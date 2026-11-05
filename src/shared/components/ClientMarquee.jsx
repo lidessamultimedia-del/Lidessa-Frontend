@@ -9,7 +9,7 @@ export default function ClientMarquee({ title = 'Empresas que confían en nosotr
           className="flex items-center justify-center rounded-xl cursor-default select-none shrink-0"
           style={{
             height: 76,
-            width: 150,
+            minWidth: 90,
             padding: '10px 18px',
             backgroundColor: c.dark ? '#1a1a1a' : 'var(--card)',
             border: '1px solid var(--border)',

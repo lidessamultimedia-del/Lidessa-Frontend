@@ -1,6 +1,6 @@
 import { clients as allClients } from '@/shared/data/clients'
 
-export default function ClientMarquee({ title = 'Empresas que confían en nosotros', items = allClients }) {
+export default function ClientMarquee({ title = 'Empresas que confían en nosotros', items = allClients, speed = 28 }) {
   const renderClients = (group) => (
     <div className="flex gap-6 shrink-0 pr-6" aria-hidden={group > 0}>
       {items.map((c, i) => {
@@ -16,23 +16,25 @@ export default function ClientMarquee({ title = 'Empresas que confían en nosotr
               padding: '10px 18px',
               backgroundColor: c.dark ? '#1a1a1a' : 'var(--card)',
               border: '1px solid var(--border)',
+              position: 'relative',
               transition: 'transform 0.25s ease, box-shadow 0.25s ease',
             }}
             onMouseEnter={e => {
-              e.currentTarget.style.transform = 'translateY(-3px)'
-              e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,81,135,0.14)'
+              e.currentTarget.style.transform = 'translateY(-4px) scale(1.12)'
+              e.currentTarget.style.boxShadow = '0 10px 28px rgba(0,81,135,0.18)'
+              e.currentTarget.style.zIndex = 10
             }}
             onMouseLeave={e => {
               e.currentTarget.style.transform = ''
               e.currentTarget.style.boxShadow = ''
+              e.currentTarget.style.zIndex = ''
             }}
           >
             <img
               src={c.logo}
               alt={group === 0 ? c.name : ''}
               title={group === 0 ? c.name : undefined}
-              className="max-h-full max-w-full"
-              style={{ objectFit: 'contain' }}
+              style={{ height: '100%', width: 'auto', maxWidth: '100%', objectFit: 'contain' }}
             />
           </Tag>
         )
@@ -53,7 +55,7 @@ export default function ClientMarquee({ title = 'Empresas que confían en nosotr
       </p>
 
       <div className="relative" style={{ maskImage: 'linear-gradient(to right, transparent, black 8%, black 92%, transparent)' }}>
-        <div className="flex animate-marquee w-max">
+        <div className="flex animate-marquee w-max" style={{ animationDuration: `${speed}s` }}>
           {renderClients(0)}
           {renderClients(1)}
         </div>

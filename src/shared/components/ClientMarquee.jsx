@@ -2,7 +2,7 @@ import { clients as allClients } from '@/shared/data/clients'
 
 export default function ClientMarquee({ title = 'Empresas que confían en nosotros', items = allClients, speed = 28 }) {
   const renderClients = (group) => (
-    <div className="flex gap-6 shrink-0 pr-6" aria-hidden={group > 0}>
+    <div className="flex gap-10 shrink-0 pr-10" aria-hidden={group > 0}>
       {items.map((c, i) => {
         const Tag = c.url ? 'a' : 'div'
         return (
@@ -11,17 +11,17 @@ export default function ClientMarquee({ title = 'Empresas que confían en nosotr
             {...(c.url ? { href: c.url, tabIndex: group > 0 ? -1 : undefined } : {})}
             className={`flex items-center justify-center rounded-xl select-none shrink-0 ${c.url ? 'cursor-pointer' : 'cursor-default'}`}
             style={{
-              height: 104,
-              minWidth: 120,
-              padding: '16px 22px',
+              height: 92,
+              minWidth: 108,
+              padding: '14px 20px',
               backgroundColor: c.dark ? '#1a1a1a' : 'var(--card)',
               border: '1px solid var(--border)',
               position: 'relative',
               transition: 'transform 0.3s ease, box-shadow 0.3s ease',
             }}
             onMouseEnter={e => {
-              e.currentTarget.style.transform = 'translateY(-6px) scale(1.22)'
-              e.currentTarget.style.boxShadow = '0 16px 36px rgba(0,81,135,0.24)'
+              e.currentTarget.style.transform = 'translateY(-5px) scale(1.12)'
+              e.currentTarget.style.boxShadow = '0 14px 32px rgba(0,81,135,0.22)'
               e.currentTarget.style.zIndex = 10
             }}
             onMouseLeave={e => {

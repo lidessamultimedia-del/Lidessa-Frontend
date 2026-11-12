@@ -16,6 +16,8 @@ const allyNames = [
   'Andrea Iglesias García', 'Clínica Smile',
 ]
 const allies = allyNames.map(n => clients.find(c => c.name === n)).filter(Boolean)
+// Clínica Smile es solo aliado estratégico, no cliente que confía en nosotros.
+const trustedClients = clients.filter(c => c.name !== 'Clínica Smile')
 
 const FEATURED_SERVICE_IMAGES = {
   'seguridad-salud': '/assets/Inicio-destacados-sst.jpg',
@@ -202,7 +204,7 @@ export default function Home() {
       </section>
 
       {/* ── Clients marquee ── */}
-      <ClientMarquee speed={48} />
+      <ClientMarquee items={trustedClients} speed={70} />
 
       {/* ── Attributes + counters ── */}
       <section className="pt-6 pb-20 max-w-7xl mx-auto px-4 sm:px-6">

@@ -11,17 +11,17 @@ export default function ClientMarquee({ title = 'Empresas que confían en nosotr
             {...(c.url ? { href: c.url, tabIndex: group > 0 ? -1 : undefined } : {})}
             className={`flex items-center justify-center rounded-xl select-none shrink-0 ${c.url ? 'cursor-pointer' : 'cursor-default'}`}
             style={{
-              height: 76,
-              minWidth: 90,
-              padding: '10px 18px',
+              height: 104,
+              minWidth: 120,
+              padding: '16px 22px',
               backgroundColor: c.dark ? '#1a1a1a' : 'var(--card)',
               border: '1px solid var(--border)',
               position: 'relative',
-              transition: 'transform 0.25s ease, box-shadow 0.25s ease',
+              transition: 'transform 0.3s ease, box-shadow 0.3s ease',
             }}
             onMouseEnter={e => {
-              e.currentTarget.style.transform = 'translateY(-4px) scale(1.12)'
-              e.currentTarget.style.boxShadow = '0 10px 28px rgba(0,81,135,0.18)'
+              e.currentTarget.style.transform = 'translateY(-6px) scale(1.22)'
+              e.currentTarget.style.boxShadow = '0 16px 36px rgba(0,81,135,0.24)'
               e.currentTarget.style.zIndex = 10
             }}
             onMouseLeave={e => {

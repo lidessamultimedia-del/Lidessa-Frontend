@@ -67,7 +67,12 @@ function ProtectedRoute({ roles, enabled = true, children }) {
   const { user, initialized } = useAuth()
   if (!initialized) return null
   if (!LOGIN_ENABLED || !enabled) return <Navigate to="/" replace />
-  if (!user || !roles.includes(user.role)) return <Navigate to="/" replace />
+  // Cuentas vinculadas (ver 2.2): el acceso depende de tener el rol en algún
+  // momento de la cuenta (user.roles), no solo del rol principal — así quien
+  // tiene estudiante+cliente puede entrar a ambos paneles sin importar cuál
+  // sea su rol "activo" en ese momento.
+  const userRoles = user?.roles ?? (user ? [user.role] : [])
+  if (!user || !roles.some(r => userRoles.includes(r))) return <Navigate to="/" replace />
   return <>{children}</>
 }
 

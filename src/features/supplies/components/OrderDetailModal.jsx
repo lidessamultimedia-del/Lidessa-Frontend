@@ -1,4 +1,5 @@
 import { X, Check, AlertTriangle, Package, Edit2, Trash, Phone, Mail, MapPin } from '@/shared/components/Icons'
+import { toFileUrl } from '@/shared/lib/api'
 
 export const ORDER_STATUS = {
   pending: { label: 'Pendiente de revisión', short: 'Pendiente', color: '#d97706' },
@@ -80,8 +81,8 @@ export default function OrderDetailModal({ order: o, onClose, onEdit, onDelete, 
             <div>
               <Label>Comprobante de pago</Label>
               {o.proofImage ? (
-                <button type="button" onClick={() => onViewImage({ src: o.proofImage, alt: 'Comprobante de pago' })}>
-                  <img src={o.proofImage} alt="Comprobante de pago" className="rounded-lg max-h-44 object-contain" style={{ border: '1px solid var(--border)' }} />
+                <button type="button" onClick={() => onViewImage({ src: toFileUrl(o.proofImage), alt: 'Comprobante de pago' })}>
+                  <img src={toFileUrl(o.proofImage)} alt="Comprobante de pago" className="rounded-lg max-h-44 object-contain" style={{ border: '1px solid var(--border)' }} />
                 </button>
               ) : (
                 <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>No se adjuntó comprobante.</p>
@@ -118,8 +119,8 @@ export default function OrderDetailModal({ order: o, onClose, onEdit, onDelete, 
             <div className="rounded-lg px-3 py-2.5 text-xs" style={{ backgroundColor: 'rgba(220,38,38,0.1)', border: '1px solid rgba(220,38,38,0.25)', color: '#dc2626' }}>
               <strong>Causa del rechazo:</strong> "{o.rejectionReason}"
               {o.refundProof && (
-                <button type="button" onClick={() => onViewImage({ src: o.refundProof, alt: 'Comprobante de devolución' })} className="mt-2 block">
-                  <img src={o.refundProof} alt="Comprobante de devolución" className="rounded-lg max-h-32 object-contain" style={{ border: '1px solid var(--border)' }} />
+                <button type="button" onClick={() => onViewImage({ src: toFileUrl(o.refundProof), alt: 'Comprobante de devolución' })} className="mt-2 block">
+                  <img src={toFileUrl(o.refundProof)} alt="Comprobante de devolución" className="rounded-lg max-h-32 object-contain" style={{ border: '1px solid var(--border)' }} />
                 </button>
               )}
             </div>
@@ -130,8 +131,8 @@ export default function OrderDetailModal({ order: o, onClose, onEdit, onDelete, 
               <Label>Envío</Label>
               <p className="text-sm" style={{ color: 'var(--foreground)' }}>{o.shipment.carrier} — guía {o.shipment.trackingNumber}</p>
               {o.shipment.photo && (
-                <button type="button" onClick={() => onViewImage({ src: o.shipment.photo, alt: 'Foto del paquete' })} className="mt-2">
-                  <img src={o.shipment.photo} alt="Foto del paquete" className="rounded-lg max-h-32 object-contain" style={{ border: '1px solid var(--border)' }} />
+                <button type="button" onClick={() => onViewImage({ src: toFileUrl(o.shipment.photo), alt: 'Foto del paquete' })} className="mt-2">
+                  <img src={toFileUrl(o.shipment.photo)} alt="Foto del paquete" className="rounded-lg max-h-32 object-contain" style={{ border: '1px solid var(--border)' }} />
                 </button>
               )}
             </div>

@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react'
 import FormField from '@/shared/components/FormField'
 import { ImageIcon } from '@/shared/components/Icons'
-
-const MAX_PHOTO_BYTES = 5 * 1024 * 1024
+import { useFileUpload } from '@/shared/lib/useFileUpload'
+import { toFileUrl } from '@/shared/lib/api'
 
 function formatCOP(value) {
   return value.toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })
@@ -13,19 +13,15 @@ export default function RejectOrderModal({ order, onSave, onCancel }) {
   const [refundProof, setRefundProof] = useState('')
   const [error, setError] = useState('')
   const photoInputRef = useRef(null)
+  const { upload, uploading } = useFileUpload()
 
-  function handlePhotoFile(e) {
+  async function handlePhotoFile(e) {
     const file = e.target.files?.[0]
     e.target.value = ''
     if (!file) return
-    if (file.size > MAX_PHOTO_BYTES) {
-      setError('La imagen no puede pesar más de 5 MB.')
-      return
-    }
     setError('')
-    const reader = new FileReader()
-    reader.onload = () => setRefundProof(reader.result)
-    reader.readAsDataURL(file)
+    const url = await upload(file, setError)
+    if (url) setRefundProof(url)
   }
 
   function handleSubmit(e) {
@@ -54,24 +50,25 @@ export default function RejectOrderModal({ order, onSave, onCancel }) {
         </FormField>
 
         <FormField label="Comprobante de devolución (opcional)" helperText="Solo si ya le devolviste el dinero al cliente — se lo mostramos junto con la causa.">
-          <input ref={photoInputRef} type="file" accept="image/*" onChange={handlePhotoFile} className="hidden" />
+          <input ref={photoInputRef} type="file" accept="image/*" onChange={handlePhotoFile} className="hidden" disabled={uploading} />
           {refundProof ? (
             <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-              <img src={refundProof} alt="Comprobante de devolución" className="w-full max-h-40 object-contain" style={{ backgroundColor: 'var(--muted)' }} />
+              <img src={toFileUrl(refundProof)} alt="Comprobante de devolución" className="w-full max-h-40 object-contain" style={{ backgroundColor: 'var(--muted)' }} />
               <div className="flex" style={{ borderTop: '1px solid var(--border)' }}>
-                <button type="button" onClick={() => photoInputRef.current?.click()} className="flex-1 py-2 text-xs font-bold" style={{ color: 'var(--primary)' }}>Cambiar foto</button>
-                <button type="button" onClick={() => setRefundProof('')} className="flex-1 py-2 text-xs font-bold" style={{ borderLeft: '1px solid var(--border)', color: '#dc2626' }}>Quitar</button>
+                <button type="button" onClick={() => photoInputRef.current?.click()} disabled={uploading} className="flex-1 py-2 text-xs font-bold disabled:opacity-50" style={{ color: 'var(--primary)' }}>Cambiar foto</button>
+                <button type="button" onClick={() => setRefundProof('')} disabled={uploading} className="flex-1 py-2 text-xs font-bold disabled:opacity-50" style={{ borderLeft: '1px solid var(--border)', color: '#dc2626' }}>Quitar</button>
               </div>
             </div>
           ) : (
             <button
               type="button"
               onClick={() => photoInputRef.current?.click()}
-              className="w-full flex flex-col items-center justify-center gap-1.5 rounded-lg py-5"
+              disabled={uploading}
+              className="w-full flex flex-col items-center justify-center gap-1.5 rounded-lg py-5 disabled:opacity-50"
               style={{ border: '2px dashed var(--border)', backgroundColor: 'var(--muted)' }}
             >
               <ImageIcon size={22} style={{ color: 'var(--muted-foreground)' }} />
-              <span className="text-xs font-bold" style={{ color: 'var(--primary)' }}>Subir comprobante de devolución</span>
+              <span className="text-xs font-bold" style={{ color: 'var(--primary)' }}>{uploading ? 'Subiendo...' : 'Subir comprobante de devolución'}</span>
             </button>
           )}
         </FormField>

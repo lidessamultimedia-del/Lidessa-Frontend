@@ -8,6 +8,15 @@ export function toFileUrl(path) {
   return /^(https?:|data:)/.test(path) ? path : `${API_URL}${path}`
 }
 
+// Para campos que pueden traer tanto una imagen de ejemplo propia del
+// frontend (/assets/...) como una subida real por un admin (/uploads/...,
+// solo esa vive en la API) — mismo criterio que heroDisplayUrl en
+// ServicesDataContext. A diferencia de toFileUrl, aquí SÍ importa no tocar
+// las rutas /assets/, que debe servir el propio frontend.
+export function toDisplayUrl(path) {
+  return path?.startsWith('/uploads/') ? toFileUrl(path) : (path ?? '')
+}
+
 async function request(path, options = {}, { allow404 = false } = {}) {
   const isFormData = options.body instanceof FormData
   const headers = { ...(isFormData ? {} : { 'Content-Type': 'application/json' }), ...options.headers }
@@ -58,6 +67,17 @@ export function apiMe(token) {
 // Solo admin. Cuentas reales (sin contraseña); `role` opcional filtra.
 export function apiGetUsers(token, role) {
   return request(`/api/auth/users${role ? `?role=${encodeURIComponent(role)}` : ''}`, { headers: authHeaders(token) })
+}
+
+// Cuentas vinculadas (ver 2.2): solo admin. Agrega un rol más a una cuenta
+// que ya existe (profesor/estudiante/cliente); devuelve la cuenta con su
+// lista de roles actualizada.
+export function apiAddRole(userId, role, token) {
+  return request(`/api/auth/users/${userId}/roles`, {
+    method: 'POST',
+    headers: authHeaders(token),
+    body: JSON.stringify({ role }),
+  })
 }
 
 // Cualquier rol autenticado. Null si no hay ningún admin.
@@ -427,4 +447,81 @@ export function apiGetSiteSettings() {
 // payload: { phone, email, address, schedule }
 export function apiUpdateSiteSettings(payload, token) {
   return request('/api/site-settings', { method: 'PUT', headers: authHeaders(token), body: JSON.stringify(payload) })
+}
+
+// ── Suministros (catálogo y pedidos) ──
+// Lectura pública: solo los activos. apiGetAllSupplyProducts (admin) también trae los ocultos.
+export function apiGetSupplyProducts() {
+  return request('/api/supplies/products')
+}
+
+export function apiGetAllSupplyProducts(token) {
+  return request('/api/supplies/products/admin', { headers: authHeaders(token) })
+}
+
+// payload: { name, description, price, stock, imageUrl, active }
+export function apiCreateSupplyProduct(payload, token) {
+  return request('/api/supplies/products', { method: 'POST', headers: authHeaders(token), body: JSON.stringify(payload) })
+}
+
+export function apiUpdateSupplyProduct(id, payload, token) {
+  return request(`/api/supplies/products/${id}`, { method: 'PUT', headers: authHeaders(token), body: JSON.stringify(payload) })
+}
+
+export function apiToggleSupplyProductActive(id, token) {
+  return request(`/api/supplies/products/${id}/toggle-active`, { method: 'PATCH', headers: authHeaders(token) })
+}
+
+export function apiDeleteSupplyProduct(id, token) {
+  return request(`/api/supplies/products/${id}`, { method: 'DELETE', headers: authHeaders(token) })
+}
+
+// Admin: todos los pedidos. apiGetMySupplyOrders: solo los del cliente logueado.
+export function apiGetSupplyOrders(token) {
+  return request('/api/supplies/orders', { headers: authHeaders(token) })
+}
+
+export function apiGetMySupplyOrders(token) {
+  return request('/api/supplies/orders/mine', { headers: authHeaders(token) })
+}
+
+export function apiGetSupplyOrder(id, token) {
+  return request(`/api/supplies/orders/${id}`, { headers: authHeaders(token) })
+}
+
+// payload: { clientId, customerName, customerPhone, customerEmail, address, city, notes, proofImageUrl, items: [{productId, quantity}] }
+export function apiCreateSupplyOrder(payload, token) {
+  return request('/api/supplies/orders', { method: 'POST', headers: authHeaders(token), body: JSON.stringify(payload) })
+}
+
+// payload: igual que apiCreateSupplyOrder, pero `items: null` deja los artículos sin tocar.
+export function apiUpdateSupplyOrder(id, payload, token) {
+  return request(`/api/supplies/orders/${id}`, { method: 'PUT', headers: authHeaders(token), body: JSON.stringify(payload) })
+}
+
+export function apiDeleteSupplyOrder(id, token) {
+  return request(`/api/supplies/orders/${id}`, { method: 'DELETE', headers: authHeaders(token) })
+}
+
+export function apiConfirmSupplyOrder(id, token) {
+  return request(`/api/supplies/orders/${id}/confirm`, { method: 'PATCH', headers: authHeaders(token) })
+}
+
+// payload: { reason, refundProofUrl }
+export function apiRejectSupplyOrder(id, payload, token) {
+  return request(`/api/supplies/orders/${id}/reject`, { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify(payload) })
+}
+
+// payload: { carrier, trackingNumber, photoUrl }
+export function apiShipSupplyOrder(id, payload, token) {
+  return request(`/api/supplies/orders/${id}/ship`, { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify(payload) })
+}
+
+// payload: { amount, message }
+export function apiRequestSupplyPaymentShortfall(id, payload, token) {
+  return request(`/api/supplies/orders/${id}/payment-shortfall`, { method: 'PATCH', headers: authHeaders(token), body: JSON.stringify(payload) })
+}
+
+export function apiCompleteSupplyOrder(id, token) {
+  return request(`/api/supplies/orders/${id}/complete`, { method: 'PATCH', headers: authHeaders(token) })
 }

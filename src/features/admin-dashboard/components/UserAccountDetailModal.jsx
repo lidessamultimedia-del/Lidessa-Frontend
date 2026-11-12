@@ -1,5 +1,8 @@
+import { useState } from 'react'
 import Avatar from '@/shared/components/Avatar'
-import { X, Edit2, Trash, Mail, Phone, IdCard, MapPin, User, BookOpen, ShoppingCart } from '@/shared/components/Icons'
+import { X, Edit2, Trash, Mail, Phone, IdCard, MapPin, User, BookOpen, ShoppingCart, Plus } from '@/shared/components/Icons'
+
+const INVITABLE_ROLES = ['profesor', 'estudiante', 'cliente']
 
 export const ROLE_BADGE = {
   admin: { label: 'Administrador', color: '#005187' },
@@ -35,9 +38,19 @@ function InfoRow({ icon: Icon, label, value }) {
 
 // Ficha de detalle de una cuenta (Configuración → Usuarios y Roles), con
 // lo relacionado según el rol: cursos que dicta, cursos inscritos o pedidos.
-export default function UserAccountDetailModal({ account, isSelf, related = [], relatedTitle, relatedIcon, onEdit, onDelete, onClose }) {
+export default function UserAccountDetailModal({ account, isSelf, related = [], relatedTitle, relatedIcon, onEdit, onDelete, onClose, onAddRole }) {
   const RelatedIcon = relatedIcon ?? (account.role === 'cliente' ? ShoppingCart : BookOpen)
   const doc = account.documentNumber ? `${account.documentType ? `${account.documentType} · ` : ''}${account.documentNumber}` : ''
+  const roles = account.roles?.length ? account.roles : [account.role]
+  const rolesToAdd = INVITABLE_ROLES.filter(r => !roles.includes(r))
+  const [addingRole, setAddingRole] = useState(false)
+  const [roleToAdd, setRoleToAdd] = useState(rolesToAdd[0] ?? '')
+
+  async function handleAddRole() {
+    if (!roleToAdd) return
+    await onAddRole(roleToAdd)
+    setAddingRole(false)
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-6"
@@ -62,10 +75,36 @@ export default function UserAccountDetailModal({ account, isSelf, related = [], 
                 {isSelf && <span className="ml-2 text-[11px] font-bold px-1.5 py-0.5 rounded-full align-middle" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }}>Tú</span>}
               </p>
               <p className="text-xs truncate mb-2" style={{ color: 'rgba(255,255,255,0.65)' }}>{account.email}</p>
-              <span className="inline-block rounded-full" style={{ backgroundColor: 'white' }}><RoleBadge role={account.role} /></span>
+              <div className="flex flex-wrap gap-1.5">
+                {roles.map(r => (
+                  <span key={r} className="inline-block rounded-full" style={{ backgroundColor: 'white' }}><RoleBadge role={r} /></span>
+                ))}
+              </div>
             </div>
           </div>
         </div>
+
+        {/* Cuentas vinculadas: agregar otro rol a esta misma cuenta */}
+        {onAddRole && rolesToAdd.length > 0 && (
+          <div className="px-6 pt-4">
+            {addingRole ? (
+              <div className="flex items-center gap-2 rounded-lg p-2" style={{ backgroundColor: 'var(--muted)' }}>
+                <select value={roleToAdd} onChange={e => setRoleToAdd(e.target.value)}
+                  className="flex-1 px-2 py-1.5 rounded-lg text-sm outline-none" style={{ backgroundColor: 'var(--background)', border: '1px solid var(--border)', color: 'var(--foreground)' }}>
+                  {rolesToAdd.map(r => <option key={r} value={r}>{ROLE_BADGE[r]?.label ?? r}</option>)}
+                </select>
+                <button type="button" onClick={handleAddRole} className="px-3 py-1.5 rounded-lg text-xs font-bold text-white" style={{ backgroundColor: '#005187' }}>Agregar</button>
+                <button type="button" onClick={() => setAddingRole(false)} className="px-2 py-1.5 rounded-lg text-xs font-bold" style={{ color: 'var(--muted-foreground)' }}>Cancelar</button>
+              </div>
+            ) : (
+              <button type="button" onClick={() => setAddingRole(true)}
+                className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-lg"
+                style={{ border: '1px dashed var(--border)', color: 'var(--primary)' }}>
+                <Plus size={13} /> Agregar otro rol a esta cuenta (cuenta vinculada)
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Cuerpo */}
         <div className="overflow-y-auto px-6 py-4">
@@ -75,7 +114,7 @@ export default function UserAccountDetailModal({ account, isSelf, related = [], 
             <InfoRow icon={IdCard} label="Documento" value={doc} />
             <InfoRow icon={Mail} label="Correo electrónico" value={account.email} />
             <InfoRow icon={Phone} label="Teléfono" value={account.phone} />
-            {account.role === 'cliente' && <InfoRow icon={MapPin} label="Dirección" value={account.address} />}
+            {roles.includes('cliente') && <InfoRow icon={MapPin} label="Dirección" value={account.address} />}
           </div>
 
           {relatedTitle && (

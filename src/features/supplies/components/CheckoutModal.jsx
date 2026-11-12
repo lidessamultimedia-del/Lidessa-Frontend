@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react'
 import FormField from '@/shared/components/FormField'
 import { ImageIcon } from '@/shared/components/Icons'
-
-const MAX_PROOF_BYTES = 5 * 1024 * 1024
+import { useFileUpload } from '@/shared/lib/useFileUpload'
+import { toFileUrl } from '@/shared/lib/api'
 
 function formatCOP(value) {
   return value.toLocaleString('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 })
@@ -29,19 +29,15 @@ export default function CheckoutModal({ user, items = [], total, onSubmit, onCan
   const [proofImage, setProofImage] = useState('')
   const [error, setError] = useState('')
   const proofInputRef = useRef(null)
+  const { upload, uploading } = useFileUpload()
 
-  function handleProofFile(e) {
+  async function handleProofFile(e) {
     const file = e.target.files?.[0]
     e.target.value = ''
     if (!file) return
-    if (file.size > MAX_PROOF_BYTES) {
-      setError('La imagen no puede pesar más de 5 MB.')
-      return
-    }
     setError('')
-    const reader = new FileReader()
-    reader.onload = () => setProofImage(reader.result)
-    reader.readAsDataURL(file)
+    const url = await upload(file, setError)
+    if (url) setProofImage(url)
   }
 
   function handleSubmit(e) {
@@ -107,14 +103,15 @@ export default function CheckoutModal({ user, items = [], total, onSubmit, onCan
         </div>
 
         <FormField label="Comprobante de pago" required helperText="Transfiere o consigna el total y sube la foto del comprobante.">
-          <input ref={proofInputRef} type="file" accept="image/*" onChange={handleProofFile} className="hidden" />
+          <input ref={proofInputRef} type="file" accept="image/*" onChange={handleProofFile} className="hidden" disabled={uploading} />
           {proofImage ? (
             <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-              <img src={proofImage} alt="Comprobante de pago" className="w-full max-h-64 object-contain" style={{ backgroundColor: inputBg }} />
+              <img src={toFileUrl(proofImage)} alt="Comprobante de pago" className="w-full max-h-64 object-contain" style={{ backgroundColor: inputBg }} />
               <button
                 type="button"
                 onClick={() => proofInputRef.current?.click()}
-                className="w-full py-2 text-xs font-bold"
+                disabled={uploading}
+                className="w-full py-2 text-xs font-bold disabled:opacity-50"
                 style={{ borderTop: '1px solid var(--border)', color: 'var(--primary)' }}
               >
                 Cambiar foto
@@ -124,11 +121,12 @@ export default function CheckoutModal({ user, items = [], total, onSubmit, onCan
             <button
               type="button"
               onClick={() => proofInputRef.current?.click()}
-              className="w-full flex flex-col items-center justify-center gap-2 rounded-lg py-10"
+              disabled={uploading}
+              className="w-full flex flex-col items-center justify-center gap-2 rounded-lg py-10 disabled:opacity-50"
               style={{ border: '2px dashed var(--border)', backgroundColor: inputBg }}
             >
               <ImageIcon size={30} style={{ color: 'var(--muted-foreground)' }} />
-              <span className="text-sm font-bold" style={{ color: 'var(--primary)' }}>Haz clic para subir el comprobante</span>
+              <span className="text-sm font-bold" style={{ color: 'var(--primary)' }}>{uploading ? 'Subiendo...' : 'Haz clic para subir el comprobante'}</span>
               <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>JPG o PNG, máximo 5 MB</span>
             </button>
           )}

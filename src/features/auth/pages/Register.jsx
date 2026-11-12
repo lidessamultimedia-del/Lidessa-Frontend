@@ -72,7 +72,7 @@ function RegisterForm() {
     setLoading(true)
     try {
       if (isClientSignup) {
-        const newUser = registerClient({
+        const newUser = await registerClient({
           name: form.name.trim(), email: form.email, password: form.password, phone: form.phone,
           documentNumber: form.documentNumber, address: form.address,
         })

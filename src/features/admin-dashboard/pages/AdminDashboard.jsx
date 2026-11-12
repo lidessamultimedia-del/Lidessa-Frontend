@@ -5,7 +5,7 @@ import { useToast } from '@/shared/context/ToastContext'
 import { useBlog } from '@/features/blog/context/BlogContext'
 import { usePQRSF, isIdentified } from '@/features/pqrsf/context/PQRSFContext'
 import { useLMS, MAX_GRADE } from '@/features/lms/context/LMSContext'
-import { toFileUrl } from '@/shared/lib/api'
+import { toFileUrl, toDisplayUrl } from '@/shared/lib/api'
 import { downloadCsv } from '@/features/lms/utils/csv'
 import { useServicesData } from '@/features/services/context/ServicesDataContext'
 import { useSupplies } from '@/features/supplies/context/SuppliesContext'
@@ -42,6 +42,7 @@ import UserAccountFormModal, { ROLE_OPTIONS } from '../components/UserAccountFor
 import UserAccountDetailModal, { RoleBadge } from '../components/UserAccountDetailModal'
 import AnimatedCounter from '@/shared/components/AnimatedCounter'
 import ThemeToggle from '@/shared/components/ThemeToggle'
+import RoleSwitcher from '@/shared/components/RoleSwitcher'
 import { courseCardStyle } from '@/features/lms/utils/courseCard'
 import { BarChart2, Building, FileText, GraduationCap, Users, Clipboard, Sliders, Bell, User, AlertTriangle, Edit2, Plus, Send, BookOpen, Trash, Search, Eye, Lock, X, UserCog, ShieldCheck, IdCard, MessageCircle, Sparkle, Check, Inbox, Download, Mail, ClipboardCheck, Package, ShoppingCart, ImageIcon, ChevronDown, History } from '@/shared/components/Icons'
 import AccountSettings from '@/shared/components/AccountSettings'
@@ -116,7 +117,7 @@ function relativeTime(dateStr) {
 }
 
 export default function AdminDashboard({ theme, setTheme }) {
-  const { user, logout, allUsers, updateUserRole, createUser, updateUserCredentials, deleteUser } = useAuth()
+  const { user, logout, allUsers, updateUserRole, createUser, updateUserCredentials, deleteUser, addRoleToAccount } = useAuth()
   const { toast } = useToast()
   const navigate = useNavigate()
   const { posts: blogPosts, addPost, updatePost, deletePost } = useBlog()
@@ -581,12 +582,20 @@ export default function AdminDashboard({ theme, setTheme }) {
       lms.deleteDocumentType(deleteConfirm.id)
       toast('success', 'Tipo de documento eliminado', deleteConfirm.label)
     } else if (deleteConfirm.type === 'supplyProduct') {
-      supplies.deleteProduct(deleteConfirm.id)
-      toast('success', 'Producto eliminado', deleteConfirm.label)
+      try {
+        await supplies.deleteProduct(deleteConfirm.id)
+        toast('success', 'Producto eliminado', deleteConfirm.label)
+      } catch (err) {
+        toast('error', 'No se pudo eliminar el producto', err.message)
+      }
     } else if (deleteConfirm.type === 'supplyOrder') {
-      supplies.deleteOrder(deleteConfirm.id)
-      if (openOrderId === deleteConfirm.id) setOpenOrderId(null)
-      toast('success', 'Pedido eliminado', deleteConfirm.label)
+      try {
+        await supplies.deleteOrder(deleteConfirm.id)
+        if (openOrderId === deleteConfirm.id) setOpenOrderId(null)
+        toast('success', 'Pedido eliminado', deleteConfirm.label)
+      } catch (err) {
+        toast('error', 'No se pudo eliminar el pedido', err.message)
+      }
     } else if (deleteConfirm.type === 'account') {
       deleteUser(deleteConfirm.id)
       if (lms.directory.some(d => d.id === deleteConfirm.id)) lms.deleteDirectoryUser(deleteConfirm.id)
@@ -957,6 +966,7 @@ export default function AdminDashboard({ theme, setTheme }) {
           </h1>
           <div className="flex items-center gap-2 sm:gap-4 shrink-0">
             <ThemeToggle theme={theme} setTheme={setTheme} />
+            <RoleSwitcher />
             {/* Bell */}
             <div ref={bellRef} style={{ position: 'relative' }}>
               <button onClick={toggleBell}
@@ -2573,7 +2583,7 @@ export default function AdminDashboard({ theme, setTheme }) {
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="rounded-lg overflow-hidden shrink-0" style={{ width: 48, height: 48, backgroundColor: 'var(--muted)', border: '1px solid var(--border)', opacity: p.active ? 1 : 0.5 }}>
                           {p.image ? (
-                            <img src={p.image} alt="" className="w-full h-full object-cover" />
+                            <img src={toDisplayUrl(p.image)} alt="" className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center" style={{ color: 'var(--muted-foreground)' }}><ImageIcon size={18} /></div>
                           )}
@@ -2594,7 +2604,7 @@ export default function AdminDashboard({ theme, setTheme }) {
                         </span>
                       </div>
                       <div className="hidden md:flex items-center gap-2" onClick={e => e.stopPropagation()}>
-                        <Toggle checked={p.active} onChange={() => supplies.toggleProductActive(p.id)} label={p.active ? 'Ocultar de la tienda' : 'Publicar en la tienda'} />
+                        <Toggle checked={p.active} onChange={() => supplies.toggleProductActive(p.id).catch(err => toast('error', 'No se pudo actualizar', err.message))} label={p.active ? 'Ocultar de la tienda' : 'Publicar en la tienda'} />
                         <span className="text-xs" style={{ color: 'var(--muted-foreground)' }}>{p.active ? 'Sí' : 'No'}</span>
                       </div>
                       <div className="flex items-center justify-end gap-1.5" style={{ minWidth: 72 }} onClick={e => e.stopPropagation()}>
@@ -3040,11 +3050,15 @@ export default function AdminDashboard({ theme, setTheme }) {
       {productModal && (
         <SupplyProductFormModal
           product={productModal === 'new' ? null : productModal}
-          onSave={data => {
-            if (productModal === 'new') supplies.addProduct(data)
-            else supplies.updateProduct(productModal.id, data)
-            toast('success', productModal === 'new' ? 'Producto creado' : 'Producto actualizado', data.name)
-            setProductModal(null)
+          onSave={async data => {
+            try {
+              if (productModal === 'new') await supplies.addProduct(data)
+              else await supplies.updateProduct(productModal.id, data)
+              toast('success', productModal === 'new' ? 'Producto creado' : 'Producto actualizado', data.name)
+              setProductModal(null)
+            } catch (err) {
+              toast('error', 'No se pudo guardar el producto', err.message)
+            }
           }}
           onCancel={() => setProductModal(null)}
         />
@@ -3093,6 +3107,14 @@ export default function AdminDashboard({ theme, setTheme }) {
             onEdit={() => { setAccountDetail(null); setAccountModal({ mode: 'edit', account }) }}
             onDelete={() => { setAccountDetail(null); setDeleteConfirm({ type: 'account', id: account.id, label: account.name }) }}
             onClose={() => setAccountDetail(null)}
+            onAddRole={async role => {
+              try {
+                await addRoleToAccount(account.id, role)
+                toast('success', 'Rol agregado', `${account.name} ahora también es ${role}`)
+              } catch (err) {
+                toast('error', 'No se pudo agregar el rol', err.message)
+              }
+            }}
           />
         )
       })()}
@@ -3133,15 +3155,19 @@ export default function AdminDashboard({ theme, setTheme }) {
           order={orderModal.mode === 'edit' ? orderModal.order : null}
           products={supplies.products}
           clients={clientUsers}
-          onSave={data => {
-            if (orderModal.mode === 'new') {
-              const created = supplies.createOrder(data)
-              toast('success', 'Pedido creado', `${orderNumber(created)} · ${data.customerName}`)
-            } else {
-              supplies.updateOrder(orderModal.order.id, data)
-              toast('success', 'Pedido actualizado', `${orderNumber(orderModal.order)} · ${data.customerName}`)
+          onSave={async data => {
+            try {
+              if (orderModal.mode === 'new') {
+                const created = await supplies.createOrder(data)
+                toast('success', 'Pedido creado', `${orderNumber(created)} · ${data.customerName}`)
+              } else {
+                await supplies.updateOrder(orderModal.order.id, data)
+                toast('success', 'Pedido actualizado', `${orderNumber(orderModal.order)} · ${data.customerName}`)
+              }
+              setOrderModal(null)
+            } catch (err) {
+              toast('error', 'No se pudo guardar el pedido', err.message)
             }
-            setOrderModal(null)
           }}
           onClose={() => setOrderModal(null)}
         />
@@ -3156,7 +3182,9 @@ export default function AdminDashboard({ theme, setTheme }) {
             onClose={() => setOpenOrderId(null)}
             onEdit={() => { setOpenOrderId(null); setOrderModal({ mode: 'edit', order: o }) }}
             onDelete={() => { setOpenOrderId(null); setDeleteConfirm({ type: 'supplyOrder', id: o.id, label: `el pedido ${orderNumber(o)} de ${o.customerName}` }) }}
-            onConfirm={() => { supplies.confirmOrder(o.id); toast('success', 'Pedido confirmado', `${orderNumber(o)} · ${o.customerName}`) }}
+            onConfirm={() => supplies.confirmOrder(o.id)
+              .then(() => toast('success', 'Pedido confirmado', `${orderNumber(o)} · ${o.customerName}`))
+              .catch(err => toast('error', 'No se pudo confirmar el pedido', err.message))}
             onReject={() => setRejectOrderModal(o)}
             onShortfall={() => setPaymentShortfallModal(o)}
             onShip={() => setShipOrderModal(o)}
@@ -3168,10 +3196,14 @@ export default function AdminDashboard({ theme, setTheme }) {
       {shipOrderModal && (
         <ShipOrderModal
           order={shipOrderModal}
-          onSave={data => {
-            supplies.shipOrder(shipOrderModal.id, data)
-            toast('success', 'Pedido marcado como enviado', shipOrderModal.customerName)
-            setShipOrderModal(null)
+          onSave={async data => {
+            try {
+              await supplies.shipOrder(shipOrderModal.id, data)
+              toast('success', 'Pedido marcado como enviado', shipOrderModal.customerName)
+              setShipOrderModal(null)
+            } catch (err) {
+              toast('error', 'No se pudo marcar como enviado', err.message)
+            }
           }}
           onCancel={() => setShipOrderModal(null)}
         />
@@ -3180,10 +3212,14 @@ export default function AdminDashboard({ theme, setTheme }) {
       {rejectOrderModal && (
         <RejectOrderModal
           order={rejectOrderModal}
-          onSave={(reason, refundProof) => {
-            supplies.rejectOrder(rejectOrderModal.id, reason, refundProof)
-            toast('success', 'Pedido rechazado', rejectOrderModal.customerName)
-            setRejectOrderModal(null)
+          onSave={async (reason, refundProof) => {
+            try {
+              await supplies.rejectOrder(rejectOrderModal.id, reason, refundProof)
+              toast('success', 'Pedido rechazado', rejectOrderModal.customerName)
+              setRejectOrderModal(null)
+            } catch (err) {
+              toast('error', 'No se pudo rechazar el pedido', err.message)
+            }
           }}
           onCancel={() => setRejectOrderModal(null)}
         />
@@ -3192,10 +3228,14 @@ export default function AdminDashboard({ theme, setTheme }) {
       {paymentShortfallModal && (
         <PaymentShortfallModal
           order={paymentShortfallModal}
-          onSave={data => {
-            supplies.requestPaymentShortfall(paymentShortfallModal.id, data)
-            toast('success', 'Aviso enviado', paymentShortfallModal.customerName)
-            setPaymentShortfallModal(null)
+          onSave={async data => {
+            try {
+              await supplies.requestPaymentShortfall(paymentShortfallModal.id, data)
+              toast('success', 'Aviso enviado', paymentShortfallModal.customerName)
+              setPaymentShortfallModal(null)
+            } catch (err) {
+              toast('error', 'No se pudo enviar el aviso', err.message)
+            }
           }}
           onCancel={() => setPaymentShortfallModal(null)}
         />

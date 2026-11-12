@@ -3,6 +3,8 @@ import FormField, { errorInputStyle } from '@/shared/components/FormField'
 import Toggle from '@/shared/components/Toggle'
 import { ImageIcon } from '@/shared/components/Icons'
 import { formatAmountInput, parseAmountInput } from '@/shared/lib/money'
+import { useFileUpload } from '@/shared/lib/useFileUpload'
+import { toDisplayUrl } from '@/shared/lib/api'
 
 export default function SupplyProductFormModal({ product, onSave, onCancel }) {
   const [form, setForm] = useState({
@@ -15,6 +17,7 @@ export default function SupplyProductFormModal({ product, onSave, onCancel }) {
   })
   const [fieldErrors, setFieldErrors] = useState({})
   const imageInputRef = useRef(null)
+  const { upload, uploading } = useFileUpload()
 
   function set(field, value) {
     setForm(f => ({ ...f, [field]: value }))
@@ -31,13 +34,12 @@ export default function SupplyProductFormModal({ product, onSave, onCancel }) {
     onSave({ ...form, price: Number(form.price), stock: Number(form.stock) || 0 })
   }
 
-  function handleImageFile(e) {
+  async function handleImageFile(e) {
     const file = e.target.files?.[0]
     e.target.value = ''
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => set('image', reader.result)
-    reader.readAsDataURL(file)
+    const url = await upload(file, msg => setFieldErrors(f => ({ ...f, image: msg })))
+    if (url) set('image', url)
   }
 
   return (
@@ -59,24 +61,27 @@ export default function SupplyProductFormModal({ product, onSave, onCancel }) {
             <button
               type="button"
               onClick={() => imageInputRef.current?.click()}
-              className="rounded-lg overflow-hidden flex items-center justify-center"
+              disabled={uploading}
+              className="rounded-lg overflow-hidden flex items-center justify-center disabled:opacity-50"
               style={{ width: 112, height: 112, backgroundColor: 'var(--muted)', border: '1px dashed var(--border)' }}
             >
               {form.image ? (
-                <img src={form.image} alt="" className="w-full h-full object-cover" />
+                <img src={toDisplayUrl(form.image)} alt="" className="w-full h-full object-cover" />
               ) : (
                 <span style={{ color: 'var(--muted-foreground)' }}><ImageIcon size={26} /></span>
               )}
             </button>
-            <input ref={imageInputRef} type="file" accept="image/*" onChange={handleImageFile} className="hidden" />
+            <input ref={imageInputRef} type="file" accept="image/*" onChange={handleImageFile} className="hidden" disabled={uploading} />
             <button
               type="button"
               onClick={() => imageInputRef.current?.click()}
-              className="text-xs font-semibold mt-1.5 underline"
+              disabled={uploading}
+              className="text-xs font-semibold mt-1.5 underline disabled:opacity-50"
               style={{ color: 'var(--primary)' }}
             >
-              {form.image ? 'Cambiar foto' : 'Subir foto'}
+              {uploading ? 'Subiendo...' : form.image ? 'Cambiar foto' : 'Subir foto'}
             </button>
+            {fieldErrors.image && <p className="text-xs mt-1" style={{ color: '#dc2626' }}>⚠ {fieldErrors.image}</p>}
           </div>
 
           <div className="space-y-4">

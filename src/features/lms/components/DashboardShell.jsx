@@ -1,10 +1,17 @@
-import { useState, useRef, useEffect } from 'react'
+import { useMemo, useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/features/auth/context/AuthContext'
 import { useToast } from '@/shared/context/ToastContext'
 import { Bell } from '@/shared/components/Icons'
 import ThemeToggle from '@/shared/components/ThemeToggle'
+import RoleSwitcher from '@/shared/components/RoleSwitcher'
 import Avatar from '@/shared/components/Avatar'
+import { useSupplyAlerts } from '@/features/supplies/hooks/useSupplyAlerts'
+
+function formatAlertDate(iso) {
+  if (!iso) return '—'
+  return new Date(iso).toLocaleDateString('es-CO', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
+}
 
 // Colores de acento por rol, para que Profesor y Estudiante no se vean
 // idénticos aunque compartan la misma estructura de panel — cada uno tiene
@@ -17,7 +24,7 @@ const ACCENTS = {
 // Shell compartido por los paneles de Profesor y Estudiante: sidebar
 // colapsable + topbar. Mismo patrón estructural que AdminDashboard.jsx; el
 // color de acento (`accent`) varía por rol para diferenciarlos visualmente.
-export default function DashboardShell({ roleLabel, navItems, activeSection, onSectionChange, title, notifications = [], theme, setTheme, accent = 'blue', children }) {
+export default function DashboardShell({ roleLabel, navItems, activeSection, onSectionChange, title, notifications: ownNotifications = [], theme, setTheme, accent = 'blue', children }) {
   const { user, logout } = useAuth()
   const { toast } = useToast()
   const navigate = useNavigate()
@@ -28,6 +35,14 @@ export default function DashboardShell({ roleLabel, navItems, activeSection, onS
   const [bellOpen, setBellOpen] = useState(false)
   const bellRef = useRef(null)
   const [seenIds, setSeenIds] = useState(() => new Set())
+
+  // Cuentas vinculadas (ver 2.2): si esta misma cuenta también es cliente,
+  // sus avisos de "Mis pedidos" se suman a los propios de este panel.
+  const supplyAlerts = useSupplyAlerts(user?.roles?.includes('cliente') ? user.id : null)
+  const notifications = useMemo(() => {
+    const extra = supplyAlerts.map(a => ({ ...a, time: formatAlertDate(a.date), onClick: () => navigate('/tienda/cliente') }))
+    return [...ownNotifications, ...extra].sort((x, y) => (y.date ?? '').localeCompare(x.date ?? ''))
+  }, [ownNotifications, supplyAlerts, navigate])
   const unreadNotifications = notifications.filter(n => !seenIds.has(n.id))
 
   useEffect(() => {
@@ -157,6 +172,7 @@ export default function DashboardShell({ roleLabel, navItems, activeSection, onS
           </h1>
           <div className="flex items-center gap-2 sm:gap-4 shrink-0">
             <ThemeToggle theme={theme} setTheme={setTheme} />
+            <RoleSwitcher />
             <div ref={bellRef} style={{ position: 'relative' }}>
               <button onClick={() => {
                 const next = !bellOpen

@@ -1,8 +1,9 @@
 import { useRef, useState } from 'react'
 import FormField, { errorInputStyle } from '@/shared/components/FormField'
 import { ImageIcon } from '@/shared/components/Icons'
+import { useFileUpload } from '@/shared/lib/useFileUpload'
+import { toFileUrl } from '@/shared/lib/api'
 
-const MAX_PHOTO_BYTES = 5 * 1024 * 1024
 const CARRIERS = ['Servientrega', 'Coordinadora', 'Envía', 'TCC', 'Interrapidísimo', 'Otra']
 
 export default function ShipOrderModal({ order, onSave, onCancel }) {
@@ -12,19 +13,15 @@ export default function ShipOrderModal({ order, onSave, onCancel }) {
   const [photo, setPhoto] = useState('')
   const [error, setError] = useState('')
   const photoInputRef = useRef(null)
+  const { upload, uploading } = useFileUpload()
 
-  function handlePhotoFile(e) {
+  async function handlePhotoFile(e) {
     const file = e.target.files?.[0]
     e.target.value = ''
     if (!file) return
-    if (file.size > MAX_PHOTO_BYTES) {
-      setError('La imagen no puede pesar más de 5 MB.')
-      return
-    }
     setError('')
-    const reader = new FileReader()
-    reader.onload = () => setPhoto(reader.result)
-    reader.readAsDataURL(file)
+    const url = await upload(file, setError)
+    if (url) setPhoto(url)
   }
 
   function handleSubmit(e) {
@@ -62,11 +59,11 @@ export default function ShipOrderModal({ order, onSave, onCancel }) {
         </FormField>
 
         <FormField label="Foto del paquete" required helperText="El cliente la verá en su pedido, junto con la guía.">
-          <input ref={photoInputRef} type="file" accept="image/*" onChange={handlePhotoFile} className="hidden" />
+          <input ref={photoInputRef} type="file" accept="image/*" onChange={handlePhotoFile} className="hidden" disabled={uploading} />
           {photo ? (
             <div className="rounded-lg overflow-hidden" style={{ border: '1px solid var(--border)' }}>
-              <img src={photo} alt="Foto del paquete" className="w-full max-h-56 object-contain" style={{ backgroundColor: 'var(--muted)' }} />
-              <button type="button" onClick={() => photoInputRef.current?.click()} className="w-full py-2 text-xs font-bold" style={{ borderTop: '1px solid var(--border)', color: 'var(--primary)' }}>
+              <img src={toFileUrl(photo)} alt="Foto del paquete" className="w-full max-h-56 object-contain" style={{ backgroundColor: 'var(--muted)' }} />
+              <button type="button" onClick={() => photoInputRef.current?.click()} disabled={uploading} className="w-full py-2 text-xs font-bold disabled:opacity-50" style={{ borderTop: '1px solid var(--border)', color: 'var(--primary)' }}>
                 Cambiar foto
               </button>
             </div>
@@ -74,11 +71,12 @@ export default function ShipOrderModal({ order, onSave, onCancel }) {
             <button
               type="button"
               onClick={() => photoInputRef.current?.click()}
-              className="w-full flex flex-col items-center justify-center gap-2 rounded-lg py-8"
+              disabled={uploading}
+              className="w-full flex flex-col items-center justify-center gap-2 rounded-lg py-8 disabled:opacity-50"
               style={{ border: '2px dashed var(--border)', backgroundColor: 'var(--muted)' }}
             >
               <ImageIcon size={26} style={{ color: 'var(--muted-foreground)' }} />
-              <span className="text-sm font-bold" style={{ color: 'var(--primary)' }}>Subir foto del paquete</span>
+              <span className="text-sm font-bold" style={{ color: 'var(--primary)' }}>{uploading ? 'Subiendo...' : 'Subir foto del paquete'}</span>
             </button>
           )}
         </FormField>

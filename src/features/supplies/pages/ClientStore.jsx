@@ -6,9 +6,13 @@ import CheckoutModal from '../components/CheckoutModal'
 import { orderNumber } from '../components/OrderDetailModal'
 import AccountSettings from '@/shared/components/AccountSettings'
 import ThemeToggle from '@/shared/components/ThemeToggle'
+import RoleSwitcher from '@/shared/components/RoleSwitcher'
 import ImageLightbox from '@/shared/components/ImageLightbox'
 import Avatar from '@/shared/components/Avatar'
 import { formatAmountInput, parseAmountInput } from '@/shared/lib/money'
+import { toDisplayUrl, toFileUrl } from '@/shared/lib/api'
+import { useToast } from '@/shared/context/ToastContext'
+import { useStudentAlerts } from '@/features/lms/hooks/useStudentAlerts'
 import {
   ShoppingCart, Plus, Minus, Trash, Check, X, Bell, ImageIcon, Package, LogOut, Search, ShieldCheck,
   Truck, CreditCard, Headset, ChevronDown, ChevronRight, User, MessageCircle, AlertTriangle,
@@ -116,6 +120,7 @@ export default function ClientStore({ theme, setTheme }) {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const supplies = useSupplies()
+  const { toast } = useToast()
   const [tab, setTab] = useState('catalogo')
   const [sortBy, setSortBy] = useState('destacados')
   const [search, setSearch] = useState('')
@@ -156,11 +161,16 @@ export default function ClientStore({ theme, setTheme }) {
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
 
+  // Cuentas vinculadas (ver 2.2): si esta misma cuenta también es
+  // estudiante, sus avisos del LMS (calificaciones, mensajes) se suman acá
+  // para que no dependan de entrar primero al panel de estudiante.
+  const studentAlerts = useStudentAlerts(user.roles?.includes('estudiante') ? user.id : null)
+
   // Avisa cuando el admin confirma o rechaza un pedido — se arma a partir
   // del estado actual de los pedidos (igual que las notificaciones del
   // panel de admin), no de un registro de eventos aparte.
   const notifications = useMemo(() => {
-    const items = []
+    const items = [...studentAlerts.map(a => ({ ...a, onClick: () => navigate('/estudiante') }))]
     myOrders.filter(o => o.status !== 'pending').forEach(o => {
       const firstItem = o.items[0]?.name ?? 'tu pedido'
       const extra = o.items.length > 1 ? ` y ${o.items.length - 1} más` : ''
@@ -183,7 +193,7 @@ export default function ClientStore({ theme, setTheme }) {
     return items
       .sort((a, b) => (b.date ?? '').localeCompare(a.date ?? ''))
       .map(n => ({ ...n, time: relativeTime(n.date) }))
-  }, [myOrders])
+  }, [myOrders, studentAlerts, navigate])
 
   const [notifSeenIds, setNotifSeenIds] = useState(() => new Set())
   const unreadNotifications = notifications.filter(n => !notifSeenIds.has(n.id))
@@ -211,10 +221,22 @@ export default function ClientStore({ theme, setTheme }) {
     setTab('checkout')
   }
 
-  function handleOrderSubmit(details) {
-    const order = supplies.createOrder({ ...details, items: supplies.cart, clientId: user.id })
-    setOrderDone(order)
-    supplies.clearCart()
+  async function handleOrderSubmit(details) {
+    try {
+      const order = await supplies.createOrder({ ...details, items: supplies.cart, clientId: user.id })
+      setOrderDone(order)
+      supplies.clearCart()
+    } catch (err) {
+      toast('error', 'No se pudo enviar el pedido', err.message)
+    }
+  }
+
+  async function handleCompleteOrder(id) {
+    try {
+      await supplies.completeOrder(id)
+    } catch (err) {
+      toast('error', 'No se pudo confirmar la entrega', err.message)
+    }
   }
 
   function handleLogout() {
@@ -268,6 +290,7 @@ export default function ClientStore({ theme, setTheme }) {
 
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <ThemeToggle theme={theme} setTheme={setTheme} className="hidden lg:flex" />
+            <RoleSwitcher className="hidden lg:block" />
 
             {/* Notificaciones */}
             <div ref={bellRef} className="relative">
@@ -306,7 +329,7 @@ export default function ClientStore({ theme, setTheme }) {
                         const wasUnread = !notifSeenIds.has(n.id)
                         return (
                           <button key={n.id}
-                            onClick={() => { setTab('pedidos'); setOpenOrderId(n.orderId); setBellOpen(false) }}
+                            onClick={() => { (n.onClick ?? (() => { setTab('pedidos'); setOpenOrderId(n.orderId) }))(); setBellOpen(false) }}
                             className="w-full text-left flex gap-3 px-4 py-3 transition-colors"
                             style={{ borderBottom: i < notifications.length - 1 ? '1px solid var(--border)' : 'none', backgroundColor: wasUnread ? 'rgba(0,81,135,0.06)' : 'transparent' }}>
                             <span className="flex items-center justify-center rounded-lg shrink-0" style={{ width: 30, height: 30, backgroundColor: `${n.color}1a`, color: n.color }}>
@@ -368,7 +391,10 @@ export default function ClientStore({ theme, setTheme }) {
                         )}
                       </button>
                     ))}
-                    <div className="lg:hidden px-3 py-2"><ThemeToggle theme={theme} setTheme={setTheme} /></div>
+                    <div className="lg:hidden px-3 py-2 flex items-center gap-2">
+                      <ThemeToggle theme={theme} setTheme={setTheme} />
+                      <RoleSwitcher />
+                    </div>
                   </div>
                   <div className="p-1.5" style={{ borderTop: '1px solid var(--border)' }}>
                     <button onClick={handleLogout}
@@ -514,7 +540,7 @@ export default function ClientStore({ theme, setTheme }) {
                             aria-label={`Ver detalle de ${p.name}`}
                           >
                             {p.image ? (
-                              <img src={p.image} alt={p.name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                              <img src={toDisplayUrl(p.image)} alt={p.name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center" style={{ color: 'var(--muted-foreground)' }}><ImageIcon size={32} /></div>
                             )}
@@ -624,8 +650,8 @@ export default function ClientStore({ theme, setTheme }) {
                             <div>
                               <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: 'var(--muted-foreground)' }}>Su comprobante de pago</p>
                               {o.proofImage ? (
-                                <button type="button" onClick={() => setLightboxImage({ src: o.proofImage, alt: 'Comprobante de pago' })}>
-                                  <img src={o.proofImage} alt="Comprobante de pago" className="rounded-lg max-h-32 object-contain" style={{ border: '1px solid var(--border)' }} />
+                                <button type="button" onClick={() => setLightboxImage({ src: toFileUrl(o.proofImage), alt: 'Comprobante de pago' })}>
+                                  <img src={toFileUrl(o.proofImage)} alt="Comprobante de pago" className="rounded-lg max-h-32 object-contain" style={{ border: '1px solid var(--border)' }} />
                                 </button>
                               ) : (
                                 <p className="text-sm" style={{ color: 'var(--muted-foreground)' }}>No se adjuntó comprobante.</p>
@@ -640,7 +666,7 @@ export default function ClientStore({ theme, setTheme }) {
                               return (
                                 <div key={it.productId} className="flex items-center gap-3 px-4 py-3" style={{ borderTop: i > 0 ? '1px solid var(--border)' : 'none' }}>
                                   <div className="rounded-lg overflow-hidden shrink-0" style={{ width: 40, height: 40, backgroundColor: 'var(--muted)' }}>
-                                    {product?.image && <img src={product.image} alt="" className="w-full h-full object-cover" />}
+                                    {product?.image && <img src={toDisplayUrl(product.image)} alt="" className="w-full h-full object-cover" />}
                                   </div>
                                   <span className="flex-1 min-w-0 text-sm truncate" style={{ color: 'var(--foreground)' }}><strong>{it.qty}</strong> × {it.name}</span>
                                   <span className="text-sm font-semibold shrink-0" style={{ color: 'var(--foreground)' }}>{formatCOP(it.price * it.qty)}</span>
@@ -665,8 +691,8 @@ export default function ClientStore({ theme, setTheme }) {
                               {o.refundProof && (
                                 <>
                                   <p className="mt-2 mb-1">Te devolvimos el dinero — comprobante:</p>
-                                  <button type="button" onClick={() => setLightboxImage({ src: o.refundProof, alt: 'Comprobante de devolución' })}>
-                                    <img src={o.refundProof} alt="Comprobante de devolución" className="rounded-lg max-h-32 object-contain" style={{ border: '1px solid var(--border)' }} />
+                                  <button type="button" onClick={() => setLightboxImage({ src: toFileUrl(o.refundProof), alt: 'Comprobante de devolución' })}>
+                                    <img src={toFileUrl(o.refundProof)} alt="Comprobante de devolución" className="rounded-lg max-h-32 object-contain" style={{ border: '1px solid var(--border)' }} />
                                   </button>
                                 </>
                               )}
@@ -680,8 +706,8 @@ export default function ClientStore({ theme, setTheme }) {
                                 <p className="text-xs font-bold uppercase tracking-wide mb-1" style={{ color: 'var(--muted-foreground)' }}>Envío</p>
                                 <p className="text-sm" style={{ color: 'var(--foreground)' }}>{o.shipment.carrier} — guía <strong>{o.shipment.trackingNumber}</strong></p>
                                 {o.shipment.photo && (
-                                  <button type="button" onClick={() => setLightboxImage({ src: o.shipment.photo, alt: 'Foto de tu paquete' })} className="mt-2">
-                                    <img src={o.shipment.photo} alt="Foto del paquete" className="rounded-lg max-h-32 object-contain" style={{ border: '1px solid var(--border)' }} />
+                                  <button type="button" onClick={() => setLightboxImage({ src: toFileUrl(o.shipment.photo), alt: 'Foto de tu paquete' })} className="mt-2">
+                                    <img src={toFileUrl(o.shipment.photo)} alt="Foto del paquete" className="rounded-lg max-h-32 object-contain" style={{ border: '1px solid var(--border)' }} />
                                   </button>
                                 )}
                               </div>
@@ -689,7 +715,7 @@ export default function ClientStore({ theme, setTheme }) {
                           )}
 
                           {o.status === 'shipped' && (
-                            <button onClick={() => supplies.completeOrder(o.id)}
+                            <button onClick={() => handleCompleteOrder(o.id)}
                               className="w-full inline-flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-sm font-bold text-white"
                               style={{ backgroundColor: '#16a34a' }}>
                               <Check size={14} /> Ya me llegó el pedido
@@ -718,7 +744,7 @@ export default function ClientStore({ theme, setTheme }) {
             <CheckoutModal
               variant="section"
               user={user}
-              items={supplies.cart.map(it => ({ ...it, image: supplies.products.find(p => p.id === it.productId)?.image }))}
+              items={supplies.cart.map(it => ({ ...it, image: toDisplayUrl(supplies.products.find(p => p.id === it.productId)?.image) }))}
               total={supplies.cartTotal}
               onSubmit={handleOrderSubmit}
               onCancel={() => setTab('catalogo')}
@@ -768,7 +794,7 @@ export default function ClientStore({ theme, setTheme }) {
                       <div key={it.productId} className="flex gap-3">
                         <div className="rounded-xl overflow-hidden shrink-0" style={{ width: 64, height: 64, backgroundColor: 'var(--muted)' }}>
                           {product?.image ? (
-                            <img src={product.image} alt={it.name} className="w-full h-full object-cover" />
+                            <img src={toDisplayUrl(product.image)} alt={it.name} className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center" style={{ color: 'var(--muted-foreground)' }}><ImageIcon size={18} /></div>
                           )}
@@ -832,7 +858,7 @@ export default function ClientStore({ theme, setTheme }) {
             </button>
             <div className="relative aspect-4/3 md:aspect-auto max-h-[46vh] md:max-h-none md:h-full" style={{ backgroundColor: 'var(--muted)' }}>
               {detailProduct.image ? (
-                <img src={detailProduct.image} alt={detailProduct.name} className="w-full h-full object-cover" />
+                <img src={toDisplayUrl(detailProduct.image)} alt={detailProduct.name} className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center" style={{ color: 'var(--muted-foreground)' }}><ImageIcon size={40} /></div>
               )}

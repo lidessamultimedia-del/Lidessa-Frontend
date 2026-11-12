@@ -11,9 +11,9 @@ import { MapPin, Phone, Mail, Check } from '@/shared/components/Icons'
 import { BACKEND_LIVE } from '@/shared/lib/features'
 
 const allyNames = [
-  'Dental Service', 'Hydro Bombas', 'Converge', 'CEET', 'La Pampa', 'Reno',
+  'Converge', 'CEET',
   'Artes Cerámicas', 'Instituto Nueva Generación', 'Reloj de Arena', 'The Best School',
-  'Andrea Iglesias García',
+  'Andrea Iglesias García', 'Clínica Smile',
 ]
 const allies = allyNames.map(n => clients.find(c => c.name === n)).filter(Boolean)
 

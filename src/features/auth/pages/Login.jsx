@@ -46,9 +46,7 @@ function LoginForm() {
     if (Object.keys(errors).length > 0) return
     setLoading(true)
     try {
-      await login(form.email, form.password)
-      const stored = sessionStorage.getItem('lidessa_user')
-      const user = stored ? JSON.parse(stored) : null
+      const user = await login(form.email, form.password)
       toast('success', `¡Bienvenido${user?.name ? ', ' + user.name.split(' ')[0] : ''}!`, 'Has iniciado sesión correctamente.')
       navigate(ROLE_HOME[user?.role] ?? '/')
     } catch {

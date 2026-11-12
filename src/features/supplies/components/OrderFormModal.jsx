@@ -2,6 +2,8 @@ import { useState } from 'react'
 import FormField, { errorInputStyle } from '@/shared/components/FormField'
 import FormSection from '@/shared/components/FormSection'
 import { X, User, Package, Plus, Trash, ImageIcon, Upload, Clipboard } from '@/shared/components/Icons'
+import { useFileUpload } from '@/shared/lib/useFileUpload'
+import { toFileUrl } from '@/shared/lib/api'
 
 const EMAIL_RE = /^\S+@\S+\.\S+$/
 const PHONE_RE = /^[\d\s+()-]{7,20}$/
@@ -33,6 +35,7 @@ export default function OrderFormModal({ order, products = [], clients = [], onS
   })
   const [items, setItems] = useState(() => order?.items?.map(it => ({ ...it })) ?? [])
   const [errors, setErrors] = useState({})
+  const { upload, uploading } = useFileUpload()
 
   function update(patch) {
     setForm(f => ({ ...f, ...patch }))
@@ -82,12 +85,12 @@ export default function OrderFormModal({ order, products = [], clients = [], onS
     setItems(prev => prev.filter((_, i) => i !== index))
   }
 
-  function handleProof(e) {
+  async function handleProof(e) {
     const file = e.target.files?.[0]
+    e.target.value = ''
     if (!file) return
-    const reader = new FileReader()
-    reader.onload = () => update({ proofImage: reader.result })
-    reader.readAsDataURL(file)
+    const url = await upload(file, msg => setErrors(er => ({ ...er, proofImage: msg })))
+    if (url) update({ proofImage: url })
   }
 
   const total = items.reduce((sum, it) => sum + it.price * it.qty, 0)
@@ -253,22 +256,23 @@ export default function OrderFormModal({ order, products = [], clients = [], onS
               <div className="flex items-center gap-4">
                 <div className="rounded-lg overflow-hidden flex items-center justify-center shrink-0"
                   style={{ width: 72, height: 72, backgroundColor: 'var(--muted)', border: '1px solid var(--border)', color: 'var(--muted-foreground)' }}>
-                  {form.proofImage ? <img src={form.proofImage} alt="Comprobante" className="w-full h-full object-cover" /> : <ImageIcon size={22} />}
+                  {form.proofImage ? <img src={toFileUrl(form.proofImage)} alt="Comprobante" className="w-full h-full object-cover" /> : <ImageIcon size={22} />}
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <label className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-lg cursor-pointer"
+                  <label className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-2 rounded-lg ${uploading ? 'opacity-50' : 'cursor-pointer'}`}
                     style={{ border: '1px solid var(--border)', color: 'var(--foreground)' }}>
-                    <Upload size={13} /> {form.proofImage ? 'Cambiar imagen' : 'Subir imagen'}
-                    <input type="file" accept="image/*" className="hidden" onChange={handleProof} />
+                    <Upload size={13} /> {uploading ? 'Subiendo...' : form.proofImage ? 'Cambiar imagen' : 'Subir imagen'}
+                    <input type="file" accept="image/*" className="hidden" onChange={handleProof} disabled={uploading} />
                   </label>
                   {form.proofImage && (
-                    <button type="button" onClick={() => update({ proofImage: null })}
-                      className="text-xs font-bold px-3 py-2 rounded-lg" style={{ color: '#dc2626' }}>
+                    <button type="button" onClick={() => update({ proofImage: null })} disabled={uploading}
+                      className="text-xs font-bold px-3 py-2 rounded-lg disabled:opacity-50" style={{ color: '#dc2626' }}>
                       Quitar
                     </button>
                   )}
                 </div>
               </div>
+              {errors.proofImage && <p className="text-xs mt-1" style={{ color: '#dc2626' }}>⚠ {errors.proofImage}</p>}
             </FormSection>
           </div>
 

@@ -388,7 +388,11 @@ export function LMSProvider({ children }) {
   // API no responde, el LMS sigue funcionando solo con los datos mock.
   const [remoteSyncError, setRemoteSyncError] = useState('')
   useEffect(() => {
-    if (!user?.token) return
+    // Cuentas vinculadas (ver 2.2): una cuenta puede ser solo "cliente"
+    // (Suministros) sin ningún rol del LMS — para esa no hay nada que
+    // sincronizar aquí (y los endpoints de cursos/mensajería le darían 403).
+    const roles = user?.roles ?? (user?.role ? [user.role] : [])
+    if (!user?.token || !roles.some(r => r === 'admin' || r === 'profesor' || r === 'estudiante')) return
     let cancelled = false
     fetchRemoteLms(user)
       .then(remote => {

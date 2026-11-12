@@ -55,6 +55,7 @@ import {
   CreditCard as LucideCreditCard,
   ChevronRight as LucideChevronRight,
   Headset as LucideHeadset,
+  ArrowLeftRight as LucideArrowLeftRight,
 } from 'lucide-react'
 
 function withDefaultSize(LucideIcon) {
@@ -115,3 +116,4 @@ export const CreditCard = withDefaultSize(LucideCreditCard)
 export const ChevronRight = withDefaultSize(LucideChevronRight)
 export const Headset = withDefaultSize(LucideHeadset)
 export const History = withDefaultSize(LucideHistory)
+export const ArrowLeftRight = withDefaultSize(LucideArrowLeftRight)

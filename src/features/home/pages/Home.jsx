@@ -202,7 +202,7 @@ export default function Home() {
       </section>
 
       {/* ── Clients marquee ── */}
-      <ClientMarquee />
+      <ClientMarquee speed={48} />
 
       {/* ── Attributes + counters ── */}
       <section className="pt-6 pb-20 max-w-7xl mx-auto px-4 sm:px-6">

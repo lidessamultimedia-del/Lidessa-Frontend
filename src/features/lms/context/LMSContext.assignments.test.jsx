@@ -125,6 +125,31 @@ describe('carga inicial de tareas y entregas', () => {
     expect(result.current.remoteSyncError).toBe('')
   })
 
+  // Cuentas vinculadas (ver 2.2): un cliente de la tienda al que el admin le
+  // agregó el rol estudiante. Antes solo se miraba user.role, y esta cuenta
+  // perdía su avance de lecciones al recargar y no podía escribirle al admin.
+  it('cliente con rol estudiante vinculado carga su progreso y el contacto del admin', async () => {
+    auth = { user: { id: '10', role: 'cliente', roles: ['cliente', 'estudiante'], token: TOKEN }, registeredStudents: [], allUsers: [] }
+    api.apiGetCourseProgress.mockResolvedValue({ completedLessonIds: [3] })
+    api.apiGetAdminContact.mockResolvedValue({ id: 1, name: 'Admin', email: 'admin@x.co', role: 'admin' })
+
+    const { result } = await renderSynced()
+
+    expect(api.apiGetCourseProgress).toHaveBeenCalledWith(5, TOKEN)
+    expect(api.apiGetAdminContact).toHaveBeenCalledWith(TOKEN)
+    expect(api.apiGetSubmissions).not.toHaveBeenCalled() // sigue siendo vista de estudiante, no de staff
+    expect(result.current.lessonProgress.some(p => p.lessonId === '3' && p.studentId === '10')).toBe(true)
+  })
+
+  it('un 403 en el progreso de un curso no tumba la carga completa', async () => {
+    auth = { user: { ...student, roles: ['estudiante'] }, registeredStudents: [], allUsers: [] }
+    api.apiGetCourseProgress.mockRejectedValue(Object.assign(new Error('Forbidden'), { status: 403 }))
+
+    const { result } = await renderSynced()
+
+    expect(result.current.remoteSyncError).toBe('')
+  })
+
   it('una nueva sincronización reemplaza las tareas reales sin duplicarlas', async () => {
     const { result, rerender } = await renderSynced()
     auth = { ...auth, user: { ...teacher, token: 'otro-token' } }

@@ -13,7 +13,8 @@ export default function ClientMarquee({ title = 'Empresas que confían en nosotr
             style={{
               height: 92,
               minWidth: 108,
-              padding: '14px 20px',
+              // `tight`: logos con mucho texto (p. ej. Andrea Iglesias) usan casi todo el alto.
+              padding: c.tight ? '6px 12px' : '14px 20px',
               backgroundColor: c.dark ? '#1a1a1a' : 'var(--card)',
               border: '1px solid var(--border)',
               position: 'relative',

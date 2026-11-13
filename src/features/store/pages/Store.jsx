@@ -38,7 +38,9 @@ export default function Store() {
 
   // Un cliente logueado tiene su propia tienda (catálogo + carrito + sus
   // pedidos) en vez de esta página pública de mercadeo — se manda para allá.
-  if (user?.role === 'cliente') {
+  // Cuentas vinculadas (ver 2.2): también quien tiene el rol cliente
+  // agregado (p. ej. estudiante + cliente), no solo el rol principal.
+  if (user?.roles?.includes('cliente') || user?.role === 'cliente') {
     return <Navigate to="/tienda/cliente" replace />
   }
 

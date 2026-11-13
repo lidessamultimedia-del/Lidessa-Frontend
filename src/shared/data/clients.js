@@ -17,7 +17,7 @@ export const clients = [
   { name: 'Instituto Nueva Generación', logo: '/assets/instituto-nueva-generacion.ico', url: 'https://institutong.org/' },
   { name: 'Reloj de Arena', logo: '/assets/reloj-de-arena.ico', url: 'https://www.centrorelojdearena.com/sede-san-joaquin/' },
   { name: 'The Best School', logo: '/assets/the-best-school.ico', url: 'https://tbsmedellin.com/' },
-  { name: 'Andrea Iglesias García', logo: '/assets/andrea-iglesias.ico', url: 'https://www.instagram.com/andrea_igabogada/' },
+  { name: 'Andrea Iglesias García', logo: '/assets/andrea-iglesias.png', url: 'https://www.instagram.com/andrea_igabogada/' },
   { name: 'Huellas y Huellitas Kids', logo: '/assets/huellas-y-huellitas-kids.png', url: 'https://huellasyhuellitaskids.com/' },
   { name: 'Ferretería La Luneta', logo: '/assets/ferreteria-la-luneta.png', url: 'https://www.ferreterialaluneta.com/' },
   { name: 'SPI Soluciones', logo: '/assets/spi-soluciones.png', url: 'https://www.spisoluciones.com/website/index.html' },

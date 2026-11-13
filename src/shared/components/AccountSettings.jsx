@@ -27,7 +27,7 @@ export default function AccountSettings() {
 
   const directoryEntry = lms.directoryById(user.id)
   const isTeacher = directoryEntry?.role === 'profesor'
-  const isClient = user.role === 'cliente'
+  const isClient = user.role === 'cliente' || !!user.roles?.includes('cliente')
 
   const [profile, setProfile] = useState({
     name: user.name, email: user.email, phone: user.phone ?? '',

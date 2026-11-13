@@ -306,9 +306,14 @@ async function fetchRemoteLms(user) {
       ])
   // Lecciones ya completadas por el estudiante: sin esto, al recargar se
   // volverían a bloquear las siguientes (isLessonUnlocked).
-  const lessonProgress = user.role === 'estudiante'
+  // Cuentas vinculadas (ver 2.2): se mira la lista de roles, no solo el
+  // principal — un cliente al que se le agregó el rol estudiante también
+  // tiene progreso. El .catch es para cuentas con otro rol del LMS además
+  // (p. ej. profesor+estudiante): en los cursos que dicta no tiene progreso.
+  const isStudent = user.role === 'estudiante' || !!user.roles?.includes('estudiante')
+  const lessonProgress = isStudent
     ? (await Promise.all(apiCourses.map(async c => {
-        const progress = await apiGetCourseProgress(c.id, token)
+        const progress = await Promise.resolve(apiGetCourseProgress(c.id, token)).catch(() => null)
         return (progress?.completedLessonIds ?? []).map(id => ({
           studentId: user.id, courseId: String(c.id), lessonId: String(id), completedAt: null,
         }))
@@ -319,7 +324,7 @@ async function fetchRemoteLms(user) {
   const accounts = user.role === 'admin' ? (await apiGetUsers(token)) ?? [] : []
   // El estudiante necesita saber quién es el admin para poder escribirle
   // (GetUsers es admin-only, por eso este endpoint aparte).
-  const adminContact = user.role === 'estudiante' ? await apiGetAdminContact(token).catch(() => null) : null
+  const adminContact = isStudent ? await apiGetAdminContact(token).catch(() => null) : null
   // Mensajería: el backend ya agrupa las conversaciones (una por curso +
   // contraparte); se usa esa lista solo para saber qué hilos existen y traer
   // cada uno completo — así threadMessages/staffConversations/

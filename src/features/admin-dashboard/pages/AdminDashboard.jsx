@@ -126,7 +126,11 @@ export default function AdminDashboard({ theme, setTheme }) {
   const catalogCourses = lms.listedCourses
   const { services, addService, updateService, deleteService, toggleServiceActive, categories: serviceCategories, addCategory, updateCategory, toggleCategoryActive, deleteCategory } = useServicesData()
   const supplies = useSupplies()
-  const clientUsers = allUsers.filter(u => u.role === 'cliente')
+  // Cuentas vinculadas (ver 2.2): incluye a quien tiene el rol cliente
+  // agregado (p. ej. un estudiante que también compra), no solo a quien se
+  // registró como cliente — si no, no aparece en Clientes ni en el selector
+  // "Cliente registrado" de OrderFormModal.
+  const clientUsers = allUsers.filter(u => u.role === 'cliente' || u.roles?.includes('cliente'))
   const [productModal, setProductModal] = useState(null) // null | 'new' | product
   const [clientModal, setClientModal] = useState(null) // null | 'new' | cliente a editar
   const [clientDetailModal, setClientDetailModal] = useState(null) // cliente a ver en detalle

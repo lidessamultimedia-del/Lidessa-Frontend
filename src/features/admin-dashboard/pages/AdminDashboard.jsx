@@ -426,7 +426,7 @@ export default function AdminDashboard({ theme, setTheme }) {
           listed: true, published: false, visible: true,
           teacherId: null, format: 'topics', completionTrackingEnabled: true,
           requiresPassword: false, password: '', selfEnrollment: true, guestAccess: false,
-          capacity: 100, color: 'var(--primary)', startDate: '', endDate: '',
+          capacity: 100, color: '#005187', startDate: '', endDate: '',
           ...form,
         })
         toast('success', 'Curso creado', 'Ya aparece en la página pública de CEET y en Cursos (LMS) para que un profesor lo complete.')
